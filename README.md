@@ -45,6 +45,6 @@ Per promemoria (più che altro per me) segno i prossimi steps:
   - [ ] rendi $\boldsymbol{\beta}$ adattivi cfr paper Griffin e Walker
   
 ### Questioni:
-Per trasferire oggetti dalla funzione R a Rcpp e da Rcpp a R ho usato una Lista. forse è brutale come soluzione, ma "sicura". Sicuramente si potrebbe fare diversamente usando i puntatori, ma da quello che ho capito è sconsigliato usarli con Rcpp. In ogni caso computazionalmente il costo in questo caso è minimo, visto che servirebbero solo per restituire gli output.
+Per trasferire oggetti dalla funzione Rcpp a R ho usato una Lista. forse è brutale come soluzione, ma "sicura". Sicuramente si potrebbe fare diversamente usando i puntatori, ma da quello che ho capito è sconsigliato usarli con Rcpp. In ogni caso il guadagno computazionale in questo caso sarebbe minimo, visto che servirebbero solo per restituire gli output.
 
 nel file `notex` $\alpha$ e $M$ sono la stessa cosa? CHIEDI!!
