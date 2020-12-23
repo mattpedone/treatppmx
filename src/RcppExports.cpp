@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // myppmx
 Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, arma::vec catvec, double alpha, int cohesion, int similarity, int consim, arma::vec y, arma::vec xcon, arma::vec xcat, int npred, arma::mat xconp, arma::mat xcatp, arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, int calibration);
-RcppExport SEXP _myppmx_myppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP cohesionSEXP, SEXP similaritySEXP, SEXP consimSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP npredSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP similparamSEXP, SEXP modelpriorsSEXP, SEXP mhtuneSEXP, SEXP calibrationSEXP) {
+RcppExport SEXP _treatppmx_myppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP cohesionSEXP, SEXP similaritySEXP, SEXP consimSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP npredSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP similparamSEXP, SEXP modelpriorsSEXP, SEXP mhtuneSEXP, SEXP calibrationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,11 +39,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_myppmx_myppmx", (DL_FUNC) &_myppmx_myppmx, 21},
+    {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 21},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_myppmx(DllInfo *dll) {
+RcppExport void R_init_treatppmx(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

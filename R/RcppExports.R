@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 myppmx <- function(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, cohesion, similarity, consim, y, xcon, xcat, npred, xconp, xcatp, similparam, modelpriors, mhtune, calibration) {
-    .Call(`_myppmx_myppmx`, iter, burn, thin, nobs, ncon, ncat, catvec, alpha, cohesion, similarity, consim, y, xcon, xcat, npred, xconp, xcatp, similparam, modelpriors, mhtune, calibration)
+    .Call(`_treatppmx_myppmx`, iter, burn, thin, nobs, ncon, ncat, catvec, alpha, cohesion, similarity, consim, y, xcon, xcat, npred, xconp, xcatp, similparam, modelpriors, mhtune, calibration)
 }
 

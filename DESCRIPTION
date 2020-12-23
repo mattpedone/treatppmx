@@ -1,4 +1,4 @@
-Package: myppmx
+Package: treatppmx
 Type: Package
 Title: What the package does (short line)
 Version: 1.0
@@ -7,6 +7,7 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 Encoding: UTF-8
+License: GPL-3
 LazyData: true
 Imports: Rcpp (>= 1.0.5)
 LinkingTo: Rcpp, RcppArmadillo
