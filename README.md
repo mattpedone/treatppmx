@@ -5,7 +5,7 @@ Questa è una repo per condividere il codice e il *work in progress* del progett
 
 Ho iniziato costruendo il modello PPMx che è presentato nel paper *Page Quintana (2018) Stat Comp*. Ho guardato molto al codice di Page nel pacchetto, spero non sia un problema. 
 
-Al momento il modello implementato è quello nell'equazione (15) di Page Quintana (2018), quindi la $y$ è ancora univariata. Le opzioni possibili prevedono: 
+Al momento il modello implementato è quello nell'equazione (15) di Page Quintana (2018), quindi la $y$ è ancora univariata. Le opzioni già implementate prevedono: 
 
   * **cohesion function**:
 
