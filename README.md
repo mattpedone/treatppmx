@@ -28,7 +28,7 @@ Al momento il modello implementato è quello nell'equazione (15) di Page Quintan
     - continue (N–N e N-NIG)
     - categoriche (DM).
 
-I files ancora non sono *impacchettati* in maniera rigorosa ma lo script `demo/myscript.R` dovrebbe essere eseguito senza grossi problemi (`devtools::check()` da un paio di WARNING e una NOTE, ma riferiti alla documentazione e al file `demo/00Index` che devo aggiungere). 
+I files ancora non sono *impacchettati* in maniera rigorosa ma lo script `demo/myscript.R` dovrebbe essere eseguibile senza grossi problemi (`devtools::check()` da un paio di WARNING e una NOTE, ma riferiti alla documentazione e al file `demo/00Index` che devo aggiungere). 
 Il codice **sembra** funzionare abbastanza bene e i tempi credo siano accettabili. 
 
 ### Roadmap
