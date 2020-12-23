@@ -1,0 +1,1293 @@
+#include <RcppArmadillo.h>
+#include <math.h>
+#include <Rcpp.h>
+#include <R.h>
+#include <Rmath.h>
+
+//#include <R_ext/Lapack.h>
+
+namespace dens{
+// Inverse Gamma density
+// the parameterization here provides a mean of beta/(alpha - 1)
+double dinvgamma(double y, double alpha, double beta, int logout){
+  
+  //	Rprintf("alpha = %f\n", alpha);
+  //	Rprintf("beta = %f\n", beta);
+  
+  double ldens;
+  
+  ldens = alpha*log(beta) - lgamma(alpha) - (alpha + 1)*log(y) - (beta/y);
+  
+  if(logout) return ldens;
+  return exp(ldens);
+  
+}
+
+// Normal-Inverse Gamma density
+// the parameterization here is such that mu0 is prior mean value with k0 prior "observations"
+// and s20 is the prior guess for sig2 with nu0 prior "observations"
+double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0, int logout){
+  
+  //	Rprintf("alpha = %f\n", alpha);
+  //	Rprintf("beta = %f\n", beta);
+  
+  double ldens;
+  
+  //	ldens =  0.5*(log(k0) - log(2*M_PI*sig2)) + a0*log(b0) -
+  //	         lgammafn(a0) - (a0 + 1)*log(sig2) -
+  //	         0.5*(1/sig2)*(k0*(mu-mu0)*(mu-mu0) + 2*b0);
+  
+  ldens = R::dnorm(mu, mu0, sqrt(sig2/k0),logout) +
+    dens::dinvgamma(sig2, a0, b0, logout);
+  //	Rprintf("ldens = %f\n", ldens);
+  if(logout){ return ldens;
+  }else{return exp(ldens);}
+  
+}
+}//closes density namespace
+
+namespace similarityf{
+// normal-normal Similarity function with x following normal and m a normal as well (v is fixed).
+// This is the result after integrating over mj.  One could also simply find the
+// ratio between likelihood multiplied by prior divided by posterior
+
+// The double dipper is included as an argument.
+
+double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2, double mle,
+                 int n,  int DD, int cal, int logout){
+  
+  //	Rprintf("m0 = %f\n", m0);
+  //	Rprintf("v2 = %f\n", v2);
+  //	Rprintf("s20 = %f\n", s20);
+  //	Rprintf("sumx = %f\n", sumx);
+  //	Rprintf("sumx2 = %f\n", sumx2);
+  //	Rprintf("n = %d\n", n);
+  
+  double mus, muss, s2s, s2ss;
+  double ld1, ld2, ld3, ld4, ld5, ld6;
+  double out;
+  //	double out1, out2;
+  
+  s2s = 1/((n/v2) + (1/s20));
+  mus = s2s*((1/v2)*sumx + (1/s20)*m0);
+  
+  //	Rprintf("mus = %f\n", mus);
+  //	Rprintf("s2s = %f\n", s2s);
+  
+  s2ss = 1/((n/v2) + (1/s2s));
+  muss = s2ss*((1/v2)*sumx + (1/s2s)*mus);
+  
+  //	Rprintf("muss = %f\n", muss);
+  //	Rprintf("s2ss = %f\n", s2ss);
+  
+  ld1 = -0.5*n*log(2*M_PI*v2) - 0.5*(1/v2)*sumx2;
+  ld2 = R::dnorm(m0, 0, sqrt(s20),1);
+  ld3 = R::dnorm(mus, 0, sqrt(s2s),1);
+  ld4 = R::dnorm(muss, 0, sqrt(s2ss),1);
+  
+  ld5 = R::dnorm(mle, m0, sqrt(s20),1);
+  ld6 = R::dnorm(mle, mus, sqrt(s2s),1);
+  //	Rprintf("ld1 = %f\n", ld1);
+  //	Rprintf("ld2 = %f\n", ld2);
+  //	Rprintf("ld3 = %f\n", ld3);
+  //	Rprintf("ld4 = %f\n", ld4);
+  
+  
+  out = ld1 + ld2 - ld3;
+  //	out1 = ld1 + ld3 - ld4;
+  //	out2 = ld5 - ld6;
+  //	Rprintf("out = %f\n", out);
+  //	Rprintf("out1 = %f\n", out1);
+  if(DD==1) out = ld1 + ld3 - ld4;
+  if(cal==1) out = ld5 - ld6;
+  if(!logout) out = exp(out);
+  return(out);
+  
+}
+
+// normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
+// I didn't carry out integration explicitly over m and v. I simply used the fact that
+// marginal likelihood (similarity) is equal to likelihood x prior / posterior.  This
+// requires inserting a value for m and v which I use 0 and 1.
+
+// The double dipper is included as an argument.
+
+
+double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, double sumx2,
+                   double mnmle, double s2mle, int n, int DD, int cal, int logout){
+  
+  //	Rprintf("sumx = %f\n", sumx);
+  //	Rprintf("sumx2 = %f\n", sumx2);
+  //	Rprintf("n = %d\n", n);
+  
+  double a0, b0, m0s, m0ss, k0s, k0ss, a0s, a0ss, b0s, b0ss;
+  double ld1, ld2, ld3, ld4, ld5, ld6, out;
+  double mu=10, v2=0.1;
+  double xbar = sumx*(1/ (double) n);
+  
+  a0 = 0.5*nu0;
+  b0 = 0.5*nu0*s20;
+  
+  
+  m0s = (k0*m0 + n*xbar)/(k0 + n);
+  k0s = k0 + (double) n;
+  a0s = a0 + 0.5*n;
+  b0s = b0 + 0.5*(sumx2 - n*xbar*xbar) + 0.5*n*k0*(xbar - m0)*(xbar - m0)/(k0+n);
+  
+  m0ss = (k0s*m0s + n*xbar)/(k0s + n);
+  k0ss = k0s + (double) n;
+  a0ss = a0s + 0.5*n;
+  b0ss = b0s + 0.5*(sumx2 - n*xbar*xbar) + 0.5*n*k0s*(xbar - m0s)*(xbar - m0s)/(k0s+n);
+  
+  ld1 = -0.5*n*log(2*M_PI*v2) - 0.5*(1/v2)*(sumx2 - 2*sumx*mu + n*mu*mu);
+  ld2 = dens::dN_IG(mu, v2, m0, k0, a0, b0, 1);
+  ld3 = dens::dN_IG(mu, v2, m0s, k0s, a0s, b0s, 1);
+  ld4 = dens::dN_IG(mu, v2, m0ss, k0ss, a0ss, b0ss, 1);
+  
+  ld5 = dens::dN_IG(mnmle, s2mle, m0, k0, a0, b0, 1);
+  ld6 = dens::dN_IG(mnmle, s2mle, m0s, k0s, a0s, b0s, 1);
+  
+  out = ld1 + ld2 - ld3;
+  
+  
+  
+  if(DD==1) out = ld1 + ld3 - ld4;
+  if(cal==1) out = ld5 - ld6;
+  if(!logout) out = exp(out);
+  
+  //	Rprintf("out = %f\n", out);
+  return(out);
+  
+}
+
+// Similarity function with for a categorical x  dirichlet-multinomial with out
+// where only on object is allocated (x_i is basically univariate that identifies which
+// category ith individual has).  The integral in reality is a product of two ratios,
+// but one of the ratios is constant in terms of $x$ and so disappears in the ratio
+// of similarity functions when updating cluster labels and so is ignored in the
+// function that follows.
+double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logout){
+  
+  int ii, sumc;
+  double tmp1=0.0,tmp2=0.0,tmp3=0.0,tmp4=0.0,tmp5=0.0,tmp6=0.0;
+  double out;
+  //	double ld1, ld2, ld3, ld4, out2, out3;
+  //	double *pi_vec = R_Vector(C);
+  //	double *dirweightsDD = R_Vector(C);
+  //	double *dirweightsDDs = R_Vector(C);
+  
+  //	RprintIVecAsMat("nobsj", nobsj, 1, C);
+  
+  sumc=0;
+  for(ii = 0; ii < C; ii++){
+    sumc = sumc+nobsj(ii);
+    
+    tmp1 = tmp1 + dirweights(ii);
+    tmp2 = tmp2 + lgamma(dirweights(ii));
+    
+    tmp3 = tmp3 + (double) nobsj(ii) + dirweights(ii);
+    tmp4 = tmp4 + lgamma( (double) nobsj(ii) + dirweights(ii));
+    
+    tmp5 = tmp5 + 2*((double) nobsj(ii)) + dirweights(ii);
+    tmp6 = tmp6 + lgamma( 2*((double) nobsj(ii)) + dirweights(ii));
+  }
+  
+  //	Rprintf("tmp3 = %f\n", tmp3);
+  //	Rprintf("tmp5 = %f\n", tmp5);
+  
+  // The next piece of code is for the similarity likelihoodxprior/posterior
+  
+  /*	for(ii=0;ii<C;ii++){
+   sumc = sumc+nobsj[ii];
+   pi_vec[ii] = 1/(double) C;
+   dirweightsDD[ii] = (double) nobsj[ii] + dirweights[ii];
+   dirweightsDDs[ii] = 2*((double) nobsj[ii]) + dirweights[ii];
+  }
+   ld1 = 0.0;
+   for(ii=0;ii<C;ii++){
+   ld1 = ld1 + nobsj[ii]*log(pi_vec[ii]);
+   }
+   ld2 = ddirich(pi_vec, dirweights, C, 1);
+   ld3 = ddirich(pi_vec, dirweightsDD, C, 1);
+   ld4 = ddirich(pi_vec, dirweightsDDs, C, 1);
+   out1 = ld1 + ld2 - ld3;
+   out2 = ld1 + ld3 - ld4;
+   */
+  
+  out = (R::lgammafn(tmp1) - tmp2) + (tmp4 - R::lgammafn(tmp3));
+  
+  
+  //	Rprintf("out = %f\n", out);
+  
+  if(DD==1) out = (R::lgammafn(tmp3) - tmp4) + (tmp6 - R::lgammafn(tmp5));
+  if(sumc==0) out = log(1);
+  if(!logout) out = exp(out);
+  return(out);
+  
+}
+
+}//closes namespace
+
+// [[Rcpp::export]]
+Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, 
+                  arma::vec catvec, double alpha, int cohesion, 
+                  int similarity, int consim, arma::vec y, arma::vec xcon, 
+                  arma::vec xcat, int npred, arma::mat xconp, arma::mat xcatp, 
+                  arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, 
+                  int calibration){
+  
+  // l - MCMC index
+  // ll - MCMC index for saving iterates
+  // i - individual index
+  // ii - second individual index (for double for loops)
+  // iii - third individual index
+  // c - categorical variable index
+  // p - number of covariates index
+  // pp - second covariate index
+  // j - cluster index
+  // t - subset of covariates index
+  int l, ll, i, ii, c, p, pp, j, t;
+  
+  double max_C, nout, sumx, sumx2;
+  //number of saved iterations
+  nout = (iter - burn)/(thin);
+  Rcpp::Rcout << "nout =  " << nout << std::endl;
+  //numero totale di covariate
+  //int ncov = ncon + ncat;
+  
+  //maximum number of categories for categorical covariates
+  max_C = catvec(0);
+  
+  for(c = 0; c < (ncat); c++){
+    if(max_C < catvec[c]) max_C = catvec[c];
+  }
+  
+  //Rprintf("max_C = %f\n", max_C);
+  
+  //sum of response vector
+  double sumy = 0.0;
+  for(i = 0; i < nobs; i++){
+    sumy += y(i);
+  }
+  
+  //Rprintf("sumy = %f\n", sumy);
+  
+  //compute mean and variance of each continuous covariate
+  arma::vec mnmle(ncon);
+  arma::vec s2mle(ncon);
+  for(p = 0; p < ncon; p++){
+    sumx = 0.0, sumx2 = 0.0;
+    for(i = 0; i < nobs; i ++){
+      sumx = sumx + xcon(i*(ncon) + p);
+      sumx2 = sumx2 + xcon(i*(ncon) + p)*xcon(i*(ncon) + p);
+    }
+    
+    mnmle(p) = sumx/((double) nobs);
+    s2mle(p) = sumx2/((double) nobs) - mnmle(p)*mnmle(p);
+  }
+  
+  //RprintVecAsMat("mnmle", mnmle, 1, *ncon);
+  //RprintVecAsMat("s2mle", s2mle, 1, *ncon);
+  
+  /////////////////////////////////
+  // storing single MCMC iterate
+  ////////////////////////////////
+  
+  double mu0_iter = 0.0;
+  
+  //upper bound on sig20 
+  //that is upper bound of uniform prior on cluster mean variance
+  double sig20_iter = 0.5 * modelpriors(3); 
+  
+  int nclus_iter = 0;
+  int iaux;
+  arma::vec Si_iter(nobs);
+  Si_iter.fill(1);
+  arma::vec nh(nobs);
+  nh.fill(0);
+  arma::vec nhc((nobs)*(ncat));
+  
+  arma::vec xcontmp(nobs);
+  
+  //da capire bene!!
+  for(i = 0; i < nobs; i++){
+    for(ii = 0; ii < nobs; ii++){
+      if(Si_iter(i) == ii+1) nh(ii) = nh(ii) + 1;
+    }
+  }
+  
+  for(i = 0; i < nobs; i++){
+    if(nh(i) > 0) nclus_iter += 1;
+  }
+  
+  
+  arma::vec sig2h(nobs);
+  sig2h.fill(0.5*modelpriors(3));
+  arma::vec muh(nobs);
+  muh.fill(0.0);
+  
+  /////////////////////////////////////
+  // Storage for posterior predictive
+  /////////////////////////////////////
+  
+  arma::vec ispred_iter(nobs);
+  ispred_iter.fill(0.0);
+  
+  arma::vec ppred_iter(npred);
+  arma::vec rbpred_iter(npred);
+  arma::vec predclass_iter(npred);
+  arma::vec predclass_prob_iter(npred * nobs);
+  
+  ////////////////////////////////////////
+  // Storage needed to update parameters
+  ////////////////////////////////////////
+  
+  // update Si (cluster labels);
+  int nhtmp;
+  double auxm, auxs2, tmp;//, npdN, npdY, npd;
+  double mudraw, sdraw, maxph, denph, cprobh, uu;
+  double lgconN, lgconY, lgcatN, lgcatY, lgcondraw, lgcatdraw;
+  double lgcont, lgcatt;
+  
+  arma::vec ph(nobs);
+  ph.fill(0.0);
+  arma::vec probh(nobs);
+  probh.fill(0.0);
+  
+  arma::vec gtilN(nobs+1);
+  gtilN.fill(0.0);
+  arma::vec gtilY(nobs+1);
+  gtilY.fill(0.0);
+  arma::vec lgtilN(nobs+1);
+  lgtilN.fill(0.0);
+  arma::vec lgtilY(nobs+1);
+  lgtilY.fill(0.0);
+  
+  double sgY, sgN,  lgtilNk, lgtilYk, maxgtilY, maxgtilN;
+  
+  
+  // update muh (mustar)
+  double mstar, s2star;
+  
+  // update mu0 (mean mustar)
+  double summu;
+  
+  // update sig20 (variance of mustar)
+  double llo, lln, llr, os0, ns0;
+  
+  // update sig2 (sigmastar)
+  double osig, nsig;
+  
+  // Stuff for out of sample predictions
+  double lgcon0, lgcat0, mupred, sig2pred;
+  
+  // Stuff to compute lpml (log pseudo marginal likelihood), 
+  // likelihood, and WAIC widely applicable information criterion (WAIC), 
+  // also known as Watanabe–Akaike information criterion
+  double lpml_iter, elppdWAIC;
+  arma::vec CPOinv(nobs);
+  CPOinv.fill(0.0);
+  arma::vec like_iter(nobs);
+  like_iter.fill(0.0);
+  arma::vec mnlike(nobs);
+  mnlike.fill(0.0);
+  arma::vec mnllike(nobs);
+  mnllike.fill(0.0);
+  
+  //	Hyper-prior parameters
+  
+  // priors for mu0
+  double m = modelpriors(0); 
+  double s2 = modelpriors(1);
+  
+  // prior values for sig2h and sig20;
+  double smin=0, smax = modelpriors(2);
+  double s0min=0, s0max = modelpriors(3);
+  
+  // DP weight parameter
+  double alphadp = alpha;
+  
+  // Similarity function parameters
+  // dirichlet denominator parameter
+  arma::vec dirweights(max_C);
+  dirweights.fill(similparam(5));
+  //	double m0=0.0, s20=0.5, v=1.0, k0=1.0, nu0=1.0;
+  double m0 = similparam(0);
+  double s20 = similparam(1);
+  double v = similparam(2);
+  double k0 = similparam(3);
+  double nu0 = similparam(4);
+  
+  // For the variance similarity function
+  //double alpha_vs = similparam(6);
+  
+  // M-H tuning parameters
+  double csigSIG0 = mhtune(0);
+  double csigSIG = mhtune(1);
+  
+  //storage for return
+  arma::vec mu(nout * nobs, arma::fill::ones); 
+  arma::vec sig2(nout * nobs, arma::fill::ones); 
+  arma::vec Si(nout * nobs, arma::fill::ones); 
+  arma::vec like(nout * nobs, arma::fill::ones); 
+  arma::vec ispred(nout * nobs, arma::fill::ones); 
+  arma::vec zi(nout * nobs, arma::fill::ones); 
+  arma::vec isordpred(nout * nobs, arma::fill::ones); 
+  
+  arma::vec mu0(nout, arma::fill::ones);
+  arma::vec sig20(nout, arma::fill::ones);
+  arma::vec nclus(nout, arma::fill::ones);
+  
+  arma::vec ppred(nout * npred, arma::fill::ones); 
+  arma::vec predclass(nout * npred, arma::fill::ones); 
+  arma::vec rbpred(nout * npred, arma::fill::ones); 
+  
+  arma::mat predclass_prob(nout, npred*nobs, arma::fill::ones); 
+  
+  double WAIC = 1.0;
+  double lpml = 1.0;
+  
+  ll = 0;
+  
+  ////////////////////////////////////////
+  //
+  // HERE COMES THE MCMC
+  //
+  ////////////////////////////////////////  
+  
+  for(l = 0; l < iter; l++){
+    
+    if((l+1) % 10000 == 0){
+    //time_t now;
+    //time(&now);
+    
+    Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
+    //Rprintf("mcmc iter = %d ===================================================== \n", i+1);
+    //Rprintf("%s", ctime(&now));
+    //			RprintIVecAsMat("Si_iter", Si_iter, 1, *nobs);
+    //			RprintVecAsMat("tau2h", tau2h, 1, nclus_iter);
+    }
+    
+    /////////////////////////////////////////
+    // update the cluster labels with NEAL 8 
+    /////////////////////////////////////////
+    
+    for(i = 0; i < nobs; i++){
+      
+      if(nh[Si_iter(i)-1] > 1){
+        
+        // Observation belongs to a non-singleton ...
+        nh(Si_iter(i)-1) = nh(Si_iter(i)-1) - 1;
+        
+      }else{
+        
+        // Observation is a member of a singleton cluster ...
+        
+        iaux = Si_iter(i);
+        
+        if(iaux < nclus_iter){
+          
+          // Need to relabel clusters.  I will do this by swapping cluster labels
+          // Si_iter(i) and nclus_iter along with cluster specific parameters;
+          
+          // All members of last cluster will be assigned subject i's cluster label
+          for(ii = 0; ii < nobs; ii++){
+            if(Si_iter(ii) == nclus_iter){
+              Si_iter(ii) = iaux;
+            }
+          }
+          
+          Si_iter(i) = nclus_iter;
+          
+          // The following steps swaps order of cluster specific parameters
+          // so that the newly labeled subjects from previous step retain
+          // their correct cluster specific parameters
+          
+          auxm = muh(iaux-1);
+          muh(iaux-1) = muh(nclus_iter-1);
+          muh(nclus_iter-1) = auxm;
+          
+          auxs2 = sig2h(iaux-1);
+          sig2h(iaux-1) = sig2h(nclus_iter-1);
+          sig2h(nclus_iter-1) = auxs2;
+          
+          
+          // the number of members in cluster is also swapped with the last
+          nh(iaux-1) = nh(nclus_iter-1);
+          nh(nclus_iter-1) = 1;
+        }
+        
+        
+        // Now remove the ith obs and last cluster;
+        nh(nclus_iter-1) = nh(nclus_iter-1) - 1;
+        nclus_iter = nclus_iter - 1;
+      }
+      
+      // The atoms have been relabeled if necessary and now we need to
+      // Begin the cluster probabilities
+      
+      for(j = 0; j < nclus_iter; j++){
+        
+        lgconY = 0.0;
+        lgconN = 0.0;
+        
+        for(p = 0; p < (ncon); p++){
+          nhtmp = 0;
+          sumx = 0.0;
+          sumx2 = 0.0;
+          for(ii = 0; ii < nobs; ii++){
+            if(ii != i){
+              if(Si_iter(ii) == j+1){
+                tmp = xcon(ii*(ncon) + p);
+                
+                sumx = sumx + tmp;
+                sumx2 = sumx2 + tmp * tmp;
+                
+                nhtmp = nhtmp+1;
+              }
+            }
+          }
+          
+          
+          if(similarity==1){ // Auxilliary
+            if(consim==1){//normal normal
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
+              lgconN = lgconN + lgcont;
+            }
+            if(consim==2){//normal normal inverse gamma
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
+              lgconN = lgconN + lgcont;
+            }
+            
+          }
+          if(similarity==2){ //Double Dipper
+            if(consim==1){//normal normal
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
+              lgconN = lgconN + lgcont;
+            }
+            if(consim==2){//normal normal inverse gamma
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
+              lgconN = lgconN + lgcont;
+            }
+          }
+          
+          // now add jth individual back;
+          
+          xcontmp(nhtmp) = xcon(i*(ncon)+p);
+          sumx = sumx + xcon(i*(ncon)+p);
+          sumx2 = sumx2 + xcon(i*(ncon)+p)*xcon(i*(ncon)+p);
+          nhtmp = nhtmp+1;
+          
+          if(similarity==1){ // Auxilliary
+            if(consim==1){//normal normal
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
+              lgconY = lgconY + lgcont;
+            }
+            if(consim==2){//normal normal inverse gamma
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
+              lgconY = lgconY + lgcont;
+            }
+          }
+          if(similarity==2){ //Double Dipper
+            if(consim==1){//normal normal
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
+              lgconY = lgconY + lgcont;
+            }
+            if(consim==2){
+              //normal normal inverse gamma
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
+              lgconY = lgconY + lgcont;
+            }
+          }
+        }//chiude ciclo su p covariate
+        
+        // Categorical Covariates
+        lgcatY = 0.0;
+        lgcatN = 0.0;
+        for(p = 0; p < (ncat); p++){
+          for(c = 0; c < catvec(p); c++){
+            nhc(c) = 0;
+          }
+          
+          nhtmp = 0;
+          for(ii = 0; ii < nobs; ii++){
+            if(ii != i){
+              if(Si_iter(ii) == (j + 1)){
+                nhc(xcat(ii*(ncat)+p)) = nhc(xcat(ii*(ncat)+p)) + 1; // this needs to be a vector
+                nhtmp += 1;
+              }
+            }
+          }
+          
+          
+          if(similarity == 1){ // Auxiliary
+            //Dirichlet-Multinomial
+            //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+            lgcatN = lgcatN + lgcatt;
+          }
+          if(similarity==2){// Double dipper
+            //Dirichlet-Multinomial
+            //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+            lgcatN = lgcatN + lgcatt;
+          }
+          
+          nhc(xcat(i*(ncat)+p)) += 1;
+          nhtmp += 1;
+          
+          if(similarity==1){
+            //Dirichlet-Multinomial
+            //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+            lgcatY = lgcatY + lgcatt;
+          }
+          if(similarity==2){
+            //Dirichlet-Multinomial
+            //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+            lgcatY = lgcatY + lgcatt;
+          }
+        }
+        
+        gtilY(j) = lgconY + lgcatY;
+        gtilN(j) = lgconN + lgcatN;
+        
+        //questa è la prbabilità che dovrò modificare con la likelihood DM inevce che Normale ASTERISCO
+        ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
+          log((double) nh(j)) + // cohesion part
+          lgcatY - lgcatN + // Categorical part
+          lgconY - lgconN;  // Continuous part
+        
+        if(calibration == 2){
+          ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
+            log((double) nh(j)) + // cohesion part
+            (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
+        }
+        
+        // Uniform cohesion
+        if(cohesion==2){
+          ph(j) = ph(j) - log((double) nh(j));
+        }
+      }//chiude il ciclo sui j cluster
+      
+      // Now need to generate auxiliary variable from the prior so that there is
+      // possibility of new cluster
+      mudraw = R::rnorm(mu0_iter, sqrt(sig20_iter));
+      sdraw = R::runif(smin, smax);
+      
+      lgcondraw = 0.0;
+      for(p = 0; p < (ncon); p++){
+        xcontmp(0) = xcon(i*(ncon)+p);
+        
+        if(similarity == 1){ // Auxiliary
+          if(consim == 1){
+            lgcont = similarityf::gsimconNN(m0,v,s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),1,0,0, 1);
+            lgcondraw = lgcondraw + lgcont;
+          }
+          if(consim == 2){
+            lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, xcontmp(0), xcontmp(0)*xcontmp(0),mnmle(p),s2mle(p), 1, 0,0, 1);
+            lgcondraw = lgcondraw + lgcont;
+          }
+        }
+        if(similarity == 2){ // Double Dipper
+          if(consim == 1){
+            lgcont = similarityf::gsimconNN(m0,v,s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p), 1, 1, 0, 1);
+            lgcondraw = lgcondraw + lgcont;
+          }
+          if(consim == 2){
+            lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, xcontmp(0), xcontmp(0)*xcontmp(0),mnmle(p),s2mle(p), 1, 1, 0, 1);
+            lgcondraw = lgcondraw + lgcont;
+          }
+        }
+      }
+      
+      // Categorical Covariates
+      lgcatdraw = 0.0;
+      for(p = 0; p < (ncat); p++){
+        for(c = 0; c < catvec(p); c++){
+          nhc(c) = 0;
+        }
+        
+        nhc(xcat(i*(ncat)+p)) = 1;
+        
+        if(similarity == 1){
+          lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+          lgcatdraw = lgcatdraw + lgcatt;
+        }
+        if(similarity == 2){
+          lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+          lgcatdraw = lgcatdraw + lgcatt;
+        }
+      }
+      
+      gtilY(nclus_iter) = lgcondraw + lgcatdraw;
+      gtilN(nclus_iter) = lgcondraw + lgcatdraw;
+      
+      //probabilità alg 8 da modificare ASTERISCO
+      ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
+        log(alphadp) +  // DP part
+        lgcondraw + // Continuous covariate part
+        lgcatdraw; // categorical covariate part
+      if(calibration == 2){
+        ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
+          log(alphadp) +
+          (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+      }
+      
+      if(cohesion == 2){
+        ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
+      }
+      
+      if(calibration == 1){
+        maxgtilN = gtilN(0);
+        maxgtilY = gtilY(0);
+        for(j = 1; j < nclus_iter + 1; j++){
+          
+          if(maxgtilN < gtilN(j)) maxgtilN = gtilN(j);
+          
+          if(j < nclus_iter){
+            if(maxgtilY < gtilY(j)) maxgtilY = gtilY(j);
+          }
+        }
+        
+        sgY=0.0;
+        sgN=0.0;
+        for(j = 0; j < nclus_iter + 1; j++){
+          
+          lgtilN(j) = gtilN(j) - maxgtilN;
+          sgN += exp(lgtilN(j));
+          
+          if(j < nclus_iter){// If x is included in an existing cluster in cannot be a singleton
+            lgtilY(j) = gtilY(j) - maxgtilY;
+            sgY = sgY + exp(lgtilY(j));
+          }
+        }
+        
+        // Calibrate the unnormalized cluster probabilities
+        for(j = 0; j < nclus_iter; j++){
+          lgtilNk = lgtilN(j) - log(sgN);
+          lgtilYk = lgtilY(j) - log(sgY);
+          
+          ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
+            log((double) nh(j)) +  // Cohesion part
+            lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+          
+          if(cohesion == 2){
+            ph(j) = ph(j) - log((double) nh(j));
+          }
+        }
+        
+        // calibration for a singleton
+        ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
+          log(alphadp) +
+          lgtilN(nclus_iter) - log(sgN);
+        
+        if(cohesion==2){// Note with a uniform cohesion, for a new cluster
+          // the value of log(c({nclus_iter}}) = log(1) = 0;
+          ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
+        }
+      }
+      
+      maxph = ph(0);
+      for(j = 1; j < nclus_iter + 1; j++){
+        if(maxph < ph(j)) maxph = ph(j);
+      }
+      
+      denph = 0.0;
+      for(j = 0; j < nclus_iter + 1; j++){
+        ph(j) = exp(ph(j) - maxph);
+        denph += ph(j);
+      }
+      
+      for(j = 0; j < nclus_iter + 1; j++){
+        probh[j] = ph[j]/denph;
+      }
+      
+      uu = R::runif(0.0,1.0);
+      
+      cprobh= 0.0;
+      iaux = nclus_iter + 1;
+      for(j = 0; j < nclus_iter + 1; j++){
+        cprobh = cprobh + probh(j);
+        if (uu < cprobh){
+          iaux = j + 1;
+          break;
+        }
+      }
+      
+      if(iaux <= nclus_iter){
+        
+        Si_iter(i) = iaux;
+        nh(Si_iter(i)-1) += 1;
+        
+      } else {
+        nclus_iter += 1;
+        Si_iter(i) = nclus_iter;
+        nh(Si_iter(i)-1) = 1;
+        
+        muh(Si_iter(i)-1) = mudraw;
+        sig2h(Si_iter(i)-1) = sdraw*sdraw;
+      }
+      
+      // Compute the CPO and lpml using the mixture
+      
+      like_iter(i) = R::dnorm(y(i), muh[Si_iter(i)-1], sig2h(Si_iter(i)-1), 0);
+      
+      if((l > (burn-1)) & (l % (thin) == 0)){
+        
+        // These are needed for WAIC
+        mnlike(i) = mnlike(i) + (like_iter(i))/(double) nout;
+        mnllike(i) = mnllike(i) + log(like_iter(i))/(double) nout;
+        
+        CPOinv(i) = CPOinv(i) + (1/(double) nout)*(1/like_iter(i));
+      }
+    }
+    
+    //////////////////////////////////////////////////
+    // update the cluster value with NEAL 8 (II step)
+    //////////////////////////////////////////////////
+    
+    //muh cluster specific mean
+    
+    for(j = 0; j < nclus_iter; j++){
+      sumy = 0.0;
+      for(i = 0; i < nobs; i++){
+        if(Si_iter(i) == j+1){
+          sumy += y(i);
+        }
+      }
+      
+      s2star = 1/((double) nh(j)/sig2h(j) + 1/sig20_iter);
+      mstar = s2star*( (1/sig2h(j))*sumy + (1/sig20_iter)*mu0_iter);
+      
+      
+      muh(j) = R::rnorm(mstar, sqrt(s2star));
+    }
+    
+    //mu0 prior mean of muh
+    
+    summu = 0.0;
+    for(j = 0; j < nclus_iter; j++){
+      summu = summu + muh(j);
+    }
+    
+    s2star = 1/(((double) nclus_iter/sig20_iter) + (1/s2));
+    mstar = s2star*((1/sig20_iter)*summu + (1/s2)*m);
+    
+    mu0_iter = R::rnorm(mstar, sqrt(s2star));
+    
+    //sigma0 prior variance for muh
+    os0 = sqrt(sig20_iter);
+    ns0 = R::rnorm(os0,csigSIG0);
+    
+    if(ns0 > 0){
+      
+      lln = 0.0;
+      llo = 0.0;
+      for(j = 0; j < nclus_iter; j++){
+        
+        llo = llo + R::dnorm(muh(j), mu0_iter, os0,1);
+        lln = lln + R::dnorm(muh(j), mu0_iter, ns0,1);
+      }
+      
+      llo = llo + R::dunif(os0, s0min, s0max, 1);
+      lln = lln + R::dunif(ns0, s0min, s0max, 1);
+      
+      
+      llr = lln - llo;
+      uu = R::runif(0,1);
+      
+      if(log(uu) < llr){
+        sig20_iter = ns0*ns0;
+      }
+    }
+    
+    // Update sig2h  cluster specific variance parameters with metropolis and Uniform prior.
+    
+    
+    for(j = 0; j < nclus_iter; j++){
+      osig = sqrt(sig2h(j));
+      nsig = R::rnorm(osig,csigSIG);
+      if((nsig > 0) & (nsig < smax)){
+        
+        lln = 0.0;
+        llo = 0.0;
+        for(i = 0; i < nobs; i++){
+          if(Si_iter(i) == j+1){
+            llo = llo + R::dnorm(y(i), muh(j), osig,1);
+            lln = lln + R::dnorm(y(i), muh(j), nsig,1);
+          }
+        }
+        
+        llo = llo + R::dunif(osig, smin, smax, 1);
+        lln = lln + R::dunif(nsig, smin, smax, 1);
+        
+        llr = lln - llo;
+        uu = R::runif(0,1);
+        
+        if(log(uu) < llr){
+          sig2h(j) = nsig*nsig;
+        }
+      }
+      
+    }
+    
+    // in sample prediction to assess model fit
+    
+    if((l > (burn-1)) & (l % (thin) == 0)){
+      for(i = 0; i < nobs; i++){
+        ispred_iter(i) = R::rnorm(muh(Si_iter(i)-1), sqrt(sig2h(Si_iter(i)-1)));
+      }
+    }
+    
+    // out of sample prediction using posterior predictive?
+    
+    if((l > (burn-1)) & (l % (thin) == 0)){
+      for(pp = 0; pp < npred; pp++){
+        for(j = 0; j < nclus_iter; j++){
+          lgconN = 0.0;
+          lgconY = 0.0;
+          for(p=0; p<(ncon); p++){
+            nhtmp = 0;
+            for(i = 0; i < nobs; i++){
+              if(Si_iter(i) == j+1){
+                xcontmp[nhtmp] = xcon(i*(ncon)+p); //create cluster specific x-vector
+                nhtmp = nhtmp+1;
+              }
+            }
+            
+            sumx = 0.0;
+            sumx2 = 0.0;
+            for(t = 0; t < nhtmp; t++){
+              sumx = sumx + xcontmp(t);
+              sumx2 = sumx2 + xcontmp(t)*xcontmp(t);
+            }
+            
+            if(similarity == 1){
+              if(consim == 1){
+                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
+                lgconN = lgconN + lgcont;
+              }
+              if(consim == 2){
+                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
+                lgconN = lgconN + lgcont;
+              }
+            }
+            if(similarity == 2){
+              if(consim == 1){
+                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
+                lgconN = lgconN + lgcont;
+              }
+              if(consim == 2){
+                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
+                lgconN = lgconN + lgcont;
+              }
+            }
+            
+            // now add ppth prediction to cluster;
+            xcontmp(nhtmp) = xconp(pp*(ncon)+p);
+            sumx = sumx + xconp(pp*(ncon)+p);
+            sumx2 = sumx2 + xconp(pp*(ncon)+p)*xconp(pp*(ncon)+p);
+            nhtmp += 1;
+            
+            if(similarity == 1){ // Auxilliary
+              if(consim == 1){
+                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
+                lgconY = lgconY + lgcont;
+              }
+              if(consim == 2){
+                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
+                lgconY = lgconY + lgcont;
+              }
+            }
+            if(similarity == 2){ // Double Dipper
+              if(consim == 1){
+                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
+                lgconY = lgconY + lgcont;
+              }
+              if(consim == 2){
+                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
+                lgconY = lgconY + lgcont;
+              }
+            }
+          } // This ends the loop through ncon continuous covariates
+          // (chiude sulle p)
+          
+          lgcatY = 0.0;
+          lgcatN = 0.0;
+          for(p = 0; p<(ncat); p++){
+            for(c = 0; c < catvec(p); c++){
+              nhc(c) = 0;
+            }
+            nhtmp = 0;
+            for(i = 0; i < nobs; i++){
+              if(Si_iter(i) == j + 1){
+                nhc(xcat(i*(ncat)+p)) += 1; // this needs to be a vector
+                nhtmp = nhtmp+1;
+              }
+            }
+            
+            if(similarity == 1){
+              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+              lgcatN = lgcatN + lgcatt;
+            }
+            if(similarity == 2){
+              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+              lgcatN = lgcatN + lgcatt;
+            }
+            
+            nhc(xcatp(pp*(ncat)+p)) += 1;
+            nhtmp=nhtmp + 1;
+            
+            if(similarity == 1){
+              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+              lgcatY = lgcatY + lgcatt;
+            }
+            if(similarity == 2){
+              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+              lgcatY = lgcatY + lgcatt;
+            }
+          }//chiude sulle p
+          
+          // These are for calibration 1
+          gtilY(j) = lgconY + lgcatY;
+          gtilN(j) = lgconN + lgcatN;
+          
+          ph(j) = log((double) nh(j)) +
+            lgcatY - lgcatN +
+            lgconY - lgconN;
+          
+          if(calibration == 2){
+            ph(j) = log((double) nh(j)) +
+              (1/((double)ncon + (double)ncat))*
+              (lgcatY + lgconY - lgcatN - lgconN);
+          }
+          
+          if(cohesion == 2) ph(j) =  ph(j) - log((double) nh(j));
+        } // ends loop through existing clusters. (j)
+        
+        // No evaluate probability of being assigned to own cluster
+        lgcon0 = 0.0;
+        for(p = 0; p < ncon; p++){
+          xcontmp(0) = xconp(pp*(ncon)+p);
+          if(similarity == 1){
+            if(consim==1){
+              lgcon0 += similarityf::gsimconNN(m0,v,s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),1,0,0,1);
+            }
+            if(consim == 2){
+              lgcon0 = lgcon0 + similarityf::gsimconNNIG(m0, k0, nu0, s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),s2mle(p),1,0,0,1);
+            }
+          }
+          if(similarity == 2){
+            if(consim == 1){
+              lgcon0 += similarityf::gsimconNN(m0,v,s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),1,1,0,1);
+            }
+            if(consim == 2){
+              lgcon0 = lgcon0 + similarityf::gsimconNNIG(m0, k0, nu0, s20,xcontmp(0),xcontmp(0)*xcontmp(0),mnmle(p),s2mle(p),1, 1, 0,1);
+            }
+          }
+        }
+        
+        lgcat0 = 0.0;
+        for( p = 0; p < (ncat); p++){
+          for(c = 0; c < catvec(p); c++){
+            nhc(c) = 0;
+          }
+          
+          nhc(xcatp(pp*(ncat)+p)) = 1;
+          
+          if(similarity == 1){
+            lgcat0 = lgcat0 + similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+          }
+          if(similarity == 2){
+            lgcat0 = lgcat0 + similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+          }
+          
+          gtilY(nclus_iter) = lgcat0 + lgcon0;
+          gtilN(nclus_iter) = lgcat0 + lgcon0;
+          
+          ph(nclus_iter) = log((double) alphadp) + lgcon0 + lgcat0;
+          
+          if(cohesion == 2) ph(nclus_iter) = ph(nclus_iter) - log((double) alphadp);
+          
+          // This is the calibration used when the similarity is standardized by
+          
+          if(calibration == 1){
+            maxgtilN = gtilN(0);
+            maxgtilY = gtilY(0);
+            for(j = 1; j < nclus_iter + 1; j++){
+              if(maxgtilN < gtilN(j)){
+                maxgtilN = gtilN(j);
+              }
+              if(j < nclus_iter){
+                if(maxgtilY < gtilY(j)) maxgtilY = gtilY(j);
+              }
+            }
+            
+            sgY=0.0;
+            sgN=0.0;
+            
+            for(j = 0; j < nclus_iter + 1; j++){
+              lgtilN(j) = gtilN(j) - maxgtilN;
+              sgN = sgN + exp(lgtilN(j));
+              
+              if(j < nclus_iter){
+                lgtilY(j) = gtilY(j) - maxgtilY;
+                sgY = sgY + exp(lgtilY(j));
+              }
+            }
+            
+            for(j = 0; j < nclus_iter; j++){
+              lgtilNk = lgtilN(j) - log(sgN);
+              lgtilYk = lgtilY(j) - log(sgY);
+              
+              ph(j) = log((double) nh(j)) + lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+              
+              if(cohesion == 2){
+                ph(j) = ph(j) - log((double) nh(j));
+              }
+            }
+            // calibration for a singleton
+            ph(nclus_iter) =  log(alphadp) +
+              lgtilN(nclus_iter) - log(sgN);
+            
+            if(cohesion == 2){// Note with a uniform cohesion, for a new cluster
+              // the value of log(c({nclus_iter}}) = log(1) = 0;
+              ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
+            }
+          }
+          // End of calibration used when the similarity is standardized by
+          
+          maxph = ph(0);
+          for(j = 1; j < nclus_iter + 1; j++){
+            if(ph(j) > maxph) maxph = ph(j);
+          }
+          
+          denph = 0.0;
+          for(j = 0; j < nclus_iter + 1; j++){
+            ph(j) = exp(ph(j) - maxph);
+            denph = denph + ph(j);
+          }
+          
+          for(j = 0; j < nclus_iter+1; j++){
+            probh(j) = ph(j)/denph;
+          }
+          
+          uu = R::runif(0.0,1.0);
+          
+          cprobh= 0.0;
+          
+          for(j = 0; j < nclus_iter + 1; j++){
+            cprobh = cprobh + probh(j);
+            if (uu < cprobh){
+              iaux = j + 1;
+              break;
+            }
+          }
+          
+          if(iaux <= nclus_iter){
+            mupred = muh((iaux-1));
+            sig2pred = sig2h((iaux-1));
+          }else{
+            mupred = R::rnorm(mu0_iter, sqrt(sig20_iter));
+            sig2pred = R::runif(smin, smax);
+            sig2pred = sig2pred*sig2pred;
+          }
+          
+          ppred_iter(pp) = R::rnorm(mupred, sqrt(sig2pred));
+          predclass_iter(pp) = iaux;
+          
+          mupred = 0.0;
+          for(j = 0; j < nclus_iter; j++){
+            mupred = mupred +  muh(j)*probh(j);
+            predclass_prob_iter(pp*(nobs) + j) = probh(j);
+          }
+          mupred = mupred + R::rnorm(mu0_iter, sqrt(sig20_iter))*probh(nclus_iter);
+          
+          rbpred_iter(pp) = mupred;
+        }//chiude p
+        
+      }//chiude pp
+    }
+    
+    //////////////////////
+    // Save MCMC iterates	
+    //////////////////////
+    
+    if((l > (burn-1)) & ((l + 1) % thin == 0)){
+      mu0(ll) = mu0_iter;
+      sig20(ll) = sig20_iter;
+      
+      nclus(ll) = nclus_iter;
+      
+      for(i = 0; i < nobs; i++){
+        mu(ll*(nobs) + i) = muh(Si_iter(i)-1);
+        sig2(ll*(nobs) + i) = sig2h(Si_iter(i)-1);
+        Si(ll*(nobs) + i) = Si_iter(i);
+        
+        like(ll*(nobs) + i) = like_iter(i);
+        ispred(ll*(nobs) + i) = ispred_iter(i);
+      }
+      
+      for(pp = 0; pp < npred; pp++){
+        ppred(ll*(npred) + pp) = ppred_iter(pp);
+        predclass(ll*(npred) + pp) = predclass_iter(pp);
+        
+        rbpred(ll*(npred) + pp) = rbpred_iter(pp);
+      }
+      for(pp = 0; pp < (nobs)*(npred); pp++){
+        predclass_prob(ll*((nobs)*(npred)) + pp) = predclass_prob_iter(pp);
+      }
+      
+      ll += 1;
+    }  
+    //Rcpp::Rcout << "ll" << ll << std::endl;
+    //}
+    //riga 1350 gp_code.c
+  }//CLOSES MCMC iterations
+  
+  // calculate LPML
+  lpml_iter=0.0;
+  
+  for(i = 0; i < nobs; i++){
+    lpml_iter += log(1/CPOinv(i));
+  }
+  lpml = lpml_iter;
+  
+  
+  // Computing WAIC  (see Gelman article in lit review folder)
+  
+  elppdWAIC = 0.0;
+  for(i = 0; i < nobs; i++){
+    elppdWAIC += (2*mnllike(i) - log(mnlike(i)));
+  }
+  
+  WAIC = -2*elppdWAIC;
+  
+  //RETURN
+  return Rcpp::List::create(Rcpp::Named("mu") = mu,
+                            Rcpp::Named("sig2") = sig2,
+                            Rcpp::Named("Si") = Si,
+                            Rcpp::Named("like") = like,
+                            Rcpp::Named("ispred") = ispred,
+                            Rcpp::Named("zi") = zi,
+                            Rcpp::Named("isordpred") = isordpred,
+                            Rcpp::Named("mu0") = mu0,
+                            Rcpp::Named("sig20") = sig20,
+                            Rcpp::Named("nclus") = nclus,
+                            Rcpp::Named("ppred") = ppred,
+                            Rcpp::Named("predclass") = predclass,
+                            Rcpp::Named("rbpred") = rbpred,
+                            Rcpp::Named("predclass_prob") = predclass_prob,
+                            Rcpp::Named("WAIC") = WAIC,
+                            Rcpp::Named("lpml") = lpml);
+}
