@@ -240,7 +240,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   // ll - MCMC index for saving iterates
   // i - individual index
   // ii - second individual index (for double for loops)
-  // iii - third individual index
   // c - categorical variable index
   // p - number of covariates index
   // pp - second covariate index
@@ -262,17 +261,13 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     if(max_C < catvec[c]) max_C = catvec[c];
   }
   
-  //Rprintf("max_C = %f\n", max_C);
-  
   //sum of response vector
   double sumy = 0.0;
   for(i = 0; i < nobs; i++){
     sumy += y(i);
   }
   
-  //Rprintf("sumy = %f\n", sumy);
-  
-  //compute mean and variance of each continuous covariate
+    //compute mean and variance of each continuous covariate
   arma::vec mnmle(ncon);
   arma::vec s2mle(ncon);
   for(p = 0; p < ncon; p++){
@@ -285,9 +280,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     mnmle(p) = sumx/((double) nobs);
     s2mle(p) = sumx2/((double) nobs) - mnmle(p)*mnmle(p);
   }
-  
-  //RprintVecAsMat("mnmle", mnmle, 1, *ncon);
-  //RprintVecAsMat("s2mle", s2mle, 1, *ncon);
   
   /////////////////////////////////
   // storing single MCMC iterate
@@ -309,7 +301,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   
   arma::vec xcontmp(nobs);
   
-  //da capire bene!!
+  //cfr adr1
   for(i = 0; i < nobs; i++){
     for(ii = 0; ii < nobs; ii++){
       if(Si_iter(i) == ii+1) nh(ii) = nh(ii) + 1;
@@ -458,14 +450,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   for(l = 0; l < iter; l++){
     
     if((l+1) % 10000 == 0){
-    //time_t now;
-    //time(&now);
-    
-    Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
-    //Rprintf("mcmc iter = %d ===================================================== \n", i+1);
-    //Rprintf("%s", ctime(&now));
-    //			RprintIVecAsMat("Si_iter", Si_iter, 1, *nobs);
-    //			RprintVecAsMat("tau2h", tau2h, 1, nclus_iter);
+      Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
     }
     
     /////////////////////////////////////////
@@ -474,29 +459,30 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     
     for(i = 0; i < nobs; i++){
       
-      if(nh[Si_iter(i)-1] > 1){
-        
-        // Observation belongs to a non-singleton ...
+      if(nh(Si_iter(i)-1) > 1){
+        // l'osservazione NON è un singoletto 
+        //Neal lo chiama n_{-1, c}
+        //nel modello di Raffaele S_{\tilde{j}}^{a\star, -i}
         nh(Si_iter(i)-1) = nh(Si_iter(i)-1) - 1;
-        
       }else{
-        
-        // Observation is a member of a singleton cluster ...
-        
+        // l'osservazione è un singoletto 
         iaux = Si_iter(i);
-        
         if(iaux < nclus_iter){
+          //questa condizione è vera se il singoletto "sta in mezzo" a non-singleton clusters
+          //o meglio il singoletto non sta nell'ultimo cluster
+          //quindi devo fare il relabel dei clusters
+          //
+          // faccio lo swap cluster labels tra Si_iter(i) e nclus_iter
+          // ANCHE cluster specific parameters;
           
-          // Need to relabel clusters.  I will do this by swapping cluster labels
-          // Si_iter(i) and nclus_iter along with cluster specific parameters;
-          
-          // All members of last cluster will be assigned subject i's cluster label
+          // Metto tutti i membri dell'ultimo cluster nel cluster del soggetto i (iaux)
           for(ii = 0; ii < nobs; ii++){
             if(Si_iter(ii) == nclus_iter){
               Si_iter(ii) = iaux;
             }
           }
           
+          //metto il soggetto i (singoletto) come ultimo cluster
           Si_iter(i) = nclus_iter;
           
           // The following steps swaps order of cluster specific parameters
@@ -523,7 +509,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         nclus_iter = nclus_iter - 1;
       }
       
-      // The atoms have been relabeled if necessary and now we need to
+      // The atoms have been relabeled 
       // Begin the cluster probabilities
       
       for(j = 0; j < nclus_iter; j++){
@@ -531,6 +517,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         lgconY = 0.0;
         lgconN = 0.0;
         
+        // Continuous Covariates
         for(p = 0; p < (ncon); p++){
           nhtmp = 0;
           sumx = 0.0;
@@ -575,7 +562,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
             }
           }
           
-          // now add jth individual back;
+          // now add ith individual back;
           
           xcontmp(nhtmp) = xcon(i*(ncon)+p);
           sumx = sumx + xcon(i*(ncon)+p);
@@ -1250,9 +1237,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       
       ll += 1;
     }  
-    //Rcpp::Rcout << "ll" << ll << std::endl;
-    //}
-    //riga 1350 gp_code.c
+    
   }//CLOSES MCMC iterations
   
   // calculate LPML
@@ -1264,7 +1249,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   lpml = lpml_iter;
   
   
-  // Computing WAIC  (see Gelman article in lit review folder)
+  // Computing WAIC  (see Gelman article)
   
   elppdWAIC = 0.0;
   for(i = 0; i < nobs; i++){

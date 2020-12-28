@@ -35,7 +35,7 @@ Il codice **sembra** funzionare abbastanza bene e i tempi credo siano accettabil
 Per promemoria (più che altro per me) segno i prossimi steps:
 
   - [ ] Finisci debug + risistema il codice
-  - [ ] script su dati bear fatto meglio
+  - [X] script su dati bear fatto meglio
   - [ ] testa il codice su scenari Page Quintana (2018)
   - [ ] rinomina y con &eta; per evitare di fare confusione andando avanti (segui notazione file `notex`)
   - [ ] fai diventare &eta; multivariata. vd appunti skype prof. (MVN-Inv Wishart)
