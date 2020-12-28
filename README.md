@@ -38,13 +38,13 @@ Per promemoria (più che altro per me) segno i prossimi steps:
   - [ ] script su dati bear fatto meglio
   - [ ] testa il codice su scenari Page Quintana (2018)
   - [ ] rinomina y con &eta; per evitare di fare confusione andando avanti (segui notazione file `notex`)
-  - [ ] fai diventare $$\eta4$ multivariata. vd appunti skype prof. (MVN-Inv Wishart)
+  - [ ] fai diventare &eta; multivariata. vd appunti skype prof. (MVN-Inv Wishart)
   - [ ] studia e implementa Reuse algorithm Favaro e Teh
   - [ ] Inserisci il modello nel sampling scheme MD 
-  - [ ] aggiungi le $$\boldsymbol{Z}$$
-  - [ ] rendi $$\boldsymbol{\beta}$$ adattivi cfr paper Griffin e Walker
+  - [ ] aggiungi le **Z**
+  - [ ] rendi &beta; adattivi cfr paper Griffin e Walker
   
 ### Questioni:
-Per trasferire oggetti dalla funzione Rcpp a R ho usato una Lista. forse è brutale come soluzione, ma "sicura". Sicuramente si potrebbe fare diversamente usando i puntatori, ma da quello che ho capito è sconsigliato usarli con Rcpp. In ogni caso il guadagno computazionale in questo caso sarebbe minimo, visto che servirebbero solo per restituire gli output.
+Per trasferire oggetti dalla funzione `Rcpp` a `R` ho usato una Lista. forse è brutale come soluzione, ma "sicura". Sicuramente si potrebbe fare diversamente usando i puntatori, ma da quello che ho capito è sconsigliato usarli con Rcpp. In ogni caso il guadagno computazionale in questo caso sarebbe minimo, visto che servirebbero solo per restituire gli output.
 
-nel file `notex` $$\alpha$$ e $$M$$ sono la stessa cosa? CHIEDI!!
+nel file `notex` &alpha; e M sono la stessa cosa? CHIEDI!!
