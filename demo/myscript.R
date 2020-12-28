@@ -26,7 +26,7 @@ out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, alpha=1.0,
         modelpriors = c(0, 100^2, 0.5*sd(Y), 100),
         mhtune=c(1, 10),
         iter=100000,burn=50000,thin=50)
-pairs(bear[trainObs,ck],col=out$Si[1,], pch=out$Si[1,])
+pairs(bear[trainObs,ck], col=out$Si[1,], pch=out$Si[1,])
 
 ## plot MCMC iterats
 plot(density(out$mu[,1:10]),type='l')

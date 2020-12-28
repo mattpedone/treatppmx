@@ -5,7 +5,7 @@
 #### How to initialize cluster counts
 
 <!--- qui devo metterci immagine -->
-
+![image](schema_adr1.jpg)
 ##### Pseudocode
 
 - n &in; N *number of observations*
@@ -21,7 +21,7 @@
 
 ##### NB
 
-Il vettore delle label `Si` indica i cluster non come `C++` (potrebbe creare confusione), quindi le etichette saranno inizieranno da 1. 
+Il vettore delle label `Si` indica i cluster non come `C++` (potrebbe creare confusione), quindi le etichette inizieranno da 1.
 Per verificare se un cluster è ''popolato'' o è un singoletto userò il vettore `Si` ed il suo indice come indice:
 
 > `if(nh(Si(i)-1) > 1)`  
