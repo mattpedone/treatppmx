@@ -5,7 +5,7 @@ Questa è una repo per condividere il codice e il *work in progress* del progett
 
 Ho iniziato costruendo il modello PPMx che è presentato nel paper *Page Quintana (2018) Stat Comp*. Ho guardato molto al codice di Page nel pacchetto, spero non sia un problema. 
 
-Al momento il modello implementato è quello nell'equazione (15) di Page Quintana (2018), quindi la &y; è ancora univariata. Le opzioni già implementate prevedono: 
+Al momento il modello implementato è quello nell'equazione (15) di Page Quintana (2018), quindi la y è ancora univariata. Le opzioni già implementate prevedono: 
 
   * **cohesion function**:
 
@@ -37,7 +37,7 @@ Per promemoria (più che altro per me) segno i prossimi steps:
   - [ ] Finisci debug + risistema il codice
   - [ ] script su dati bear fatto meglio
   - [ ] testa il codice su scenari Page Quintana (2018)
-  - [ ] rinomina y con $$\eta$$ per evitare di fare confusione andando avanti (segui notazione file `notex`)
+  - [ ] rinomina y con &eta; per evitare di fare confusione andando avanti (segui notazione file `notex`)
   - [ ] fai diventare $$\eta4$ multivariata. vd appunti skype prof. (MVN-Inv Wishart)
   - [ ] studia e implementa Reuse algorithm Favaro e Teh
   - [ ] Inserisci il modello nel sampling scheme MD 
