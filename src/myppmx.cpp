@@ -648,7 +648,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         gtilY(j) = lgconY + lgcatY;
         gtilN(j) = lgconN + lgcatN;
         
-        //questa è la prbabilità che dovrò modificare con la likelihood DM inevce che Normale ASTERISCO
+        //ASTERISCO
         ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
           log((double) nh(j)) + // cohesion part
           lgcatY - lgcatN + // Categorical part
@@ -719,7 +719,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       gtilY(nclus_iter) = lgcondraw + lgcatdraw;
       gtilN(nclus_iter) = lgcondraw + lgcatdraw;
       
-      //probabilità alg 8 da modificare ASTERISCO
+      //ASTERISCO
       ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
         log(alphadp) +  // DP part
         lgcondraw + // Continuous covariate part
