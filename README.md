@@ -5,7 +5,7 @@ Questa è una repo per condividere il codice e il *work in progress* del progett
 
 Ho iniziato costruendo il modello PPMx che è presentato nel paper *Page Quintana (2018) Stat Comp*. Ho guardato molto al codice di Page nel pacchetto, spero non sia un problema. 
 
-Al momento il modello implementato è quello nell'equazione (15) di Page Quintana (2018), quindi la y è ancora univariata. Le opzioni già implementate prevedono: 
+Al momento il modello implementato è quello nell'equazione (15) di *Page Quintana (2018)*, quindi la y è ancora univariata. Le opzioni già implementate prevedono: 
 
   * **cohesion function**:
 
@@ -49,4 +49,6 @@ Per trasferire oggetti dalla funzione `Rcpp` a `R` ho usato una Lista. forse è 
 
 nel file `notex` &alpha; e M sono la stessa cosa? CHIEDI!!
 
-Studiando il codice di Page e vedendo gli appunti nell'**Appendice A** di *Page Quintana (2018) Stat Comp* sembra che venga considerato un solo *empty cluster*. Dalla discussione di *Neal (2000) JCGS* mi sembra di capire che è una valida opzione, soprattutto dal punto di vista computazionale. In questo senso non avrebbe senso usare il *Reuse algorithm* di *Favaro and Teh (2013) Stat Sci* (visto che usando un solo *auxiliary parameter*) non ci sono *discardeed draws*. D'altra parte *Neal (2000) JCGS* fa vedere come aumentare il numero di *auxiliary parameters* riduca l'autocorrelazione per il numero di clusters ed i relativi *cluster specific parameters*. Forse per evitare i costi computazionali dei *discarded draws* *Page Quintana (2018) Stat Comp* avevano scelto di usare un solo *auxiliary parameter*, considerando il *tradeoff* con l'autocorrelazione sostenibile. Usare *Reuse algorithm* potrebbe essere vantaggioso in questo senso.
+nel file `docs/adr1.md` ci stanno alcuni appunti per spiegare come sono fatti i vettori delle label e delle cardinalità dei singoli clusters.
+
+Studiando il codice di Page e vedendo gli appunti nell'**Appendice A** di *Page Quintana (2018) Stat Comp* sembra che venga considerato un solo *empty cluster*. Dalla discussione di *Neal (2000) JCGS* mi sembra di capire che è una valida opzione, soprattutto dal punto di vista computazionale. In questo senso non avrebbe senso usare il *Reuse algorithm* di *Favaro and Teh (2013) Stat Sci* (visto che usando un solo *auxiliary parameter*) non ci sono *discarded draws*. D'altra parte *Neal (2000) JCGS* fa vedere come aumentare il numero di *auxiliary parameters* riduca l'autocorrelazione per il numero di clusters ed i relativi *cluster specific parameters*. Forse per evitare i costi computazionali dei *discarded draws* *Page Quintana (2018) Stat Comp* avevano scelto di usare un solo *auxiliary parameter*, considerando il *tradeoff* con l'autocorrelazione sostenibile. Usare *Reuse algorithm* potrebbe essere vantaggioso in questo senso.
