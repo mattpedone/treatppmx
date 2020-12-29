@@ -230,7 +230,7 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
 
 // [[Rcpp::export]]
 Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, 
-                  arma::vec catvec, double alpha, int cohesion, 
+                  arma::vec catvec, double alpha, int maug, int cohesion, 
                   int similarity, int consim, arma::vec y, arma::vec xcon, 
                   arma::vec xcat, int npred, arma::mat xconp, arma::mat xcatp, 
                   arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, 
@@ -248,7 +248,8 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   // pp - second covariate index
   // j - cluster index
   // t - subset of covariates index
-  int l, ll, i, ii, c, p, pp, j, t;
+  // mm - for auxiliary parameters
+  int l, ll, i, ii, c, p, pp, j, t, mm;
   
   double max_C, nout, sumx, sumx2;
   //number of saved iterations
@@ -344,23 +345,28 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double lgconN, lgconY, lgcatN, lgcatY, lgcondraw, lgcatdraw;
   double lgcont, lgcatt;
   
-  //EXT ph da modificare con (nobs+m)
-  arma::vec ph(nobs);
+  //REUSE
+  /*for(mm = 0; mm < maug; mm++){
+    muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+    saug(mm) = R::runif(smin, smax);
+  }*/
+  arma::vec muaug(maug);
+  muaug.fill(0.0);
+  arma::vec saug(maug);
+  saug.fill(0.0);
+  
+  arma::vec ph(nobs + maug);
   ph.fill(0.0);
-  arma::vec probh(nobs);
+  arma::vec probh(nobs + maug);
   probh.fill(0.0);
   
-  //EXT andrebbero modificati in 
-  //arma::vec gtilN(nobs+m);
-  //arma::vec gtilY(nobs+m);
-  //anche altri 2!
-  arma::vec gtilN(nobs+1);
+  arma::vec gtilN(nobs + maug);
   gtilN.fill(0.0);
-  arma::vec gtilY(nobs+1);
+  arma::vec gtilY(nobs + maug);
   gtilY.fill(0.0);
-  arma::vec lgtilN(nobs+1);
+  arma::vec lgtilN(nobs + maug);
   lgtilN.fill(0.0);
-  arma::vec lgtilY(nobs+1);
+  arma::vec lgtilY(nobs + maug);
   lgtilY.fill(0.0);
   
   double sgY, sgN,  lgtilNk, lgtilYk, maxgtilY, maxgtilN;
@@ -522,10 +528,9 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       
       for(j = 0; j < nclus_iter; j++){
         
+        // Continuous Covariates
         lgconY = 0.0;
         lgconN = 0.0;
-        
-        // Continuous Covariates
         for(p = 0; p < (ncon); p++){
           nhtmp = 0;
           sumx = 0.0;
@@ -602,7 +607,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
               lgconY = lgconY + lgcont;
             }
           }
-        }//chiude ciclo su p covariate
+        }//chiude ciclo su p covariate continue
         
         // Categorical Covariates
         lgcatY = 0.0;
@@ -651,7 +656,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
             lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
             lgcatY = lgcatY + lgcatt;
           }
-        }
+        }//chiude ciclo su p covariate discrete
         
         gtilY(j) = lgconY + lgcatY;
         gtilN(j) = lgconN + lgcatN;
@@ -680,8 +685,11 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       //EXT qui campioni m valori
       //mudraw e sdraw li usi alla fine per salvare il valore eventualmente effettivamente
       //pescato dagli augmented auxiliary parameters
-      mudraw = R::rnorm(mu0_iter, sqrt(sig20_iter));
-      sdraw = R::runif(smin, smax);
+      //REUSE
+      for(mm = 0; mm < maug; mm++){
+        muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+        saug(mm) = R::runif(smin, smax);
+      }
       
       //qui non dovrebbe esserci niente da modificare
       // Continuous Covariates
@@ -732,41 +740,34 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       }
       
       //qui metti ciclo dopo cicli su p ncon e p ncat
-      // for(k = nclus_iter; k < (nclus_iter+m); k++){
-      //  gtilY(k) = lgcondraw + lgcatdraw;
-      //  gtilN(k) = lgcondraw + lgcatdraw;
-      // }
-      gtilY(nclus_iter) = lgcondraw + lgcatdraw;
-      gtilN(nclus_iter) = lgcondraw + lgcatdraw;
-      
-      //ASTERISCO
-      
-      //inserisci quanto segue in un cliclo
-      // for(k = nclus_iter; k < (nclus_iter+m); k++){
-      // ph(k) = ...
-      // }
-      
-      //R::dnorm deve andare in ph(k) 
-      //tutte le opzioni devono modificare ph(k) non ph(nclus_iter)
-      ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
-        log(alphadp) +  // DP part
-        lgcondraw + // Continuous covariate part
-        lgcatdraw; // categorical covariate part
-      if(calibration == 2){
-        ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
-          log(alphadp) +
-          (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
-      }
-      //EXT modifica vd appunti sopra
-      if(cohesion == 2){
-        ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
+      for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
+        gtilY(mm) = lgcondraw + lgcatdraw;
+        gtilN(mm) = lgcondraw + lgcatdraw;
+        }
+      //gtilY(nclus_iter) = lgcondraw + lgcatdraw;
+      //gtilN(nclus_iter) = lgcondraw + lgcatdraw;
+
+      //EXT
+      for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
+        ph(mm) = R::dnorm(y(i), muaug(mm - nclus_iter), saug(mm - nclus_iter), 1) +
+          log(alphadp) +  // DP part
+          lgcondraw + // Continuous covariate part
+          lgcatdraw; // categorical covariate part
+        if(calibration == 2){
+          ph(mm) = R::dnorm(y(i), muaug(mm - nclus_iter), saug(mm - nclus_iter), 1) +
+            log(alphadp) +
+            (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+        }
+        
+        if(cohesion == 2){
+          ph(mm) -= log(alphadp);
+        }
       }
       
-      //qui non dovresti modificare MA CONTROLLA!!
-      if(calibration == 1){
-        maxgtilN = gtilN(0);
-        maxgtilY = gtilY(0);
-        for(j = 1; j < nclus_iter + 1; j++){
+        if(calibration == 1){
+          maxgtilN = gtilN(0);//arma::max(gtilN)
+          maxgtilY = gtilY(0);
+          for(j = 1; j < nclus_iter + maug; j++){//1 - maug
           
           if(maxgtilN < gtilN(j)) maxgtilN = gtilN(j);
           
@@ -774,10 +775,11 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
             if(maxgtilY < gtilY(j)) maxgtilY = gtilY(j);
           }
         }
-        
+          
         sgY=0.0;
         sgN=0.0;
-        for(j = 0; j < nclus_iter + 1; j++){
+          
+        for(j = 0; j < nclus_iter + maug; j++){//1 - maug
           
           lgtilN(j) = gtilN(j) - maxgtilN;
           sgN += exp(lgtilN(j));
@@ -790,9 +792,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         //qui non modificare MA CONTROLLA!!
         // Calibrate the unnormalized cluster probabilities
+          
         for(j = 0; j < nclus_iter; j++){
-          lgtilNk = lgtilN(j) - log(sgN);
-          lgtilYk = lgtilY(j) - log(sgY);
+            lgtilNk = lgtilN(j) - log(sgN);
+            lgtilYk = lgtilY(j) - log(sgY);
           
           ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
             log((double) nh(j)) +  // Cohesion part
@@ -804,50 +807,45 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         }
         
         // calibration for a singleton
-        // EXT qui devi modificare mettendo in un ciclo su k da nclus_iter a nclus_iter+m
-        //bisogna anche considerare quello che Page Quintana (2018) app A chiama p^-1
-        ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
-          log(alphadp) +
-          lgtilN(nclus_iter) - log(sgN);
-        
-        //bisogna anche considerare quello che Page Quintana (2018) app A chiama p^-1
-        if(cohesion==2){// Note with a uniform cohesion, for a new cluster
-          // the value of log(c({nclus_iter}}) = log(1) = 0;
-          ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
+        // EXT
+        for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
+          ph(mm) = R::dnorm(y(i), muaug(mm - nclus_iter), saug(mm - nclus_iter), 1) +
+            log(alphadp) +
+            lgtilN(mm) - log(sgN) - log(maug);//in caso togli -log(maug)
+          
+          if(cohesion==2){// Note with a uniform cohesion, for a new cluster
+            // the value of log(c({nclus_iter}}) = log(1) = 0;
+            ph(mm) -= log(alphadp);
+          }
         }
       }
       
       //NORMALIZZAZIONE PROBABILITà
-      //qui dovrebbe bastare sostiruire nclus_iter + 1 con nclus_iter +m
-      //forse posso sostituire questo ciclo con max
       maxph = ph(0);
-      for(j = 1; j < nclus_iter + 1; j++){
+      for(j = 1; j < nclus_iter + maug; j++){//1 - maug
         if(maxph < ph(j)) maxph = ph(j);
       }
       
-      //qui dovrebbe bastare sostiruire nclus_iter + 1 con nclus_iter +m
-      //forse posso sostituire questo ciclo con sum
       denph = 0.0;
-      for(j = 0; j < nclus_iter + 1; j++){
+      for(j = 0; j < nclus_iter + maug; j++){//1 - maug
         ph(j) = exp(ph(j) - maxph);
         denph += ph(j);
       }
       
-      //qui dovrebbe bastare sostiruire nclus_iter + 1 con nclus_iter +m
-      for(j = 0; j < nclus_iter + 1; j++){
+      for(j = 0; j < nclus_iter + maug; j++){//1 - maug
         probh(j) = ph(j)/denph;
       }
       
       uu = R::runif(0.0,1.0);
       
-      //ATTENZIONE DA CAPIRE BENE
-      //visto che al massimo posso aggiungere un solo cluster alla volta lascerei +1
+      //visto che al massimo posso aggiungere un solo cluster alla volta 
+      //lascerei +1 invece che + maug
       cprobh= 0.0;
       iaux = nclus_iter + 1;
       for(j = 0; j < nclus_iter + 1; j++){
         cprobh = cprobh + probh(j);
         if (uu < cprobh){
-          iaux = j + 1;
+          iaux = j + 1;//arbitrariamente prendo il primo cfr Neal(2000)
           break;
         }
       }
@@ -859,6 +857,9 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
       } else {
         //qui dal vettore di m auxiliary variables salva mudraw & sdraw
+        mudraw = muaug(0);
+        sdraw = saug(0);
+        // REUSE nel reuse qui rinserisci il primo
         nclus_iter += 1;
         Si_iter(i) = nclus_iter;
         nh(Si_iter(i)-1) = 1;

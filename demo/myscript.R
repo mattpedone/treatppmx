@@ -20,13 +20,13 @@ Xtrain <- X[trainObs,,drop=FALSE]
 Xtest <- X[-trainObs,,drop=FALSE]
 
 
-out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, alpha=1.0,
+out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, alpha=1.0, maug = 3,
         similarity=2, consim=2, calibration=2,
         similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1),
         modelpriors = c(0, 100^2, 0.5*sd(Y), 100),
         mhtune=c(1, 10),
         iter=100000,burn=50000,thin=50)
-pairs(bear[trainObs,ck], col=out$Si[1,], pch=out$Si[1,])
+pairs(bear[trainObs,ck], col=out$Si[1000,], pch=out$Si[1000,])
 
 ## plot MCMC iterats
 plot(density(out$mu[,1:10]),type='l')
