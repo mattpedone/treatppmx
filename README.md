@@ -55,8 +55,21 @@ Studiando il codice di Page e vedendo gli appunti nell'**Appendice A** di *Page 
 
 Per adattare codice:
 
-- [ ] estendere il numero di *auxiliary parameters* considerati da 1 a m
+- [X] estendere il numero di *auxiliary parameters* considerati da 1 a m
   - vedi appunti sul codice
   - studia bene ll. 841 ss.
   - implementa in nuovo branch
+- [ ] **controlla** 
+  - non sono sicuro che sia ok. sullo script sui dati bear vengono selezionati molti più clusters con m=3 rispetto a m=1. forse non normalizzo bene?
 - [ ] introdurre *Reuse option*
+  - segui appunti su `myppmx.cpp`
+- [ ] **confronto** *con e senza reuse*
+    - m=1
+    - m=3
+    - m=10
+    - m=30 
+    sulla base 
+    - tempo
+    - autocorrelazione numero clusters
+    - autocorrelazione parametri *cluster specific*
+    
