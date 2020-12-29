@@ -52,3 +52,11 @@ nel file `notex` &alpha; e M sono la stessa cosa? CHIEDI!!
 nel file `docs/adr1.md` ci stanno alcuni appunti per spiegare come sono fatti i vettori delle label e delle cardinalità dei singoli clusters.
 
 Studiando il codice di Page e vedendo gli appunti nell'**Appendice A** di *Page Quintana (2018) Stat Comp* sembra che venga considerato un solo *empty cluster*. Dalla discussione di *Neal (2000) JCGS* mi sembra di capire che è una valida opzione, soprattutto dal punto di vista computazionale. In questo senso non avrebbe senso usare il *Reuse algorithm* di *Favaro and Teh (2013) Stat Sci* (visto che usando un solo *auxiliary parameter*) non ci sono *discarded draws*. D'altra parte *Neal (2000) JCGS* fa vedere come aumentare il numero di *auxiliary parameters* riduca l'autocorrelazione per il numero di clusters ed i relativi *cluster specific parameters*. Forse per evitare i costi computazionali dei *discarded draws* *Page Quintana (2018) Stat Comp* avevano scelto di usare un solo *auxiliary parameter*, considerando il *tradeoff* con l'autocorrelazione sostenibile. Usare *Reuse algorithm* potrebbe essere vantaggioso in questo senso.
+
+Per adattare codice:
+
+- [ ] estendere il numero di *auxiliary parameters* considerati da 1 a m
+  - vedi appunti sul codice
+  - studia bene ll. 841 ss.
+  - implementa in nuovo branch
+- [ ] introdurre *Reuse option*

@@ -236,6 +236,9 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                   arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, 
                   int calibration){
   
+  //serve flag Reuse e m number of auxiliary parameters
+  //fai check su eventuali conflitti nella fnuzione R
+  
   // l - MCMC index
   // ll - MCMC index for saving iterates
   // i - individual index
@@ -341,11 +344,16 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double lgconN, lgconY, lgcatN, lgcatY, lgcondraw, lgcatdraw;
   double lgcont, lgcatt;
   
+  //EXT ph da modificare con (nobs+m)
   arma::vec ph(nobs);
   ph.fill(0.0);
   arma::vec probh(nobs);
   probh.fill(0.0);
   
+  //EXT andrebbero modificati in 
+  //arma::vec gtilN(nobs+m);
+  //arma::vec gtilY(nobs+m);
+  //anche altri 2!
   arma::vec gtilN(nobs+1);
   gtilN.fill(0.0);
   arma::vec gtilY(nobs+1);
@@ -668,9 +676,15 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       
       // Now need to generate auxiliary variable from the prior so that there is
       // possibility of new cluster
+      
+      //EXT qui campioni m valori
+      //mudraw e sdraw li usi alla fine per salvare il valore eventualmente effettivamente
+      //pescato dagli augmented auxiliary parameters
       mudraw = R::rnorm(mu0_iter, sqrt(sig20_iter));
       sdraw = R::runif(smin, smax);
       
+      //qui non dovrebbe esserci niente da modificare
+      // Continuous Covariates
       lgcondraw = 0.0;
       for(p = 0; p < (ncon); p++){
         xcontmp(0) = xcon(i*(ncon)+p);
@@ -697,6 +711,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         }
       }
       
+      //qui non dovrebbe esserci niente da modificare
       // Categorical Covariates
       lgcatdraw = 0.0;
       for(p = 0; p < (ncat); p++){
@@ -716,10 +731,23 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         }
       }
       
+      //qui metti ciclo dopo cicli su p ncon e p ncat
+      // for(k = nclus_iter; k < (nclus_iter+m); k++){
+      //  gtilY(k) = lgcondraw + lgcatdraw;
+      //  gtilN(k) = lgcondraw + lgcatdraw;
+      // }
       gtilY(nclus_iter) = lgcondraw + lgcatdraw;
       gtilN(nclus_iter) = lgcondraw + lgcatdraw;
       
       //ASTERISCO
+      
+      //inserisci quanto segue in un cliclo
+      // for(k = nclus_iter; k < (nclus_iter+m); k++){
+      // ph(k) = ...
+      // }
+      
+      //R::dnorm deve andare in ph(k) 
+      //tutte le opzioni devono modificare ph(k) non ph(nclus_iter)
       ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
         log(alphadp) +  // DP part
         lgcondraw + // Continuous covariate part
@@ -729,11 +757,12 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           log(alphadp) +
           (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
       }
-      
+      //EXT modifica vd appunti sopra
       if(cohesion == 2){
         ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
       }
       
+      //qui non dovresti modificare MA CONTROLLA!!
       if(calibration == 1){
         maxgtilN = gtilN(0);
         maxgtilY = gtilY(0);
@@ -759,6 +788,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           }
         }
         
+        //qui non modificare MA CONTROLLA!!
         // Calibrate the unnormalized cluster probabilities
         for(j = 0; j < nclus_iter; j++){
           lgtilNk = lgtilN(j) - log(sgN);
@@ -774,33 +804,44 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         }
         
         // calibration for a singleton
+        // EXT qui devi modificare mettendo in un ciclo su k da nclus_iter a nclus_iter+m
+        //bisogna anche considerare quello che Page Quintana (2018) app A chiama p^-1
         ph(nclus_iter) = R::dnorm(y(i), mudraw, sdraw, 1) +
           log(alphadp) +
           lgtilN(nclus_iter) - log(sgN);
         
+        //bisogna anche considerare quello che Page Quintana (2018) app A chiama p^-1
         if(cohesion==2){// Note with a uniform cohesion, for a new cluster
           // the value of log(c({nclus_iter}}) = log(1) = 0;
           ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
         }
       }
       
+      //NORMALIZZAZIONE PROBABILITà
+      //qui dovrebbe bastare sostiruire nclus_iter + 1 con nclus_iter +m
+      //forse posso sostituire questo ciclo con max
       maxph = ph(0);
       for(j = 1; j < nclus_iter + 1; j++){
         if(maxph < ph(j)) maxph = ph(j);
       }
       
+      //qui dovrebbe bastare sostiruire nclus_iter + 1 con nclus_iter +m
+      //forse posso sostituire questo ciclo con sum
       denph = 0.0;
       for(j = 0; j < nclus_iter + 1; j++){
         ph(j) = exp(ph(j) - maxph);
         denph += ph(j);
       }
       
+      //qui dovrebbe bastare sostiruire nclus_iter + 1 con nclus_iter +m
       for(j = 0; j < nclus_iter + 1; j++){
-        probh[j] = ph[j]/denph;
+        probh(j) = ph(j)/denph;
       }
       
       uu = R::runif(0.0,1.0);
       
+      //ATTENZIONE DA CAPIRE BENE
+      //visto che al massimo posso aggiungere un solo cluster alla volta lascerei +1
       cprobh= 0.0;
       iaux = nclus_iter + 1;
       for(j = 0; j < nclus_iter + 1; j++){
@@ -817,6 +858,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         nh(Si_iter(i)-1) += 1;
         
       } else {
+        //qui dal vettore di m auxiliary variables salva mudraw & sdraw
         nclus_iter += 1;
         Si_iter(i) = nclus_iter;
         nh(Si_iter(i)-1) = 1;
