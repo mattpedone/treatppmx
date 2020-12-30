@@ -49,11 +49,11 @@ out00 <- my_ppmx(y = Ytrain, X = Xtrain, Xpred = Xtest, cohesion = 1, alpha = 1.
                  similparam = similarityfun, modelpriors = priors, mhtune = MH,
                  iter = 10000, burn = 5000, thin = 1)
 out10 <- my_ppmx(y = Ytrain, X = Xtrain, Xpred = Xtest, cohesion = 1, alpha = 1.0, 
-               maug = 10, reuse = 2, similarity=2, consim=2, calibration=2, 
+               maug = 20, reuse = 2, similarity=2, consim=2, calibration=2, 
                similparam = similarityfun, modelpriors = priors, mhtune = MH,
                iter = 10000, burn = 5000, thin = 1)
 out11 <- my_ppmx(y = Ytrain, X = Xtrain, Xpred = Xtest, cohesion = 1, alpha = 1.0, 
-               maug = 10, reuse = 1, similarity=2, consim=2, calibration=2, 
+               maug = 20, reuse = 1, similarity=2, consim=2, calibration=2, 
                similparam = similarityfun, modelpriors = priors, mhtune = MH,
                iter = 10000, burn = 5000, thin = 1)
 
