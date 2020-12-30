@@ -34,7 +34,7 @@ Le *''estensioni''* apportate al modello di *Page Quintana (2018)* finora sono:
   * *Reuse algorithm* di *Favaro & Teh (2013) Stat Sci*
 
 I files ancora non sono *impacchettati* in maniera rigorosa ma lo script `demo/myscript.R` dovrebbe essere eseguibile senza grossi problemi (`devtools::check()` da un WARNING e una NOTE, ma riferiti alla documentazione e alla cartella `docs` che però è utile per documentare il codice). 
-~Il codice **sembra** funzionare abbastanza bene e i tempi credo siano accettabili. ~ sto scrivendo uno script per fare uno studio e verificare il corretto funzionamento dei metodi.
+~~Il codice **sembra** funzionare abbastanza bene e i tempi credo siano accettabili.~~ sto scrivendo uno script per fare uno studio e verificare il corretto funzionamento dei metodi.
 
 ### Roadmap
 Per promemoria (più che altro per me) segno i prossimi steps:
@@ -44,7 +44,7 @@ Per promemoria (più che altro per me) segno i prossimi steps:
   - [ ] testa il codice su scenari Page Quintana (2018)
   - [ ] rinomina y con &eta; per evitare di fare confusione andando avanti (segui notazione file `notex`)
   - [ ] fai diventare &eta; multivariata. vd appunti skype prof. (MVN-Inv Wishart)
-  - [ ] studia e implementa Reuse algorithm Favaro e Teh
+  - [X] studia e implementa Reuse algorithm Favaro e Teh
   - [ ] Inserisci il modello nel sampling scheme MD 
   - [ ] aggiungi le **Z**
   - [ ] rendi &beta; adattivi cfr paper Griffin e Walker
