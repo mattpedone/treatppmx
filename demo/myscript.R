@@ -20,15 +20,15 @@ Xtrain <- X[trainObs,,drop=FALSE]
 Xtest <- X[-trainObs,,drop=FALSE]
 
 
-out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, alpha=1.0, maug = 3,
-        similarity=2, consim=2, calibration=2,
-        similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1),
-        modelpriors = c(0, 100^2, 0.5*sd(Y), 100),
-        mhtune=c(1, 10),
-        iter=10000,burn=5000,thin=1)
+out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, 
+               alpha=1.0, maug = 3, reuse = 1, similarity=2, 
+               consim=2, calibration=2, similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1),
+                modelpriors = c(0, 100^2, 0.5*sd(Y), 100),
+                mhtune=c(1, 10),
+                iter=10000,burn=5000,thin=1)
 
 plot(out$nc, type="l")
-coda::effectiveSize(out$nc)
+#coda::effectiveSize(out$nc)
 acf(out$nc)
 
 pairs(bear[trainObs,ck], col=out$Si[1000,], pch=out$Si[1000,])

@@ -230,7 +230,7 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
 
 // [[Rcpp::export]]
 Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, 
-                  arma::vec catvec, double alpha, int maug, int cohesion, 
+                  arma::vec catvec, double alpha, int maug, int reuse, int cohesion, 
                   int similarity, int consim, arma::vec y, arma::vec xcon, 
                   arma::vec xcat, int npred, arma::mat xconp, arma::mat xcatp, 
                   arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, 
@@ -345,11 +345,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double lgconN, lgconY, lgcatN, lgcatY, lgcondraw, lgcatdraw;
   double lgcont, lgcatt;
   
-  //REUSE
-  /*for(mm = 0; mm < maug; mm++){
-    muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
-    saug(mm) = R::runif(smin, smax);
-  }*/
   arma::vec muaug(maug);
   muaug.fill(0.0);
   arma::vec saug(maug);
@@ -430,6 +425,14 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   // M-H tuning parameters
   double csigSIG0 = mhtune(0);
   double csigSIG = mhtune(1);
+  
+  // REUSE ALGORITHM
+  if(reuse == 1){
+    for(mm = 0; mm < maug; mm++){
+      muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+      saug(mm) = R::runif(smin, smax);
+    }
+  }
   
   //storage for return
   arma::vec mu(nout * nobs, arma::fill::ones); 
@@ -685,10 +688,12 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       //EXT qui campioni m valori
       //mudraw e sdraw li usi alla fine per salvare il valore eventualmente effettivamente
       //pescato dagli augmented auxiliary parameters
-      //REUSE
-      for(mm = 0; mm < maug; mm++){
-        muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
-        saug(mm) = R::runif(smin, smax);
+      
+      if(reuse == 2){
+        for(mm = 0; mm < maug; mm++){
+          muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+          saug(mm) = R::runif(smin, smax);
+        }
       }
       
       //qui non dovrebbe esserci niente da modificare
@@ -859,7 +864,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         //qui dal vettore di m auxiliary variables salva mudraw & sdraw
         mudraw = muaug(0);
         sdraw = saug(0);
-        // REUSE nel reuse qui rinserisci il primo
+        if(reuse == 1){
+          muaug(0) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+          saug(0) = R::runif(smin, smax);
+        }
         nclus_iter += 1;
         Si_iter(i) = nclus_iter;
         nh(Si_iter(i)-1) = 1;

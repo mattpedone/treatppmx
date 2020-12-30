@@ -28,8 +28,13 @@ Al momento il modello implementato è quello nell'equazione (15) di *Page Quinta
     - continue (N–N e N-NIG)
     - categoriche (DM).
 
-I files ancora non sono *impacchettati* in maniera rigorosa ma lo script `demo/myscript.R` dovrebbe essere eseguibile senza grossi problemi (`devtools::check()` da un paio di WARNING e una NOTE, ma riferiti alla documentazione e al file `demo/00Index` che devo aggiungere). 
-Il codice **sembra** funzionare abbastanza bene e i tempi credo siano accettabili. 
+Le *''estensioni''* apportate al modello di *Page Quintana (2018)* finora sono:
+
+  * *auxiliary parameters*: è possibile scegliere un numero m &#62; 1 (unica opzione nel codice di Page).
+  * *Reuse algorithm* di *Favaro & Teh (2013) Stat Sci*
+
+I files ancora non sono *impacchettati* in maniera rigorosa ma lo script `demo/myscript.R` dovrebbe essere eseguibile senza grossi problemi (`devtools::check()` da un WARNING e una NOTE, ma riferiti alla documentazione e alla cartella `docs` che però è utile per documentare il codice). 
+~Il codice **sembra** funzionare abbastanza bene e i tempi credo siano accettabili. ~ sto scrivendo uno script per fare uno studio e verificare il corretto funzionamento dei metodi.
 
 ### Roadmap
 Per promemoria (più che altro per me) segno i prossimi steps:
@@ -61,7 +66,7 @@ Per adattare codice:
   - implementa in nuovo branch
 - [X] **controlla** 
   - non sono sicuro che sia ok. sullo script sui dati bear all'aumentare di m aumentano i clusters individuati. è dovuto al fatto che diminuisce l'autocorrelazione? ha senso?
-- [ ] introdurre *Reuse option*
+- [X] introdurre *Reuse option*
   - segui appunti su `myppmx.cpp`
 - [ ] **confronto** *con e senza reuse* su dati bear e su scenari *Page Quintana (2018)*
     - m=1

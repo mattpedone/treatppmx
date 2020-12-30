@@ -9,6 +9,9 @@
 #' @param catvec \eqn{ncat \times 1} vector indicating the number of categories for each categorical covariate
 #' @param alpha value of \eqn{\alpha} for cohesion function (concentration parameter in DP)
 #' @param maug number of auxiliary parameters
+#' @param reuse option for the reuse algorithm by Favaro&Teh. integer 1 or 2. 
+#'   1 - reuse algorithm is adopted
+#'   2 - reuse algorithm is NOT adopted
 #' @param cohesion type of cohesion function to use in the PPMx prior 
 #'   1 - Dirichlet process style of cohesion \eqn{c(S) = \alpha \times (\mid S\mid - 1)!}
 #'   2 - Uniform cohesion \eqn{c(S) = 1}
@@ -35,7 +38,7 @@
 # se non funziona l output di myppmx deve essere una lista
 
 my_ppmx <- function(y,X=NULL,Xpred=NULL,
-                          cohesion=1, alpha=1, maug = 3,
+                          cohesion=1, alpha=1, maug = 3, reuse = 1,
                           similarity=1, consim=1,
                           calibration=0,
                           similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
@@ -163,7 +166,8 @@ my_ppmx <- function(y,X=NULL,Xpred=NULL,
   
   out <- myppmx(as.integer(iter), as.integer(burn), as.integer(thin), 
                   as.integer(nobs), as.integer(ncon), as.integer(ncat), 
-                  as.vector(catvec), as.double(alpha), as.integer(maug), as.integer(cohesion), 
+                  as.vector(catvec), as.double(alpha), as.integer(maug), 
+                  as.integer(reuse), as.integer(cohesion), 
                   as.integer(similarity), as.integer(consim), as.vector(y), as.vector(xcon), 
                   as.vector(xcat), as.integer(npred), as.matrix(xconp), as.matrix(xcatp), 
                   as.vector(similparam), as.vector(modelpriors), as.vector(mhtune), 
