@@ -58,6 +58,8 @@ nel file `docs/adr1.md` ci stanno alcuni appunti per spiegare come sono fatti i 
 
 Studiando il codice di Page e vedendo gli appunti nell'**Appendice A** di *Page Quintana (2018) Stat Comp* sembra che venga considerato un solo *empty cluster*. Dalla discussione di *Neal (2000) JCGS* mi sembra di capire che è una valida opzione, soprattutto dal punto di vista computazionale. In questo senso non avrebbe senso usare il *Reuse algorithm* di *Favaro and Teh (2013) Stat Sci* (visto che usando un solo *auxiliary parameter*) non ci sono *discarded draws*. D'altra parte *Neal (2000) JCGS* fa vedere come aumentare il numero di *auxiliary parameters* riduca l'autocorrelazione per il numero di clusters ed i relativi *cluster specific parameters*. Forse per evitare i costi computazionali dei *discarded draws* *Page Quintana (2018) Stat Comp* avevano scelto di usare un solo *auxiliary parameter*, considerando il *tradeoff* con l'autocorrelazione sostenibile. Usare *Reuse algorithm* potrebbe essere vantaggioso in questo senso.
 
+Dai **primissimi risultati** sembra che l'uso di m > 1 sia meglio in termini di autocorrelazione, come ci si aspetta (*Neal (2000)*) ed è ovviamente più costoso computazionalmente. L'uso del Reuse algorithm migliora i tempi computazionali per m>1, ma ha maggiore autocorrelazione... strano? Non mi torna/non capisco perché
+
 Per adattare codice:
 
 - [X] estendere il numero di *auxiliary parameters* considerati da 1 a m
@@ -68,6 +70,9 @@ Per adattare codice:
   - non sono sicuro che sia ok. sullo script sui dati bear all'aumentare di m aumentano i clusters individuati. è dovuto al fatto che diminuisce l'autocorrelazione? ha senso?
 - [X] introdurre *Reuse option*
   - segui appunti su `myppmx.cpp`
+- [ ] errore strano post predictive se burn in corto
+- [ ] inserisci controllo se reuse = true, m deve essere >1
+- [ ] controlla posterior predictive
 - [ ] **confronto** *con e senza reuse* su dati bear e su scenari *Page Quintana (2018)*
     - m=1
     - m=3

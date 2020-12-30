@@ -751,7 +751,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         }
       //gtilY(nclus_iter) = lgcondraw + lgcatdraw;
       //gtilN(nclus_iter) = lgcondraw + lgcatdraw;
-
+      
       //EXT
       for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
         ph(mm) = R::dnorm(y(i), muaug(mm - nclus_iter), saug(mm - nclus_iter), 1) +
@@ -823,6 +823,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
             ph(mm) -= log(alphadp);
           }
         }
+        
       }
       
       //NORMALIZZAZIONE PROBABILITà
@@ -854,7 +855,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           break;
         }
       }
-      
+     
       if(iaux <= nclus_iter){
         
         Si_iter(i) = iaux;
@@ -874,6 +875,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         muh(Si_iter(i)-1) = mudraw;
         sig2h(Si_iter(i)-1) = sdraw*sdraw;
+        
       }
       
       // Compute the CPO and lpml using the mixture
@@ -986,7 +988,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         ispred_iter(i) = R::rnorm(muh(Si_iter(i)-1), sqrt(sig2h(Si_iter(i)-1)));
       }
     }
-    
     // out of sample prediction using posterior predictive?
     
     if((l > (burn-1)) & (l % (thin) == 0)){
@@ -1002,7 +1003,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                 nhtmp = nhtmp+1;
               }
             }
-            
             sumx = 0.0;
             sumx2 = 0.0;
             for(t = 0; t < nhtmp; t++){
@@ -1030,13 +1030,13 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                 lgconN = lgconN + lgcont;
               }
             }
-            
+            //SE BURN IN NON SUFF GRANDE QUI SOTTO DA ERRORE
             // now add ppth prediction to cluster;
             xcontmp(nhtmp) = xconp(pp*(ncon)+p);
             sumx = sumx + xconp(pp*(ncon)+p);
             sumx2 = sumx2 + xconp(pp*(ncon)+p)*xconp(pp*(ncon)+p);
             nhtmp += 1;
-            
+            //SE BURN IN NON SUFF GRANDE QUI  SOPRA DA ERRORE
             if(similarity == 1){ // Auxilliary
               if(consim == 1){
                 lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
@@ -1057,9 +1057,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                 lgconY = lgconY + lgcont;
               }
             }
+            
           } // This ends the loop through ncon continuous covariates
           // (chiude sulle p)
-          
+          //Rcpp::Rcout << "here3" << std::endl;
           lgcatY = 0.0;
           lgcatN = 0.0;
           for(p = 0; p<(ncat); p++){

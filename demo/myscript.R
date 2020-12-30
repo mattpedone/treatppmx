@@ -21,11 +21,11 @@ Xtest <- X[-trainObs,,drop=FALSE]
 
 
 out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, 
-               alpha=1.0, maug = 3, reuse = 1, similarity=2, 
+               alpha=1.0, maug = 2, reuse = 2, similarity=2, 
                consim=2, calibration=2, similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1),
                 modelpriors = c(0, 100^2, 0.5*sd(Y), 100),
                 mhtune=c(1, 10),
-                iter=10000,burn=5000,thin=1)
+                iter=100,burn=50,thin=1)
 
 plot(out$nc, type="l")
 #coda::effectiveSize(out$nc)
