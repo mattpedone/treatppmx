@@ -59,11 +59,11 @@ Per adattare codice:
   - vedi appunti sul codice
   - studia bene ll. 841 ss.
   - implementa in nuovo branch
-- [ ] **controlla** 
-  - non sono sicuro che sia ok. sullo script sui dati bear vengono selezionati molti più clusters con m=3 rispetto a m=1. forse non normalizzo bene?
+- [X] **controlla** 
+  - non sono sicuro che sia ok. sullo script sui dati bear all'aumentare di m aumentano i clusters individuati. è dovuto al fatto che diminuisce l'autocorrelazione? ha senso?
 - [ ] introdurre *Reuse option*
   - segui appunti su `myppmx.cpp`
-- [ ] **confronto** *con e senza reuse*
+- [ ] **confronto** *con e senza reuse* su dati bear e su scenari *Page Quintana (2018)*
     - m=1
     - m=3
     - m=10
@@ -72,4 +72,6 @@ Per adattare codice:
     - tempo
     - autocorrelazione numero clusters
     - autocorrelazione parametri *cluster specific*
+    - *effective sample size*
+    - classificazione corretta (posterior predictive)
     
