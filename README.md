@@ -84,4 +84,5 @@ Per adattare codice:
     - autocorrelazione parametri *cluster specific*
     - *effective sample size*
     - classificazione corretta (posterior predictive)
+    **ho dei GROSSI PROBLEMI con la posterior predictive**, vd `demo/testing2.R`
     
