@@ -12,7 +12,7 @@ X <- bear[,c("length", "sex")]
 X$sex <- as.factor(X$sex)
 
 # Randomly partition data into 44 training and 10 testing
-set.seed(1)
+#set.seed(1216)
 trainObs <- sample(1:length(Y),44, replace=FALSE)
 Ytrain <- Y[trainObs]
 Ytest <- Y[-trainObs]
@@ -21,7 +21,7 @@ Xtest <- X[-trainObs,,drop=FALSE]
 
 
 out <- my_ppmx(y=Ytrain, X=Xtrain, Xpred=Xtest, cohesion=1, 
-               alpha=1.0, maug = 2, reuse = 2, similarity=2, 
+               alpha=1.0, maug = 1, reuse = 1, similarity=2, 
                consim=2, calibration=2, similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1),
                 modelpriors = c(0, 100^2, 0.5*sd(Y), 100),
                 mhtune=c(1, 10),

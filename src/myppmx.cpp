@@ -1150,7 +1150,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           if(similarity == 2){
             lgcat0 = lgcat0 + similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
           }
-          
+        }
           gtilY(nclus_iter) = lgcat0 + lgcon0;
           gtilN(nclus_iter) = lgcat0 + lgcon0;
           
@@ -1236,13 +1236,19 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           if(iaux <= nclus_iter){
             mupred = muh((iaux-1));
             sig2pred = sig2h((iaux-1));
+            Rcpp::Rcout << "mupred =  " << mupred << std::endl;
+            Rcpp::Rcout << "sig2pred =  " << sig2pred << std::endl;
           }else{
             mupred = R::rnorm(mu0_iter, sqrt(sig20_iter));
             sig2pred = R::runif(smin, smax);
             sig2pred = sig2pred*sig2pred;
+            Rcpp::Rcout << "mupred =  " << mupred << std::endl;
+            Rcpp::Rcout << "sig2pred =  " << sig2pred << std::endl;
           }
           
+          
           ppred_iter(pp) = R::rnorm(mupred, sqrt(sig2pred));
+          Rcpp::Rcout << "ppred_iter(pp) =  " << ppred_iter(pp) << std::endl;
           predclass_iter(pp) = iaux;
           
           mupred = 0.0;
@@ -1253,7 +1259,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           mupred = mupred + R::rnorm(mu0_iter, sqrt(sig20_iter))*probh(nclus_iter);
           
           rbpred_iter(pp) = mupred;
-        }//chiude p
+        //}//chiude p
         
       }//chiude pp
     }
@@ -1279,6 +1285,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       
       for(pp = 0; pp < npred; pp++){
         ppred(ll*(npred) + pp) = ppred_iter(pp);
+        //Rcpp::Rcout << "ppred_iter(pp) 2 =  " << ppred_iter(pp) << std::endl;
         predclass(ll*(npred) + pp) = predclass_iter(pp);
         
         rbpred(ll*(npred) + pp) = rbpred_iter(pp);

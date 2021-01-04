@@ -154,15 +154,12 @@ my_ppmx <- function(y,X=NULL,Xpred=NULL,
     #if(nmissing > 0) Mcatp <- cbind(rep(0,1));
   }
   
-  dissimtn <- 0
-  dissimtt <- 0
-  
   # Create empty vectors that will hold MCMC iterates
-  mu <- sig2 <- Si <- like <- ispred <- zi <- isordpred <- matrix(1,nrow=nout,ncol=nobs)
-  mu0 <- sig20 <- nclus <- rep(1,nout)
-  ppred <- predclass <-  rbpred <-  matrix(1, nrow=nout, ncol=npred)
-  predclass_prob <- matrix(1, nrow=nout, ncol=npred*nobs)
-  WAIC <- lpml <- rep(1,1)
+  #mu <- sig2 <- Si <- like <- ispred <- zi <- isordpred <- matrix(1,nrow=nout,ncol=nobs)
+  #mu0 <- sig20 <- nclus <- rep(1,nout)
+  #ppred <- predclass <-  rbpred <-  matrix(1, nrow=nout, ncol=npred)
+  #predclass_prob <- matrix(1, nrow=nout, ncol=npred*nobs)
+  #WAIC <- lpml <- rep(1,1)
   
   out <- myppmx(as.integer(iter), as.integer(burn), as.integer(thin), 
                   as.integer(nobs), as.integer(ncon), as.integer(ncat), 
