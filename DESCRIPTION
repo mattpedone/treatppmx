@@ -1,11 +1,11 @@
 Package: treatppmx
 Type: Package
-Title: What the package does (short line)
+Title: trying to extend ppmx
 Version: 1.0
 Date: 2020-12-22
-Author: Who wrote it
+Author: Matt
 Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Description: wip implementation of model in notex file. as far as now it is implemented Page Quintana (2018) Stat Com. Moreover, multiple auxiliary variables can be sampled (cfr Neal (2000) JCGS), even through the Reuse algorithm (Favaro and Teh (2013) Stat Sci).
 Encoding: UTF-8
 License: GPL-3
 LazyData: true

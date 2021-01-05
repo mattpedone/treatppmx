@@ -10,6 +10,8 @@ my_ppmx(
   Xpred = NULL,
   cohesion = 1,
   alpha = 1,
+  maug = 3,
+  reuse = 1,
   similarity = 1,
   consim = 1,
   calibration = 0,
@@ -27,6 +29,12 @@ my_ppmx(
 2 - Uniform cohesion \eqn{c(S) = 1}}
 
 \item{alpha}{value of \eqn{\alpha} for cohesion function (concentration parameter in DP)}
+
+\item{maug}{number of auxiliary parameters}
+
+\item{reuse}{option for the reuse algorithm by Favaro&Teh. integer 1 or 2. 
+1 - reuse algorithm is adopted
+2 - reuse algorithm is NOT adopted}
 
 \item{similarity}{type of similarity function that is employed for the PPMx prior on partitions. Options are
 1 - Auxiliary similarity
