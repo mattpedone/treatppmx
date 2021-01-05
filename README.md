@@ -70,11 +70,7 @@ Per adattare codice:
   - non sono sicuro che sia ok. sullo script sui dati bear all'aumentare di m aumentano i clusters individuati. è dovuto al fatto che diminuisce l'autocorrelazione? ha senso?
 - [X] introdurre *Reuse option*
   - segui appunti su `myppmx.cpp`
-- [ ] errore strano post predictive 
-  * ricontrolla ciclo su p (pp)
-  * adatta m auxiliary + reuse in predictive
-  * se reuse = true, m deve essere >1 altrimenti errore
-- [ ] controlla posterior predictive
+- [ ] **errore!!!** se reuse = true, m deve essere >1 altrimenti non funziona
 - [ ] **confronto** *con e senza reuse* su dati bear e su scenari *Page Quintana (2018)*
     - m=1
     - m=3

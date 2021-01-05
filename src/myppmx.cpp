@@ -232,7 +232,7 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
 Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, 
                   arma::vec catvec, double alpha, int maug, int reuse, int cohesion, 
                   int similarity, int consim, arma::vec y, arma::vec xcon, 
-                  arma::vec xcat, int npred, arma::mat xconp, arma::mat xcatp, 
+                  arma::vec xcat, //int npred, arma::mat xconp, arma::mat xcatp, 
                   arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, 
                   int calibration){
   
@@ -328,11 +328,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   
   arma::vec ispred_iter(nobs);
   ispred_iter.fill(0.0);
-  
-  arma::vec ppred_iter(npred);
-  arma::vec rbpred_iter(npred);
-  arma::vec predclass_iter(npred);
-  arma::vec predclass_prob_iter(npred * nobs);
   
   ////////////////////////////////////////
   // Storage needed to update parameters
@@ -440,18 +435,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   arma::vec Si(nout * nobs, arma::fill::ones); 
   arma::vec like(nout * nobs, arma::fill::ones); 
   arma::vec ispred(nout * nobs, arma::fill::ones); 
-  arma::vec zi(nout * nobs, arma::fill::ones); 
-  arma::vec isordpred(nout * nobs, arma::fill::ones); 
   
   arma::vec mu0(nout, arma::fill::ones);
   arma::vec sig20(nout, arma::fill::ones);
   arma::vec nclus(nout, arma::fill::ones);
-  
-  arma::vec ppred(nout * npred, arma::fill::ones); 
-  arma::vec predclass(nout * npred, arma::fill::ones); 
-  arma::vec rbpred(nout * npred, arma::fill::ones); 
-  
-  arma::mat predclass_prob(nout, npred*nobs, arma::fill::ones); 
   
   double WAIC = 1.0;
   double lpml = 1.0;
@@ -988,281 +975,6 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         ispred_iter(i) = R::rnorm(muh(Si_iter(i)-1), sqrt(sig2h(Si_iter(i)-1)));
       }
     }
-    // out of sample prediction using posterior predictive?
-    
-    if((l > (burn-1)) & (l % (thin) == 0)){
-      for(pp = 0; pp < npred; pp++){
-        for(j = 0; j < nclus_iter; j++){
-          lgconN = 0.0;
-          lgconY = 0.0;
-          for(p=0; p<(ncon); p++){
-            nhtmp = 0;
-            for(i = 0; i < nobs; i++){
-              if(Si_iter(i) == j+1){
-                xcontmp[nhtmp] = xcon(i*(ncon)+p); //create cluster specific x-vector
-                nhtmp = nhtmp+1;
-              }
-            }
-            sumx = 0.0;
-            sumx2 = 0.0;
-            for(t = 0; t < nhtmp; t++){
-              sumx = sumx + xcontmp(t);
-              sumx2 = sumx2 + xcontmp(t)*xcontmp(t);
-            }
-            
-            if(similarity == 1){
-              if(consim == 1){
-                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
-                lgconN = lgconN + lgcont;
-              }
-              if(consim == 2){
-                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
-                lgconN = lgconN + lgcont;
-              }
-            }
-            if(similarity == 2){
-              if(consim == 1){
-                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
-                lgconN = lgconN + lgcont;
-              }
-              if(consim == 2){
-                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
-                lgconN = lgconN + lgcont;
-              }
-            }
-            //SE BURN IN NON SUFF GRANDE QUI SOTTO DA ERRORE
-            // now add ppth prediction to cluster;
-            xcontmp(nhtmp) = xconp(pp*(ncon)+p);
-            sumx = sumx + xconp(pp*(ncon)+p);
-            sumx2 = sumx2 + xconp(pp*(ncon)+p)*xconp(pp*(ncon)+p);
-            nhtmp += 1;
-            //SE BURN IN NON SUFF GRANDE QUI  SOPRA DA ERRORE
-            if(similarity == 1){ // Auxilliary
-              if(consim == 1){
-                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
-                lgconY = lgconY + lgcont;
-              }
-              if(consim == 2){
-                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
-                lgconY = lgconY + lgcont;
-              }
-            }
-            if(similarity == 2){ // Double Dipper
-              if(consim == 1){
-                lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
-                lgconY = lgconY + lgcont;
-              }
-              if(consim == 2){
-                lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
-                lgconY = lgconY + lgcont;
-              }
-            }
-            
-          } // This ends the loop through ncon continuous covariates
-          // (chiude sulle p)
-          //Rcpp::Rcout << "here3" << std::endl;
-          lgcatY = 0.0;
-          lgcatN = 0.0;
-          for(p = 0; p<(ncat); p++){
-            for(c = 0; c < catvec(p); c++){
-              nhc(c) = 0;
-            }
-            nhtmp = 0;
-            for(i = 0; i < nobs; i++){
-              if(Si_iter(i) == j + 1){
-                nhc(xcat(i*(ncat)+p)) += 1; // this needs to be a vector
-                nhtmp = nhtmp+1;
-              }
-            }
-            
-            if(similarity == 1){
-              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
-              lgcatN = lgcatN + lgcatt;
-            }
-            if(similarity == 2){
-              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
-              lgcatN = lgcatN + lgcatt;
-            }
-            
-            nhc(xcatp(pp*(ncat)+p)) += 1;
-            nhtmp=nhtmp + 1;
-            
-            if(similarity == 1){
-              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
-              lgcatY = lgcatY + lgcatt;
-            }
-            if(similarity == 2){
-              lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
-              lgcatY = lgcatY + lgcatt;
-            }
-          }//chiude sulle p
-          
-          // These are for calibration 1
-          gtilY(j) = lgconY + lgcatY;
-          gtilN(j) = lgconN + lgcatN;
-          
-          ph(j) = log((double) nh(j)) +
-            lgcatY - lgcatN +
-            lgconY - lgconN;
-          
-          if(calibration == 2){
-            ph(j) = log((double) nh(j)) +
-              (1/((double)ncon + (double)ncat))*
-              (lgcatY + lgconY - lgcatN - lgconN);
-          }
-          
-          if(cohesion == 2) ph(j) =  ph(j) - log((double) nh(j));
-        } // ends loop through existing clusters. (j)
-        
-        // No evaluate probability of being assigned to own cluster
-        lgcon0 = 0.0;
-        for(p = 0; p < ncon; p++){
-          xcontmp(0) = xconp(pp*(ncon)+p);
-          if(similarity == 1){
-            if(consim==1){
-              lgcon0 += similarityf::gsimconNN(m0,v,s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),1,0,0,1);
-            }
-            if(consim == 2){
-              lgcon0 = lgcon0 + similarityf::gsimconNNIG(m0, k0, nu0, s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),s2mle(p),1,0,0,1);
-            }
-          }
-          if(similarity == 2){
-            if(consim == 1){
-              lgcon0 += similarityf::gsimconNN(m0,v,s20,xcontmp(0),xcontmp(0)*xcontmp(0), mnmle(p),1,1,0,1);
-            }
-            if(consim == 2){
-              lgcon0 = lgcon0 + similarityf::gsimconNNIG(m0, k0, nu0, s20,xcontmp(0),xcontmp(0)*xcontmp(0),mnmle(p),s2mle(p),1, 1, 0,1);
-            }
-          }
-        }
-        
-        lgcat0 = 0.0;
-        for( p = 0; p < (ncat); p++){
-          for(c = 0; c < catvec(p); c++){
-            nhc(c) = 0;
-          }
-          
-          nhc(xcatp(pp*(ncat)+p)) = 1;
-          
-          if(similarity == 1){
-            lgcat0 = lgcat0 + similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
-          }
-          if(similarity == 2){
-            lgcat0 = lgcat0 + similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
-          }
-        }
-          gtilY(nclus_iter) = lgcat0 + lgcon0;
-          gtilN(nclus_iter) = lgcat0 + lgcon0;
-          
-          ph(nclus_iter) = log((double) alphadp) + lgcon0 + lgcat0;
-          
-          if(cohesion == 2) ph(nclus_iter) = ph(nclus_iter) - log((double) alphadp);
-          
-          // This is the calibration used when the similarity is standardized by
-          
-          if(calibration == 1){
-            maxgtilN = gtilN(0);
-            maxgtilY = gtilY(0);
-            for(j = 1; j < nclus_iter + 1; j++){
-              if(maxgtilN < gtilN(j)){
-                maxgtilN = gtilN(j);
-              }
-              if(j < nclus_iter){
-                if(maxgtilY < gtilY(j)) maxgtilY = gtilY(j);
-              }
-            }
-            
-            sgY=0.0;
-            sgN=0.0;
-            
-            for(j = 0; j < nclus_iter + 1; j++){
-              lgtilN(j) = gtilN(j) - maxgtilN;
-              sgN = sgN + exp(lgtilN(j));
-              
-              if(j < nclus_iter){
-                lgtilY(j) = gtilY(j) - maxgtilY;
-                sgY = sgY + exp(lgtilY(j));
-              }
-            }
-            
-            for(j = 0; j < nclus_iter; j++){
-              lgtilNk = lgtilN(j) - log(sgN);
-              lgtilYk = lgtilY(j) - log(sgY);
-              
-              ph(j) = log((double) nh(j)) + lgtilYk - lgtilNk; //This takes into account both cont and cat vars
-              
-              if(cohesion == 2){
-                ph(j) = ph(j) - log((double) nh(j));
-              }
-            }
-            // calibration for a singleton
-            ph(nclus_iter) =  log(alphadp) +
-              lgtilN(nclus_iter) - log(sgN);
-            
-            if(cohesion == 2){// Note with a uniform cohesion, for a new cluster
-              // the value of log(c({nclus_iter}}) = log(1) = 0;
-              ph(nclus_iter) = ph(nclus_iter) - log(alphadp);
-            }
-          }
-          // End of calibration used when the similarity is standardized by
-          
-          maxph = ph(0);
-          for(j = 1; j < nclus_iter + 1; j++){
-            if(ph(j) > maxph) maxph = ph(j);
-          }
-          
-          denph = 0.0;
-          for(j = 0; j < nclus_iter + 1; j++){
-            ph(j) = exp(ph(j) - maxph);
-            denph = denph + ph(j);
-          }
-          
-          for(j = 0; j < nclus_iter+1; j++){
-            probh(j) = ph(j)/denph;
-          }
-          
-          uu = R::runif(0.0,1.0);
-          
-          cprobh= 0.0;
-          
-          for(j = 0; j < nclus_iter + 1; j++){
-            cprobh = cprobh + probh(j);
-            if (uu < cprobh){
-              iaux = j + 1;
-              break;
-            }
-          }
-          
-          if(iaux <= nclus_iter){
-            mupred = muh((iaux-1));
-            sig2pred = sig2h((iaux-1));
-            Rcpp::Rcout << "mupred =  " << mupred << std::endl;
-            Rcpp::Rcout << "sig2pred =  " << sig2pred << std::endl;
-          }else{
-            mupred = R::rnorm(mu0_iter, sqrt(sig20_iter));
-            sig2pred = R::runif(smin, smax);
-            sig2pred = sig2pred*sig2pred;
-            Rcpp::Rcout << "mupred =  " << mupred << std::endl;
-            Rcpp::Rcout << "sig2pred =  " << sig2pred << std::endl;
-          }
-          
-          
-          ppred_iter(pp) = R::rnorm(mupred, sqrt(sig2pred));
-          Rcpp::Rcout << "ppred_iter(pp) =  " << ppred_iter(pp) << std::endl;
-          predclass_iter(pp) = iaux;
-          
-          mupred = 0.0;
-          for(j = 0; j < nclus_iter; j++){
-            mupred = mupred +  muh(j)*probh(j);
-            predclass_prob_iter(pp*(nobs) + j) = probh(j);
-          }
-          mupred = mupred + R::rnorm(mu0_iter, sqrt(sig20_iter))*probh(nclus_iter);
-          
-          rbpred_iter(pp) = mupred;
-        //}//chiude p
-        
-      }//chiude pp
-    }
     
     //////////////////////
     // Save MCMC iterates	
@@ -1283,18 +995,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         ispred(ll*(nobs) + i) = ispred_iter(i);
       }
       
-      for(pp = 0; pp < npred; pp++){
-        ppred(ll*(npred) + pp) = ppred_iter(pp);
-        //Rcpp::Rcout << "ppred_iter(pp) 2 =  " << ppred_iter(pp) << std::endl;
-        predclass(ll*(npred) + pp) = predclass_iter(pp);
-        
-        rbpred(ll*(npred) + pp) = rbpred_iter(pp);
-      }
-      for(pp = 0; pp < (nobs)*(npred); pp++){
-        predclass_prob(ll*((nobs)*(npred)) + pp) = predclass_prob_iter(pp);
-      }
-      
-      ll += 1;
+    ll += 1;
     }  
     
   }//CLOSES MCMC iterations
@@ -1323,15 +1024,9 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                             Rcpp::Named("Si") = Si,
                             Rcpp::Named("like") = like,
                             Rcpp::Named("ispred") = ispred,
-                            Rcpp::Named("zi") = zi,
-                            Rcpp::Named("isordpred") = isordpred,
                             Rcpp::Named("mu0") = mu0,
                             Rcpp::Named("sig20") = sig20,
                             Rcpp::Named("nclus") = nclus,
-                            Rcpp::Named("ppred") = ppred,
-                            Rcpp::Named("predclass") = predclass,
-                            Rcpp::Named("rbpred") = rbpred,
-                            Rcpp::Named("predclass_prob") = predclass_prob,
                             Rcpp::Named("WAIC") = WAIC,
                             Rcpp::Named("lpml") = lpml);
 }
