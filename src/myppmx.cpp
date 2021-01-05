@@ -245,11 +245,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   // ii - second individual index (for double for loops)
   // c - categorical variable index
   // p - number of covariates index
-  // pp - second covariate index
   // j - cluster index
   // t - subset of covariates index
   // mm - for auxiliary parameters
-  int l, ll, i, ii, c, p, pp, j, t, mm;
+  int l, ll, i, ii, c, p, j, mm;
   
   double max_C, nout, sumx, sumx2;
   //number of saved iterations
@@ -375,7 +374,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double osig, nsig;
   
   // Stuff for out of sample predictions
-  double lgcon0, lgcat0, mupred, sig2pred;
+  //double lgcon0, lgcat0, mupred, sig2pred;
   
   // Stuff to compute lpml (log pseudo marginal likelihood), 
   // likelihood, and WAIC widely applicable information criterion (WAIC), 
@@ -422,12 +421,12 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double csigSIG = mhtune(1);
   
   // REUSE ALGORITHM
-  if(reuse == 1){
+  //if(reuse == 1){
     for(mm = 0; mm < maug; mm++){
       muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
       saug(mm) = R::runif(smin, smax);
     }
-  }
+  //}
   
   //storage for return
   arma::vec mu(nout * nobs, arma::fill::ones); 
@@ -847,15 +846,22 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         Si_iter(i) = iaux;
         nh(Si_iter(i)-1) += 1;
-        
-      } else {
-        //qui dal vettore di m auxiliary variables salva mudraw & sdraw
-        mudraw = muaug(0);
-        sdraw = saug(0);
+        /*mudraw = muaug(0);
+        sdraw = saug(0);*/
         if(reuse == 1){
           muaug(0) = R::rnorm(mu0_iter, sqrt(sig20_iter));
           saug(0) = R::runif(smin, smax);
         }
+      } else {
+        //qui dal vettore di m auxiliary variables salva mudraw & sdraw
+        mudraw = muaug(0);
+        sdraw = saug(0);
+        //Rcpp::Rcout << "here! " << std::endl;
+        if(reuse == 1){
+          muaug(0) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+          saug(0) = R::runif(smin, smax);
+        }
+        //Rcpp::Rcout << "here 3! " << std::endl;
         nclus_iter += 1;
         Si_iter(i) = nclus_iter;
         nh(Si_iter(i)-1) = 1;
