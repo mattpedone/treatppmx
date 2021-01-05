@@ -847,11 +847,13 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         Si_iter(i) = iaux;
         nh(Si_iter(i)-1) += 1;
         /*mudraw = muaug(0);
-        sdraw = saug(0);*/
+        sdraw = saug(0);
         if(reuse == 1){
           muaug(0) = R::rnorm(mu0_iter, sqrt(sig20_iter));
           saug(0) = R::runif(smin, smax);
-        }
+        }*/
+        //Rcpp::Rcout << "muaug(0) " << muaug(0) << std::endl;
+        //Rcpp::Rcout << "saug(0) " << saug(0) << std::endl;
       } else {
         //qui dal vettore di m auxiliary variables salva mudraw & sdraw
         mudraw = muaug(0);
