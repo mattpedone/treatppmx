@@ -453,6 +453,8 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
     }
     
+    //qui inizializza parametri P0 x reuse (vettori di lunghezza CC)
+    
     /////////////////////////////////////////
     // update the cluster labels with NEAL 8 
     /////////////////////////////////////////
