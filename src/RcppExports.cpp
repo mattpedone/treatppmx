@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // myppmx
-Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, arma::vec catvec, double alpha, int maug, int reuse, int cohesion, int similarity, int consim, arma::vec y, arma::vec xcon, arma::vec xcat, arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, int calibration);
-RcppExport SEXP _treatppmx_myppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP maugSEXP, SEXP reuseSEXP, SEXP cohesionSEXP, SEXP similaritySEXP, SEXP consimSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP similparamSEXP, SEXP modelpriorsSEXP, SEXP mhtuneSEXP, SEXP calibrationSEXP) {
+Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, arma::vec catvec, double alpha, int CC, int cohesion, int similarity, int consim, arma::vec y, arma::vec xcon, arma::vec xcat, arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, int calibration);
+RcppExport SEXP _treatppmx_myppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP CCSEXP, SEXP cohesionSEXP, SEXP similaritySEXP, SEXP consimSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP similparamSEXP, SEXP modelpriorsSEXP, SEXP mhtuneSEXP, SEXP calibrationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,8 +20,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type catvec(catvecSEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< int >::type maug(maugSEXP);
-    Rcpp::traits::input_parameter< int >::type reuse(reuseSEXP);
+    Rcpp::traits::input_parameter< int >::type CC(CCSEXP);
     Rcpp::traits::input_parameter< int >::type cohesion(cohesionSEXP);
     Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
     Rcpp::traits::input_parameter< int >::type consim(consimSEXP);
@@ -32,13 +31,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type modelpriors(modelpriorsSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type mhtune(mhtuneSEXP);
     Rcpp::traits::input_parameter< int >::type calibration(calibrationSEXP);
-    rcpp_result_gen = Rcpp::wrap(myppmx(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, maug, reuse, cohesion, similarity, consim, y, xcon, xcat, similparam, modelpriors, mhtune, calibration));
+    rcpp_result_gen = Rcpp::wrap(myppmx(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesion, similarity, consim, y, xcon, xcat, similparam, modelpriors, mhtune, calibration));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 20},
+    {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
     {NULL, NULL, 0}
 };
 

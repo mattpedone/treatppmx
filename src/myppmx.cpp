@@ -230,7 +230,7 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
 
 // [[Rcpp::export]]
 Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, 
-                  arma::vec catvec, double alpha, int maug, int reuse, int cohesion, 
+                  arma::vec catvec, double alpha, int CC, int cohesion, 
                   int similarity, int consim, arma::vec y, arma::vec xcon, 
                   arma::vec xcat, //int npred, arma::mat xconp, arma::mat xcatp, 
                   arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, 
@@ -339,23 +339,23 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double lgconN, lgconY, lgcatN, lgcatY, lgcondraw, lgcatdraw;
   double lgcont, lgcatt;
   
-  arma::vec muaug(maug);
+  arma::vec muaug(CC);
   muaug.fill(0.0);
-  arma::vec saug(maug);
+  arma::vec saug(CC);
   saug.fill(0.0);
   
-  arma::vec ph(nobs + maug);
+  arma::vec ph(nobs + CC);
   ph.fill(0.0);
-  arma::vec probh(nobs + maug);
+  arma::vec probh(nobs + CC);
   probh.fill(0.0);
   
-  arma::vec gtilN(nobs + maug);
+  arma::vec gtilN(nobs + CC);
   gtilN.fill(0.0);
-  arma::vec gtilY(nobs + maug);
+  arma::vec gtilY(nobs + CC);
   gtilY.fill(0.0);
-  arma::vec lgtilN(nobs + maug);
+  arma::vec lgtilN(nobs + CC);
   lgtilN.fill(0.0);
-  arma::vec lgtilY(nobs + maug);
+  arma::vec lgtilY(nobs + CC);
   lgtilY.fill(0.0);
   
   double sgY, sgN,  lgtilNk, lgtilYk, maxgtilY, maxgtilN;
@@ -420,13 +420,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   double csigSIG0 = mhtune(0);
   double csigSIG = mhtune(1);
   
-  // REUSE ALGORITHM
-  //if(reuse == 1){
-    for(mm = 0; mm < maug; mm++){
-      muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
-      saug(mm) = R::runif(smin, smax);
+  for(mm = 0; mm < CC; mm++){
+    muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
+    saug(mm) = R::runif(smin, smax);
     }
-  //}
   
   //storage for return
   arma::vec mu(nout * nobs, arma::fill::ones); 
@@ -675,12 +672,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       //mudraw e sdraw li usi alla fine per salvare il valore eventualmente effettivamente
       //pescato dagli augmented auxiliary parameters
       
-      if(reuse == 2){
-        for(mm = 0; mm < maug; mm++){
+      for(mm = 0; mm < CC; mm++){
           muaug(mm) = R::rnorm(mu0_iter, sqrt(sig20_iter));
           saug(mm) = R::runif(smin, smax);
         }
-      }
       
       //qui non dovrebbe esserci niente da modificare
       // Continuous Covariates
@@ -731,7 +726,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       }
       
       //qui metti ciclo dopo cicli su p ncon e p ncat
-      for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
+      for(mm = nclus_iter; mm < (nclus_iter+CC); mm++){
         gtilY(mm) = lgcondraw + lgcatdraw;
         gtilN(mm) = lgcondraw + lgcatdraw;
         }
@@ -739,7 +734,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       //gtilN(nclus_iter) = lgcondraw + lgcatdraw;
       
       //EXT
-      for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
+      for(mm = nclus_iter; mm < (nclus_iter+CC); mm++){
         ph(mm) = R::dnorm(y(i), muaug(mm - nclus_iter), saug(mm - nclus_iter), 1) +
           log(alphadp) +  // DP part
           lgcondraw + // Continuous covariate part
@@ -758,7 +753,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         if(calibration == 1){
           maxgtilN = gtilN(0);//arma::max(gtilN)
           maxgtilY = gtilY(0);
-          for(j = 1; j < nclus_iter + maug; j++){//1 - maug
+          for(j = 1; j < nclus_iter + CC; j++){//1 - CC
           
           if(maxgtilN < gtilN(j)) maxgtilN = gtilN(j);
           
@@ -770,7 +765,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         sgY=0.0;
         sgN=0.0;
           
-        for(j = 0; j < nclus_iter + maug; j++){//1 - maug
+        for(j = 0; j < nclus_iter + CC; j++){//1 - CC
           
           lgtilN(j) = gtilN(j) - maxgtilN;
           sgN += exp(lgtilN(j));
@@ -799,10 +794,10 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         // calibration for a singleton
         // EXT
-        for(mm = nclus_iter; mm < (nclus_iter+maug); mm++){
+        for(mm = nclus_iter; mm < (nclus_iter+CC); mm++){
           ph(mm) = R::dnorm(y(i), muaug(mm - nclus_iter), saug(mm - nclus_iter), 1) +
             log(alphadp) +
-            lgtilN(mm) - log(sgN) - log(maug);//in caso togli -log(maug)
+            lgtilN(mm) - log(sgN) - log(CC);//in caso togli -log(CC)
           
           if(cohesion==2){// Note with a uniform cohesion, for a new cluster
             // the value of log(c({nclus_iter}}) = log(1) = 0;
@@ -814,24 +809,24 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       
       //NORMALIZZAZIONE PROBABILITà
       maxph = ph(0);
-      for(j = 1; j < nclus_iter + maug; j++){//1 - maug
+      for(j = 1; j < nclus_iter + CC; j++){//1 - CC
         if(maxph < ph(j)) maxph = ph(j);
       }
       
       denph = 0.0;
-      for(j = 0; j < nclus_iter + maug; j++){//1 - maug
+      for(j = 0; j < nclus_iter + CC; j++){//1 - CC
         ph(j) = exp(ph(j) - maxph);
         denph += ph(j);
       }
       
-      for(j = 0; j < nclus_iter + maug; j++){//1 - maug
+      for(j = 0; j < nclus_iter + CC; j++){//1 - CC
         probh(j) = ph(j)/denph;
       }
       
       uu = R::runif(0.0,1.0);
       
       //visto che al massimo posso aggiungere un solo cluster alla volta 
-      //lascerei +1 invece che + maug
+      //lascerei +1 invece che + CC
       cprobh= 0.0;
       iaux = nclus_iter + 1;
       for(j = 0; j < nclus_iter + 1; j++){
@@ -846,12 +841,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         Si_iter(i) = iaux;
         nh(Si_iter(i)-1) += 1;
-        /*mudraw = muaug(0);
-        sdraw = saug(0);
-        if(reuse == 1){
-          muaug(0) = R::rnorm(mu0_iter, sqrt(sig20_iter));
-          saug(0) = R::runif(smin, smax);
-        }*/
+        
         //Rcpp::Rcout << "muaug(0) " << muaug(0) << std::endl;
         //Rcpp::Rcout << "saug(0) " << saug(0) << std::endl;
       } else {
@@ -859,10 +849,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         mudraw = muaug(0);
         sdraw = saug(0);
         //Rcpp::Rcout << "here! " << std::endl;
-        if(reuse == 1){
-          muaug(0) = R::rnorm(mu0_iter, sqrt(sig20_iter));
-          saug(0) = R::runif(smin, smax);
-        }
+        
         //Rcpp::Rcout << "here 3! " << std::endl;
         nclus_iter += 1;
         Si_iter(i) = nclus_iter;
