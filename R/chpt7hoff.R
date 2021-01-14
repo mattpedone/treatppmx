@@ -12,13 +12,13 @@ theta_test <- rep(0, p)
 Sigma_test <- diag(1, p, p)
 mbm <- microbenchmark::microbenchmark(
   "R-MN" = rmvnorm(1, theta_test, Sigma_test), 
-  "C++-MN" = ran_mvnorm(theta_test, Sigma_test))
+  "C++-MN" = ran_mvnorm(theta_test, c(Sigma_test), p))
 mbm
 ggplot2::autoplot(mbm)
 
 mbm <- microbenchmark::microbenchmark(
   "R-IW" = rwish(1, nu0, Sigma_test), 
-  "C++-IW" = ran_wish(nu0, Sigma_test))
+  "C++-IW" = ran_wish(nu0, c(Sigma_test), p))
 mbm
 ggplot2::autoplot(mbm)
 
