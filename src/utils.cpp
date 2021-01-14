@@ -103,7 +103,7 @@ double dinvwish(arma::vec Sig, int dim, double detSig, double detS, int nu0,
 
 //Random Draw from Wishart distribution
 // [[Rcpp::export]]
-arma::mat ran_wish(int nu, arma::vec Sig, int dim){
+arma::vec ran_wish(int nu, arma::vec Sig, int dim){
   
   //Rcpp::Rcout << "input" << Sig << std::endl;
   

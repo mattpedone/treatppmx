@@ -35,9 +35,71 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dmvnorm
+double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, int logout);
+RcppExport SEXP _treatppmx_dmvnorm(SEXP ySEXP, SEXP muSEXP, SEXP SigSEXP, SEXP dimSEXP, SEXP ldSEXP, SEXP logoutSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< double >::type ld(ldSEXP);
+    Rcpp::traits::input_parameter< int >::type logout(logoutSEXP);
+    rcpp_result_gen = Rcpp::wrap(dmvnorm(y, mu, Sig, dim, ld, logout));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ran_mvnorm
+arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim);
+RcppExport SEXP _treatppmx_ran_mvnorm(SEXP mSEXP, SEXP SigSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(ran_mvnorm(m, Sig, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dinvwish
+double dinvwish(arma::vec Sig, int dim, double detSig, double detS, int nu0, int logout);
+RcppExport SEXP _treatppmx_dinvwish(SEXP SigSEXP, SEXP dimSEXP, SEXP detSigSEXP, SEXP detSSEXP, SEXP nu0SEXP, SEXP logoutSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< double >::type detSig(detSigSEXP);
+    Rcpp::traits::input_parameter< double >::type detS(detSSEXP);
+    Rcpp::traits::input_parameter< int >::type nu0(nu0SEXP);
+    Rcpp::traits::input_parameter< int >::type logout(logoutSEXP);
+    rcpp_result_gen = Rcpp::wrap(dinvwish(Sig, dim, detSig, detS, nu0, logout));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ran_wish
+arma::mat ran_wish(int nu, arma::vec Sig, int dim);
+RcppExport SEXP _treatppmx_ran_wish(SEXP nuSEXP, SEXP SigSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(ran_wish(nu, Sig, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
+    {"_treatppmx_dmvnorm", (DL_FUNC) &_treatppmx_dmvnorm, 6},
+    {"_treatppmx_ran_mvnorm", (DL_FUNC) &_treatppmx_ran_mvnorm, 3},
+    {"_treatppmx_dinvwish", (DL_FUNC) &_treatppmx_dinvwish, 6},
+    {"_treatppmx_ran_wish", (DL_FUNC) &_treatppmx_ran_wish, 3},
     {NULL, NULL, 0}
 };
 

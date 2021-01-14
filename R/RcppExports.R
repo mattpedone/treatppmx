@@ -5,3 +5,19 @@ myppmx <- function(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesi
     .Call(`_treatppmx_myppmx`, iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesion, similarity, consim, y, xcon, xcat, similparam, modelpriors, mhtune, calibration)
 }
 
+dmvnorm <- function(y, mu, Sig, dim, ld, logout) {
+    .Call(`_treatppmx_dmvnorm`, y, mu, Sig, dim, ld, logout)
+}
+
+ran_mvnorm <- function(m, Sig, dim) {
+    .Call(`_treatppmx_ran_mvnorm`, m, Sig, dim)
+}
+
+dinvwish <- function(Sig, dim, detSig, detS, nu0, logout) {
+    .Call(`_treatppmx_dinvwish`, Sig, dim, detSig, detS, nu0, logout)
+}
+
+ran_wish <- function(nu, Sig, dim) {
+    .Call(`_treatppmx_ran_wish`, nu, Sig, dim)
+}
+
