@@ -117,6 +117,18 @@ mean( THETA[,2]-THETA[,1])
 mean( THETA[,2]>THETA[,1]) 
 mean(YS[,2]>YS[,1])
 
+
+
+y <- ran_mvnorm(mu0, L0, 2)
+ldmvnorm(y, mu0, matrix(L0, 2, 2))
+ld0 = -determinant(solve(matrix(L0, 2, 2)), T)$modulus[1]
+dmvnorm(y, mu0, c(solve(matrix(L0, 2, 2))), 2, ld0, 1)
+
+y <- ran_wish(nu0, Sig = S0, 2)
+CholWishart::dInvWishart(matrix(y, 2, 2), nu0, matrix(S0, 2, 2), T)
+dinvwish(matrix(S0, 2, 2)%*%solve(matrix(y, 2, 2)), 2, 
+         determinant(matrix(y, 2, 2))$modulus[1], 
+         determinant(matrix(S0, 2, 2))$modulus[1], nu0, 1)
 #### Figure 7.2 
 par(mfrow=c(1,2),mgp=c(1.75,.75,0),mar=c(3,3,1,1))
 

@@ -292,6 +292,9 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
          * log(alpha), log(CC)
          * - controlla nel file in cui faccio il confronto con Hoff se 
          * la varianza è specificata bene
+         * - in particolare la funzione dinvwish non è corretta (cfr chpt7hoff.R)
+         * - questione matrici varianza/precision
+         * - forse la cosa migliore è scrivere una funzioncina che faccia inversa e usarla x le densità
          * - verifica se ldet0 va bene
          * - bisogna inserire (capisci se direttamente nel ciclo) le covariate
          * attraverso le funzioni di similarità
@@ -300,6 +303,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         for(j = 0; j < nclu_curr + CC; j++){
           if(j < nclu_curr){
+            //vogliono le inverse!!!
             weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j), 
                    sigma_star_curr.row(j), dim, ldet0, 1);
           } else {
