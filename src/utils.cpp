@@ -22,8 +22,48 @@ double quform(arma::vec x, arma::vec A, int dim){
   return(sm);
 }
 
+// Inverse Gamma density
+// the parameterization here provides a mean of beta/(alpha - 1)
+double dinvgamma(double y, double alpha, double beta, int logout){
+  
+  //	Rprintf("alpha = %f\n", alpha);
+  //	Rprintf("beta = %f\n", beta);
+  
+  double ldens;
+  
+  ldens = alpha*log(beta) - lgamma(alpha) - (alpha + 1)*log(y) - (beta/y);
+  
+  if(logout) return ldens;
+  return exp(ldens);
+  
+}
+
+// Normal-Inverse Gamma density
+// the parameterization here is such that mu0 is prior mean value with k0 prior "observations"
+// and s20 is the prior guess for sig2 with nu0 prior "observations"
+double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0, int logout){
+  
+  //	Rprintf("alpha = %f\n", alpha);
+  //	Rprintf("beta = %f\n", beta);
+  
+  double ldens;
+  
+  //	ldens =  0.5*(log(k0) - log(2*M_PI*sig2)) + a0*log(b0) -
+  //	         lgammafn(a0) - (a0 + 1)*log(sig2) -
+  //	         0.5*(1/sig2)*(k0*(mu-mu0)*(mu-mu0) + 2*b0);
+  
+  ldens = R::dnorm(mu, mu0, sqrt(sig2/k0),logout) + dinvgamma(sig2, a0, b0, logout);
+  //	Rprintf("ldens = %f\n", ldens);
+  if(logout){ return ldens;
+  }else{return exp(ldens);}
+  
+}
+
 //Multivariate normal density
 // [[Rcpp::export]]
+/*
+ * Sig è la precision matrix
+ */
 double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, int logout){
   
   arma::vec scr(dim);
@@ -70,8 +110,8 @@ Sig is argument and S is parameter.
 *In Hoff is S_0\Sigma^{-1}
 nu0 - degrees of freedom of the inverse-wishart function*/
   
-  // [[Rcpp::export]]
-double dinvwish(arma::vec Sig, int dim, double detSig, double detS, int nu0, 
+
+double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0, 
                 int logout){
   
   int i;
@@ -86,7 +126,7 @@ double dinvwish(arma::vec Sig, int dim, double detSig, double detS, int nu0,
   
   for(i = 0; i < dim*dim; i++){
     if(i % (dim+1) == 0){
-      trace += Sig(i);
+      trace += SSiginv(i);
     }
   }
   p1 = 0.5 * nu0 * dim;
@@ -102,8 +142,8 @@ double dinvwish(arma::vec Sig, int dim, double detSig, double detS, int nu0,
 }
 
 //Random Draw from Wishart distribution
-// [[Rcpp::export]]
-arma::vec ran_wish(int nu, arma::vec Sig, int dim){
+
+arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
   
   //Rcpp::Rcout << "input" << Sig << std::endl;
   
@@ -128,14 +168,15 @@ arma::vec ran_wish(int nu, arma::vec Sig, int dim){
   arma::vec x(dim);
   arma::vec zeros(dim);
   zeros.fill(0.0);
-  arma::vec out(dim * dim);
+  arma::vec outv(dim * dim);
+  arma::mat out(dim, dim);
   out.fill(0.0);
   
   for(i = 0; i < nu; i++){
     x = ran_mvnorm(zeros, Sig, dim);
     for(j = 0; j < dim; j++){
       for(k = 0; k <= j; k++){
-        out(j * dim + k) += x(j)*x(k);
+        out(j, k) += x(j)*x(k);
       }
     }
   }
@@ -143,10 +184,145 @@ arma::vec ran_wish(int nu, arma::vec Sig, int dim){
   /* fill the upper triangular part with lower triangular part */
     for(j=0; j<dim; j++){
       for(k=0; k<j; k++){
-        out(k * dim + j) = out(j * dim + k);
+        out(k, j) = out(j, k);
       }
     }
-  return out;
+    
+    out = arma::inv(out);
+  
+    for(j = 0; j < dim; j++){
+      for(k = 0; k < dim; k++){
+        outv(j * dim + k) = out(j, k);
+      }
+    }
+    
+    
+  return outv;
+}
+
+// normal-normal Similarity function with x following normal and m a normal as well (v is fixed).
+// This is the result after integrating over mj.  One could also simply find the
+// ratio between likelihood multiplied by prior divided by posterior
+
+// The double dipper is included as an argument.
+
+double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2, double mle,
+                 int n,  int DD, int cal, int logout){
+  
+  double mus, muss, s2s, s2ss;
+  double ld1, ld2, ld3, ld4, ld5, ld6;
+  double out;
+  
+  s2s = 1/((n/v2) + (1/s20));
+  mus = s2s*((1/v2)*sumx + (1/s20)*m0);
+  
+  s2ss = 1/((n/v2) + (1/s2s));
+  muss = s2ss*((1/v2)*sumx + (1/s2s)*mus);
+  
+  ld1 = -0.5*n*log(2*M_PI*v2) - 0.5*(1/v2)*sumx2;
+  ld2 = R::dnorm(m0, 0, sqrt(s20),1);
+  ld3 = R::dnorm(mus, 0, sqrt(s2s),1);
+  ld4 = R::dnorm(muss, 0, sqrt(s2ss),1);
+  
+  ld5 = R::dnorm(mle, m0, sqrt(s20),1);
+  ld6 = R::dnorm(mle, mus, sqrt(s2s),1);
+  
+  
+  out = ld1 + ld2 - ld3;
+  if(DD==1) out = ld1 + ld3 - ld4;
+  if(cal==1) out = ld5 - ld6;
+  if(!logout) out = exp(out);
+  return(out);
+  
+}
+
+// normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
+// I didn't carry out integration explicitly over m and v. I simply used the fact that
+// marginal likelihood (similarity) is equal to likelihood x prior / posterior.  This
+// requires inserting a value for m and v which I use 0 and 1.
+
+// The double dipper is included as an argument.
+
+
+double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, double sumx2,
+                   double mnmle, double s2mle, int n, int DD, int cal, int logout){
+  
+  double a0, b0, m0s, m0ss, k0s, k0ss, a0s, a0ss, b0s, b0ss;
+  double ld1, ld2, ld3, ld4, ld5, ld6, out;
+  double mu=10, v2=0.1;
+  double xbar = sumx*(1/ (double) n);
+  
+  a0 = 0.5*nu0;
+  b0 = 0.5*nu0*s20;
+  
+  m0s = (k0*m0 + n*xbar)/(k0 + n);
+  k0s = k0 + (double) n;
+  a0s = a0 + 0.5*n;
+  b0s = b0 + 0.5*(sumx2 - n*xbar*xbar) + 0.5*n*k0*(xbar - m0)*(xbar - m0)/(k0+n);
+  
+  m0ss = (k0s*m0s + n*xbar)/(k0s + n);
+  k0ss = k0s + (double) n;
+  a0ss = a0s + 0.5*n;
+  b0ss = b0s + 0.5*(sumx2 - n*xbar*xbar) + 0.5*n*k0s*(xbar - m0s)*(xbar - m0s)/(k0s+n);
+  
+  ld1 = -0.5*n*log(2*M_PI*v2) - 0.5*(1/v2)*(sumx2 - 2*sumx*mu + n*mu*mu);
+  ld2 = dN_IG(mu, v2, m0, k0, a0, b0, 1);
+  ld3 = dN_IG(mu, v2, m0s, k0s, a0s, b0s, 1);
+  ld4 = dN_IG(mu, v2, m0ss, k0ss, a0ss, b0ss, 1);
+  
+  ld5 = dN_IG(mnmle, s2mle, m0, k0, a0, b0, 1);
+  ld6 = dN_IG(mnmle, s2mle, m0s, k0s, a0s, b0s, 1);
+  
+  out = ld1 + ld2 - ld3;
+  
+  
+  
+  if(DD==1) out = ld1 + ld3 - ld4;
+  if(cal==1) out = ld5 - ld6;
+  if(!logout) out = exp(out);
+  
+  //	Rprintf("out = %f\n", out);
+  return(out);
+  
+}
+
+// Similarity function with for a categorical x  dirichlet-multinomial with out
+// where only on object is allocated (x_i is basically univariate that identifies which
+// category ith individual has).  The integral in reality is a product of two ratios,
+// but one of the ratios is constant in terms of $x$ and so disappears in the ratio
+// of similarity functions when updating cluster labels and so is ignored in the
+// function that follows.
+
+double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logout){
+  
+  int ii, sumc;
+  double tmp1=0.0,tmp2=0.0,tmp3=0.0,tmp4=0.0,tmp5=0.0,tmp6=0.0;
+  double out;
+  
+  sumc=0;
+  for(ii = 0; ii < C; ii++){
+    sumc = sumc+nobsj(ii);
+    
+    tmp1 = tmp1 + dirweights(ii);
+    tmp2 = tmp2 + lgamma(dirweights(ii));
+    
+    tmp3 = tmp3 + (double) nobsj(ii) + dirweights(ii);
+    tmp4 = tmp4 + lgamma( (double) nobsj(ii) + dirweights(ii));
+    
+    tmp5 = tmp5 + 2*((double) nobsj(ii)) + dirweights(ii);
+    tmp6 = tmp6 + lgamma( 2*((double) nobsj(ii)) + dirweights(ii));
+  }
+  
+  out = (R::lgammafn(tmp1) - tmp2) + (tmp4 - R::lgammafn(tmp3));
+  
+  
+  //	Rprintf("out = %f\n", out);
+  
+  if(DD==1) out = (R::lgammafn(tmp3) - tmp4) + (tmp6 - R::lgammafn(tmp5));
+  if(sumc==0) out = log(1);
+  if(!logout) out = exp(out);
+  return(out);
+  
 }
 
 // Multivariate normal-normal-inverse-wishart Similarity function with x following normal
