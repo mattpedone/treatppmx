@@ -330,7 +330,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         //ldet0 = -dim*log(hP0_L0(0));
         
-        for(j = 0; j < nclu_curr + CC; j++){
+        for(j = 0; j < nclu_curr; j++){
           
           // Continuous Covariates
           lgconY = 0.0;
@@ -470,34 +470,34 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
            */
            
           if(calibration == 1){
-            if(j < nclu_curr){
+            //if(j < nclu_curr){
               //vogliono le inverse!!!
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
                      sigma_star_curr.row(j), dim, ldet0, 1) +
                        log((double) nj_curr(j)) + // cohesion part
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part
-            } else { 
+            /*} else { 
               weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
                      sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
                        log(alpha) - log(CC) +
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part;
-            }
+            }*/
           } else {
             //if(calibration == 2){
-            if(j < nclu_curr){
+            //if(j < nclu_curr){
               //vogliono le inverse!!!
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
                      sigma_star_curr.row(j), dim, ldet0, 1)+
                        log((double) nj_curr(j)) + // cohesion part
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
-            } else { 
+            /*} else { 
               weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
                      sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
                        log(alpha) - log(CC) +
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
-            } 
+            } */
           }
         }
         
@@ -508,6 +508,107 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
          * e il punto 2a pag 345 Favaro and Teh
          */
         
+        for(j = nclu_curr; j < CC; j++){
+          
+          // Continuous Covariates
+          lgcondraw = 0.0;
+          //lgconN = 0.0;
+          for(p = 0; p < (ncon); p++){
+            tmp = xcon(i*(ncon) + p);
+          
+          if(similarity==1){ // Auxilliary
+              if(consim==1){//normal normal
+                //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+                lgcont = gsimconNN(m0, v, s20, tmp, tmp*tmp, xbar(p), 1, 0, 0, 1);
+                lgcondraw += lgcont;
+              } 
+              if(consim==2){//normal normal inverse gamma
+                //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 0, 0, 1);
+                lgcondraw += lgcont;
+              } 
+              
+            } 
+          if(similarity==2){ //Double Dipper
+              if(consim==1){//normal normal
+                //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+                lgcont = gsimconNN(m0, v, s20, tmp, tmp*tmp, xbar(p), 1, 1, 0, 1);
+                lgcondraw += lgcont;
+              } 
+              if(consim==2){//normal normal inverse gamma
+                //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 1, 0, 1);
+                lgcondraw += lgcont;
+              }
+            }
+          }//chiude ciclo su p covariate continue
+          
+          // Categorical Covariates
+          lgcatdraw = 0.0;
+          for(p = 0; p < (ncat); p++){
+            for(c = 0; c < catvec(p); c++){
+              njc(c) = 0;
+            } 
+            
+            njc(xcat(i*(ncat)+p)) = 1;
+            
+            if(similarity == 1){ // Auxiliary
+              //Dirichlet-Multinomial
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
+              lgcatdraw += lgcatt;
+            } 
+            if(similarity==2){// Double dipper
+              //Dirichlet-Multinomial
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
+              lgcatdraw += lgcatt;
+            }
+          }//chiude ciclo su covariate discrete
+            
+          gtilY(j) = lgcondraw + lgcatdraw;
+          gtilN(j) = lgcondraw + lgcatdraw;
+          
+          /*
+           * ogni volta controlla se i determinanti e le matrici di covarianza/precision le passo bene
+           */
+          
+          if(calibration == 1){
+            /*if(j < nclu_curr){
+              //vogliono le inverse!!!
+              weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+                     sigma_star_curr.row(j), dim, ldet0, 1) +
+                       log((double) nj_curr(j)) + // cohesion part
+                       lgcatY - lgcatN + // Categorical part
+                       lgconY - lgconN;  // Continuous part
+            } else { */
+              weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
+                     sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                       log(alpha) - log(CC) +
+                       lgcondraw + // Continuous covariate part
+                       lgcatdraw; // categorical covariate part
+                       //lgcatY - lgcatN + // Categorical part
+                       //lgconY - lgconN;  // Continuous part;
+            //}
+          } else {
+            //if(calibration == 2){
+            /*if(j < nclu_curr){
+              //vogliono le inverse!!!
+              weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+                     sigma_star_curr.row(j), dim, ldet0, 1)+
+                       log((double) nj_curr(j)) + // cohesion part
+                       (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
+            } else { */
+              weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
+                     sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                       log(alpha) - log(CC) +
+                       (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+            //} 
+          }
+        }
+        
+        
+        // prima di normalizzare i pesi devo fare calibrated similarity function
         maxwei = weight(0);
         for(j = 1; j < nclu_curr+ CC; j++){
           if(maxwei < weight(j)) maxwei = weight(j);
@@ -584,7 +685,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         }
         //FINE PARTA PROBLEMATICA
         
-        for(j = 0; j < nclu_curr + CC; j++){
+        for(j = 0; j < nclu_curr; j++){
           
           // Continuous Covariates
           lgconY = 0.0;
@@ -720,34 +821,34 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           gtilN(j) = lgconN + lgcatN;
           
           if(calibration == 1){
-            if(j < nclu_curr){
+            //if(j < nclu_curr){
               //vogliono le inverse!!!
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
                      sigma_star_curr.row(j), dim, ldet0, 1) +
                        log((double) nj_curr(j)) + // cohesion part
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part
-            } else { 
+            /*} else { 
               weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
                      sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
                        log(alpha) - log(CC) +
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part;
-            }
+            }*/
           } else {
             //if(calibration == 2){
-            if(j < nclu_curr){
+            //if(j < nclu_curr){
               //vogliono le inverse!!!
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
                      sigma_star_curr.row(j), dim, ldet0, 1)+
                        log((double) nj_curr(j)) + // cohesion part
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
-            } else { 
+            /*} else { 
               weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
                      sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
                        log(alpha) - log(CC) +
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
-            } 
+            } */
           }
       }
 
@@ -757,6 +858,107 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           ph(j) = ph(j) - log((double) nj_curr(j));
         }*/
       }//chiude il ciclo sui j cluster
+      
+      for(j = nclu_curr; j < CC; j++){
+        
+        // Continuous Covariates
+        lgcondraw = 0.0;
+        //lgconN = 0.0;
+        for(p = 0; p < (ncon); p++){
+          tmp = xcon(i*(ncon) + p);
+          
+          if(similarity==1){ // Auxilliary
+            if(consim==1){//normal normal
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = gsimconNN(m0, v, s20, tmp, tmp*tmp, xbar(p), 1, 0, 0, 1);
+              lgcondraw += lgcont;
+            } 
+            if(consim==2){//normal normal inverse gamma
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 0, 0, 1);
+              lgcondraw += lgcont;
+            } 
+            
+          } 
+          if(similarity==2){ //Double Dipper
+            if(consim==1){//normal normal
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = gsimconNN(m0, v, s20, tmp, tmp*tmp, xbar(p), 1, 1, 0, 1);
+              lgcondraw += lgcont;
+            } 
+            if(consim==2){//normal normal inverse gamma
+              //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+              lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 1, 0, 1);
+              lgcondraw += lgcont;
+            }
+          }
+        }//chiude ciclo su p covariate continue
+        
+        // Categorical Covariates
+        lgcatdraw = 0.0;
+        for(p = 0; p < (ncat); p++){
+          for(c = 0; c < catvec(p); c++){
+            njc(c) = 0;
+          } 
+          
+          njc(xcat(i*(ncat)+p)) = 1;
+          
+          if(similarity == 1){ // Auxiliary
+            //Dirichlet-Multinomial
+            //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+            lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
+            lgcatdraw += lgcatt;
+          } 
+          if(similarity==2){// Double dipper
+            //Dirichlet-Multinomial
+            //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
+            lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
+            lgcatdraw += lgcatt;
+          }
+        }//chiude ciclo su covariate discrete
+        
+        gtilY(j) = lgcondraw + lgcatdraw;
+        gtilN(j) = lgcondraw + lgcatdraw;
+        
+        /*
+         * ogni volta controlla se i determinanti e le matrici di covarianza/precision le passo bene
+         */
+        
+        if(calibration == 1){
+          /*if(j < nclu_curr){
+           //vogliono le inverse!!!
+           weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+           sigma_star_curr.row(j), dim, ldet0, 1) +
+           log((double) nj_curr(j)) + // cohesion part
+           lgcatY - lgcatN + // Categorical part
+           lgconY - lgconN;  // Continuous part
+           } else { */
+          weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
+                 sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                   log(alpha) - log(CC) +
+                   lgcondraw + // Continuous covariate part
+                   lgcatdraw; // categorical covariate part
+          //lgcatY - lgcatN + // Categorical part
+          //lgconY - lgconN;  // Continuous part;
+          //}
+        } else {
+          //if(calibration == 2){
+          /*if(j < nclu_curr){
+           //vogliono le inverse!!!
+           weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+           sigma_star_curr.row(j), dim, ldet0, 1)+
+           log((double) nj_curr(j)) + // cohesion part
+           (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
+           } else { */
+          weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
+                 sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                   log(alpha) - log(CC) +
+                   (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+          //} 
+        }
+      }
+      
+      // prima di normalizzare i pesi devo fare calibrated similarity function
       
       maxwei = weight(0);
       for(j = 1; j < nclu_curr+ CC; j++){
@@ -808,6 +1010,8 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       }
       
       // Compute the CPO and lpml using the mixture
+      
+      //CONTROLLA ldet0 + calibration!!!
       
       //R::dnorm(y(i), muh[curr_clu(i)-1], sig2h(curr_clu(i)-1), 0);
       like_iter(i) = dmvnorm(y.row(i), mu_star_curr.row(curr_clu(i)-1),
