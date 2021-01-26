@@ -63,6 +63,7 @@ double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0
 // [[Rcpp::export]]
 /*
  * Sig è la precision matrix
+ * ld vuole log determinant variance matrix
  */
 double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, int logout){
   

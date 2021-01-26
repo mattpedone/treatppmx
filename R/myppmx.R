@@ -12,9 +12,6 @@
 # @param reuse option for the reuse algorithm by Favaro&Teh. integer 1 or 2. 
 #'   1 - reuse algorithm is adopted
 #'   2 - reuse algorithm is NOT adopted
-#' @param cohesion type of cohesion function to use in the PPMx prior 
-#'   1 - Dirichlet process style of cohesion \eqn{c(S) = \alpha \times (\mid S\mid - 1)!}
-#'   2 - Uniform cohesion \eqn{c(S) = 1}
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
@@ -34,8 +31,7 @@
 # poi in R li metto in una lista 
 # se non funziona l output di myppmx deve essere una lista
 
-my_ppmx <- function(y,X=NULL,#Xpred=NULL,
-                          cohesion=1, alpha=1, maug = 3, #reuse = 1,
+my_ppmx <- function(y,X=NULL, alpha=1, maug = 3, #reuse = 1,
                           similarity=1, consim=1,
                           calibration=0,
                           similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),

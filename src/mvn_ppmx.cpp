@@ -7,7 +7,7 @@
 
 // [[Rcpp::export]]
 Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
-                    arma::vec catvec, double alpha, int CC, int consim, int cohesion,
+                    arma::vec catvec, double alpha, int CC, int consim, 
                     int similarity, arma::mat y, arma::vec xcon,
                     arma::vec xcat, arma::vec similparam, //arma::vec modelpriors,
                     arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
@@ -28,7 +28,6 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
 
   int dim = y.n_cols;
   double max_C, nout, sumx, sumx2, dval;
-  double ldet0; //for mvn density
   //number of saved iterations
   nout = (iter - burn)/(thin);
   Rcpp::Rcout << "nout =  " << nout << std::endl;
@@ -113,6 +112,14 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
 
   arma::mat sigma_star_curr(nobs, dim * dim);
   sigma_star_curr.fill(1); //tbfilled from input
+  
+  ////////////////////////////////////////////////////
+  //// log determinant of matrices stuff
+  ////////////////////////////////////////////////////
+  int row, col;
+  arma::mat work(dim, dim);
+  arma::vec wv(dim*dim);
+  double ldSig, sign;
 
   ////////////////////////////////////////////////////
   //// reuse algorithm stuff
@@ -142,7 +149,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   //ispred_iter.fill(0.0);
 
   ////////////////////////////////////////
-  // Stuf needed for similarities
+  // Stuff needed for similarities
   ////////////////////////////////////////
   
   int njtmp;
@@ -172,11 +179,13 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   arma::vec lgtilY(nobs + CC);
   lgtilY.fill(0.0);
   
+  double lgcondraw, lgcatdraw;
+  double sgY, sgN,  lgtilNk, lgtilYk, maxgtilY, maxgtilN;
+  
   ////////////////////////////////////////
   // Stuf needed for probabilities
   ////////////////////////////////////////
   
-  double sgY, sgN,  lgtilNk, lgtilYk, maxgtilY, maxgtilN;
   double maxwei, denwei;
   double uu, cweight;
   int newci, id_empty;
@@ -228,7 +237,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   // Stuff to compute lpml (log pseudo marginal likelihood),
   // likelihood, and WAIC widely applicable information criterion (WAIC),
   // also known as Watanabe–Akaike information criterion
-  /*double lpml_iter, elppdWAIC;
+  double lpml_iter, elppdWAIC;
    arma::vec CPOinv(nobs);
    CPOinv.fill(0.0);
    arma::vec like_iter(nobs);
@@ -237,7 +246,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
    mnlike.fill(0.0);
    arma::vec mnllike(nobs);
    mnllike.fill(0.0);
-   */
+   
   //	Hyper-prior parameters
   /*
    // priors for mu0
@@ -312,12 +321,12 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       sigma_empty.row(mm) = ran_iwish(hP0_nu0, hP0_V0, dim);
     }
   
-    /////////////////////////////////////////
-    // update the cluster labels with NEAL 8
-    /////////////////////////////////////////
-  
     for(i = 0; i < nobs; i++){
     
+      /////////////////////////////////////////
+      // update the cluster labels with NEAL 8
+      /////////////////////////////////////////
+      
       zi = curr_clu(i)-1; //sottraggo 1 perché C conta da 0
       
       if(nj_curr(zi) > 1){// Case where the nj corresponding to zi is such that nj>1
@@ -327,8 +336,6 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
          */
       
         nj_curr(zi) -= 1;
-        
-        //ldet0 = -dim*log(hP0_L0(0));
         
         for(j = 0; j < nclu_curr; j++){
           
@@ -471,9 +478,20 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
            
           if(calibration == 1){
             //if(j < nclu_curr){
-              //vogliono le inverse!!!
+            //vogliono le inverse!!!
+            
+            wv = sigma_star_curr.row(j);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+                }
+              }
+              
+              work = arma::chol(work, "lower");
+              arma::log_det(ldSig, sign, work);
+            
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
-                     sigma_star_curr.row(j), dim, ldet0, 1) +
+                     sigma_star_curr.row(j), dim, ldSig, 1) +
                        log((double) nj_curr(j)) + // cohesion part
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part
@@ -484,12 +502,23 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part;
             }*/
-          } else {
+          } 
+          if(calibration == 2){
             //if(calibration == 2){
             //if(j < nclu_curr){
-              //vogliono le inverse!!!
-              weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
-                     sigma_star_curr.row(j), dim, ldet0, 1)+
+            //vogliono le inverse!!!
+              
+            wv = sigma_star_curr.row(j);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+                     sigma_star_curr.row(j), dim, ldSig, 1)+
                        log((double) nj_curr(j)) + // cohesion part
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
             /*} else { 
@@ -582,15 +611,26 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part
             } else { */
+            wv = sigma_empty.row(j - nclu_curr);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            
               weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
-                     sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                     sigma_empty.row(j - nclu_curr), dim, ldSig, 1) +
                        log(alpha) - log(CC) +
                        lgcondraw + // Continuous covariate part
                        lgcatdraw; // categorical covariate part
                        //lgcatY - lgcatN + // Categorical part
                        //lgconY - lgconN;  // Continuous part;
             //}
-          } else {
+          } 
+          if(calibration == 2){
             //if(calibration == 2){
             /*if(j < nclu_curr){
               //vogliono le inverse!!!
@@ -599,16 +639,102 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                        log((double) nj_curr(j)) + // cohesion part
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
             } else { */
+            
+            wv = sigma_empty.row(j - nclu_curr);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            
               weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
-                     sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                     sigma_empty.row(j - nclu_curr), dim, ldSig, 1) +
                        log(alpha) - log(CC) +
                        (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
             //} 
           }
         }
         
+        if(calibration == 1){
+          maxgtilN = gtilN(0);
+          maxgtilY = gtilY(0);
+          for(j = 1; j < nclu_curr + CC; j++){
+            
+            if(maxgtilN < gtilN(j)) maxgtilN = gtilN(j);
+            
+            if(j < nclu_curr){
+              if(maxgtilY < gtilY(j)) maxgtilY = gtilY(j);
+            }
+          }
+          
+          sgY=0.0;
+          sgN=0.0;
+          for(j = 0; j < nclu_curr + CC; j++){
+            
+            lgtilN(j) = gtilN(j) - maxgtilN;
+            sgN = sgN + exp(lgtilN(j));
+            
+            if(j < nclu_curr){// If x is included in an existing cluster in cannot be a singleton
+              lgtilY(j) = gtilY(j) - maxgtilY;
+              sgY = sgY + exp(lgtilY(j));
+            }
+          }
+          
+          // Calibrate the unnormalized cluster probabilities
+          for(j = 0; j < nclu_curr; j++){
+            lgtilNk = lgtilN(j) - log(sgN);
+            lgtilYk = lgtilY(j) - log(sgY);
+            
+            wv = sigma_star_curr.row(j);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            
+            weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+                   sigma_star_curr.row(j), dim, ldSig, 1) + 
+                     log((double) nj_curr(j)) +  // Cohesion part
+                     lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+            
+            /*if(*cohesion==2){
+              ph[k] = ph[k] - log((double) nh[k]);
+            }*/
+          }
+          
+          // calibration for a singleton
+          for(j = nclu_curr; j < nclu_curr + CC; j++){
+            
+            wv = sigma_empty.row(j - nclu_curr);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            
+            weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
+                   sigma_empty.row(j - nclu_curr), dim, ldSig, 1) +
+                     log(alpha) - log(CC) +
+                     lgtilN[j] - // Continuous covariate part
+                     log(sgN);
+          }
+          
+          /*if(*cohesion==2){// Note with a uniform cohesion, for a new cluster
+            // the value of log(c({nclus_iter}}) = log(1) = 0;
+            ph[nclus_iter] = ph[nclus_iter] - log(Mdp);
+          }*/
+          
+        }
         
-        // prima di normalizzare i pesi devo fare calibrated similarity function
         maxwei = weight(0);
         for(j = 1; j < nclu_curr+ CC; j++){
           if(maxwei < weight(j)) maxwei = weight(j);
@@ -823,8 +949,19 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           if(calibration == 1){
             //if(j < nclu_curr){
               //vogliono le inverse!!!
+              
+              wv = sigma_star_curr.row(j);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
-                     sigma_star_curr.row(j), dim, ldet0, 1) +
+                     sigma_star_curr.row(j), dim, ldSig, 1) +
                        log((double) nj_curr(j)) + // cohesion part
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part
@@ -835,12 +972,24 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part;
             }*/
-          } else {
+          } 
+          if(calibration == 2){
             //if(calibration == 2){
             //if(j < nclu_curr){
               //vogliono le inverse!!!
+              
+              wv = sigma_star_curr.row(j);
+            for(row = 0; row < dim; row++){
+              for(col = 0; col < dim; col++){
+                work(row, col) = wv(row * dim + col);
+              }
+            }
+            
+            work = arma::chol(work, "lower");
+            arma::log_det(ldSig, sign, work);
+            
               weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
-                     sigma_star_curr.row(j), dim, ldet0, 1)+
+                     sigma_star_curr.row(j), dim, ldSig, 1)+
                        log((double) nj_curr(j)) + // cohesion part
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
             /*} else { 
@@ -857,7 +1006,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         /*if(cohesion==2){
           ph(j) = ph(j) - log((double) nj_curr(j));
         }*/
-      }//chiude il ciclo sui j cluster
+      //}//chiude il ciclo sui j cluster
       
       for(j = nclu_curr; j < CC; j++){
         
@@ -933,15 +1082,27 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
            lgcatY - lgcatN + // Categorical part
            lgconY - lgconN;  // Continuous part
            } else { */
+          
+          wv = sigma_empty.row(j - nclu_curr);
+          for(row = 0; row < dim; row++){
+            for(col = 0; col < dim; col++){
+              work(row, col) = wv(row * dim + col);
+            }
+          }
+          
+          work = arma::chol(work, "lower");
+          arma::log_det(ldSig, sign, work);
+          
           weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
-                 sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                 sigma_empty.row(j - nclu_curr), dim, ldSig, 1) +
                    log(alpha) - log(CC) +
                    lgcondraw + // Continuous covariate part
                    lgcatdraw; // categorical covariate part
           //lgcatY - lgcatN + // Categorical part
           //lgconY - lgconN;  // Continuous part;
           //}
-        } else {
+        } 
+        if(calibration == 2){
           //if(calibration == 2){
           /*if(j < nclu_curr){
            //vogliono le inverse!!!
@@ -950,15 +1111,101 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
            log((double) nj_curr(j)) + // cohesion part
            (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
            } else { */
+          
+          wv = sigma_empty.row(j - nclu_curr);
+          for(row = 0; row < dim; row++){
+            for(col = 0; col < dim; col++){
+              work(row, col) = wv(row * dim + col);
+            }
+          }
+          
+          work = arma::chol(work, "lower");
+          arma::log_det(ldSig, sign, work);
+          
           weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
-                 sigma_empty.row(j - nclu_curr), dim, ldet0, 1) +
+                 sigma_empty.row(j - nclu_curr), dim, ldSig, 1) +
                    log(alpha) - log(CC) +
                    (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
           //} 
         }
       }
       
-      // prima di normalizzare i pesi devo fare calibrated similarity function
+      if(calibration == 1){
+        maxgtilN = gtilN(0);
+        maxgtilY = gtilY(0);
+        for(j = 1; j < nclu_curr + CC; j++){
+          
+          if(maxgtilN < gtilN(j)) maxgtilN = gtilN(j);
+          
+          if(j < nclu_curr){
+            if(maxgtilY < gtilY(j)) maxgtilY = gtilY(j);
+          }
+        }
+        
+        sgY=0.0;
+        sgN=0.0;
+        for(j = 0; j < nclu_curr + CC; j++){
+          
+          lgtilN(j) = gtilN(j) - maxgtilN;
+          sgN = sgN + exp(lgtilN(j));
+          
+          if(j < nclu_curr){// If x is included in an existing cluster in cannot be a singleton
+            lgtilY(j) = gtilY(j) - maxgtilY;
+            sgY = sgY + exp(lgtilY(j));
+          }
+        }
+        
+        // Calibrate the unnormalized cluster probabilities
+        for(j = 0; j < nclu_curr; j++){
+          lgtilNk = lgtilN(j) - log(sgN);
+          lgtilYk = lgtilY(j) - log(sgY);
+          
+          wv = sigma_star_curr.row(j);
+          for(row = 0; row < dim; row++){
+            for(col = 0; col < dim; col++){
+              work(row, col) = wv(row * dim + col);
+            }
+          }
+          
+          work = arma::chol(work, "lower");
+          arma::log_det(ldSig, sign, work);
+          
+          weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
+                 sigma_star_curr.row(j), dim, ldSig, 1) + 
+                   log((double) nj_curr(j)) +  // Cohesion part
+                   lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+          
+          /*if(*cohesion==2){
+           ph[k] = ph[k] - log((double) nh[k]);
+          }*/
+        }
+        
+        // calibration for a singleton
+        for(j = nclu_curr; j < nclu_curr + CC; j++){
+          
+          wv = sigma_empty.row(j - nclu_curr);
+          for(row = 0; row < dim; row++){
+            for(col = 0; col < dim; col++){
+              work(row, col) = wv(row * dim + col);
+            }
+          }
+          
+          work = arma::chol(work, "lower");
+          arma::log_det(ldSig, sign, work);
+          
+          weight(j) = dmvnorm(y.row(i), mu_empty.row(j - nclu_curr),
+                 sigma_empty.row(j - nclu_curr), dim, ldSig, 1) +
+                   log(alpha) - log(CC) +
+                   lgtilN[j] - // Continuous covariate part
+                   log(sgN);
+        }
+        
+        /*if(*cohesion==2){// Note with a uniform cohesion, for a new cluster
+         // the value of log(c({nclus_iter}}) = log(1) = 0;
+         ph[nclus_iter] = ph[nclus_iter] - log(Mdp);
+         }*/
+        
+      }
       
       maxwei = weight(0);
       for(j = 1; j < nclu_curr+ CC; j++){
@@ -1013,9 +1260,19 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       
       //CONTROLLA ldet0 + calibration!!!
       
+      wv = sigma_star_curr.row(j);
+      for(row = 0; row < dim; row++){
+        for(col = 0; col < dim; col++){
+          work(row, col) = wv(row * dim + col);
+        }
+      }
+      
+      work = arma::chol(work, "lower");
+      arma::log_det(ldSig, sign, work);
       //R::dnorm(y(i), muh[curr_clu(i)-1], sig2h(curr_clu(i)-1), 0);
       like_iter(i) = dmvnorm(y.row(i), mu_star_curr.row(curr_clu(i)-1),
-              sigma_star_curr.row(curr_clu(i)-1), dim, ldet0, 1);
+              sigma_star_curr.row(curr_clu(i)-1), dim, ldSig, 1);
+      
       if((l > (burn-1)) & (l % (thin) == 0)){
         
         // These are needed for WAIC
@@ -1029,6 +1286,24 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     //////////////////////////////////////////////////
     // update the cluster value with NEAL 8 (II step)
     //////////////////////////////////////////////////
+    arma::vec Ln(dim*dim);
+    arma::vec mun(dim);
+      
+    for(j = 0; j < nclu_curr; j++){
+      Ln = hP0_L0 + sigma_star_curr.row(j);
+      mun = 
+    }
+    //hP0_L0;        hP0_V0;        hP0_m0;          hP0_nu0;          arma::vec Ln(dim*dim)
+            
+    
+    /*Ln<-solve( solve(matrix(L0, 2, 2)) + n*)
+    mun<-Ln%*%( solve(matrix(L0, 2, 2))%*%mu0 + n*solve(matrix(Sigma, 2, 2))%*%ybar )
+    theta<-c(ran_mvnorm(c(mun),c(Ln), 2)  )
+            
+            Sn<- matrix(S0, 2, 2) + ( t(Y)-c(theta) )%*%t( t(Y)-c(theta) ) 
+            Sigma<-matrix(ran_iwish(nu0+n, c(solve(Sn)), 2), 2, 2)
+      */
+    
     
     //muh cluster specific mean
     
