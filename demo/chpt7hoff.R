@@ -49,21 +49,16 @@ for(s in 1:5000){
   theta<-rmvnorm(1,mun,Ln)  
   ###update Sigma
   Sn<- S0 + ( t(Y)-c(theta) )%*%t( t(Y)-c(theta) ) 
-  #  Sigma<-rinvwish(1,nu0+n,solve(Sn))
   Sigma<-solve( rwish(1, nu0+n, solve(Sn)) )
   ###
   YS<-rbind(YS,rmvnorm(1,theta,Sigma)) 
   ### save results 
   THETA<-rbind(THETA,theta) ; SIGMA<-rbind(SIGMA,c(Sigma))
-  #cat(s,round(theta,2),round(c(Sigma),2),"\n")
-}
+  }
 
 quantile(  SIGMA[,2]/sqrt(SIGMA[,1]*SIGMA[,4]), prob=c(.025,.5,.975) )
 quantile(   THETA[,2]-THETA[,1], prob=c(.025,.5,.975) )
-mean( THETA[,2]-THETA[,1])
-mean( THETA[,2]>THETA[,1]) 
-mean(YS[,2]>YS[,1])
-
+mean( THETA[,2]-THETA[,1]); mean( THETA[,2]>THETA[,1]); mean(YS[,2]>YS[,1])
 
 ##my CODE
 rm(list=ls())
@@ -75,41 +70,25 @@ load("data/reading.RData")
 Y<-reading
 
 mu0<-c(50,50)
-L0<-c( c(625,312.5,312.5,625))
-
+L0 <- c(solve(matrix(c(625,312.5,312.5,625), 2, 2)))
 nu0<-4
-S0<-c( c(625,312.5,312.5,625))
+S0<- c(solve(matrix(c(625,312.5,312.5,625), 2, 2)))
 
 n<-dim(Y)[1] ; ybar<-apply(Y,2,mean)
-Sigma<-c(cov(Y)) ; THETA<-SIGMA<-NULL
+Sigma<-c(solve(cov(Y))) ; THETA<-SIGMA<-NULL
 YS<-NULL
-#set.seed(1)
 for(s in 1:5000){
-  
   ###update theta
-  Ln<-solve( solve(matrix(L0, 2, 2)) + n*solve(matrix(Sigma, 2, 2)) )
-  mun<-Ln%*%( solve(matrix(L0, 2, 2))%*%mu0 + n*solve(matrix(Sigma, 2, 2))%*%ybar )
-  theta<-c(ran_mvnorm(c(mun),c(Ln), 2)  )
-  ### 
-  
+  Ln<-matrix(L0, 2, 2) + n*matrix(Sigma, 2, 2)
+  mun<-solve(Ln)%*%( matrix(L0, 2, 2)%*%mu0 + n*matrix(Sigma, 2, 2)%*%ybar )
+  theta<-c(ran_mvnorm(c(mun),c(solve(Ln)), 2)  )
   ###update Sigma
-  Sn<- matrix(S0, 2, 2) + ( t(Y)-c(theta) )%*%t( t(Y)-c(theta) ) 
-  #  Sigma<-rinvwish(1,nu0+n,solve(Sn))
-  Sigma<-matrix(ran_iwish(nu0+n, c(solve(Sn)), 2), 2, 2)
-  #Sigma<-solve( rwish(1, nu0+n, solve(Sn)) )
-  #cat("1", Sigma[1,1], "\n")
-  #cat("2", Sigma[2,2], "\n")
+  Sn<- solve(solve(matrix(S0, 2, 2)) + ( t(Y)-c(theta) )%*%t( t(Y)-c(theta)))
+  Sigma<-solve(matrix(ran_iwish(nu0+n, c(Sn), 2), 2, 2))
   ###
-  
-  ###
-  YS<-rbind(YS, c(ran_mvnorm(theta,c(Sigma), 2) ))
-  ###
-  
+  YS<-rbind(YS, c(ran_mvnorm(c(theta),c(solve(Sigma)), 2) ))
   ### save results 
-  THETA<-rbind(THETA,theta) ; SIGMA<-rbind(SIGMA,c(Sigma))
-  ###
-  #cat(s,round(theta,2),round(c(Sigma),2),"\n")
-}
+  THETA<-rbind(THETA,theta) ; SIGMA<-rbind(SIGMA,c(solve(Sigma)))}
 
 quantile(  SIGMA[,2]/sqrt(SIGMA[,1]*SIGMA[,4]), prob=c(.025,.5,.975) )
 quantile(   THETA[,2]-THETA[,1], prob=c(.025,.5,.975) )

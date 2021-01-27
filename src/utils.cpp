@@ -111,7 +111,7 @@ Sig is argument and S is parameter.
 *In Hoff is S_0\Sigma^{-1}
 nu0 - degrees of freedom of the inverse-wishart function*/
   
-
+  // [[Rcpp::export]]
 double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0, 
                 int logout){
   
@@ -143,7 +143,7 @@ double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0,
 }
 
 //Random Draw from Wishart distribution
-
+// [[Rcpp::export]]
 arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
   
   //Rcpp::Rcout << "input" << Sig << std::endl;
