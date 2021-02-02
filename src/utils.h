@@ -1,3 +1,8 @@
+double quform(arma::vec, arma::vec, int);
+double inner_product(arma::vec, int, arma::vec, int, int);
+double squared_norm(arma::vec, int, int, int);
+arma::vec cholesky(arma::vec, int);
+double logdet(arma::vec, int);
 double dinvgamma(double, double, double, int);
 double dN_IG(double, double, double, double, double, double, int);
 double dmvnorm(arma::vec, arma::vec, arma::vec, int,  double,  int); 

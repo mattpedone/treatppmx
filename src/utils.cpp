@@ -1,11 +1,40 @@
-//define ARMA_DONT_PRINT_ERRORS 
+/* 
+ * functions quform, inner_product and squared norm are adapted from
+ * correspondent functions in MATRIX.C - Routines for doing matrix operations. 
+ * 
+ *  Copyright (c) 1995-2004 by Radford M. Neal
+ *
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
+ */
+
+/* most of remaining are adapted from correspondent function in ppmSuite package
+ * Copyright (c) 2009 Steven McKay Curtis and Garritt L. Page
+ *
+ * I give permission for anyone to use and/or modify these
+ * programs provided the following conditions are met:
+ *
+ * 1) This copyright message is retained.
+ * 2) Any changes to the code are noted.
+ *
+ * These programs are provided WITHOUT ANY WARRNTY.
+ *
+ */
+
   #include <RcppArmadillo.h>
   #include <math.h>
   #include <Rcpp.h>
   #include <R.h>
   #include <Rmath.h>
   
-  //quadratic form
+//quadratic form
 double quform(arma::vec x, arma::vec A, int dim){
   
   int i, j;
@@ -20,6 +49,141 @@ double quform(arma::vec x, arma::vec A, int dim){
     sm += x(i)*x(i)*A(i * dim + i);
   }
   return(sm);
+}
+
+//inner product
+/* Each vector is of length n, and is stored in memory in successive locations 
+ * that are at a given distance apart. For an ordinary vector, a distance of 1 
+ * is used, but other distances can come about from looking at columns of a 
+ * matrix.
+ */
+// [[Rcpp::export]]
+double inner_product(arma::vec v1, int d1, arma::vec v2, int d2, int n){
+  double s = 0;
+  int i;
+  int idx1= 0;
+  int idx2 = 0;
+  for(i = n; i > 0; i--){
+    s += v1(idx1) * v2(idx2);
+    idx1 += d1;
+    idx2 += d2;
+  }
+  return s;
+}
+
+//squared norm
+/* The vector (of length n) is stored in memory in successive locations that are 
+ * at a given distance apart.  For an ordinary vector, a distance of 1 is 
+ * used, but other distances can come about from looking at columns of a matrix.
+ */
+// [[Rcpp::export]]
+double squared_norm(arma::vec v, int d, int n, int sq){
+  double s = 0;
+  int i;
+  int idx = 0;
+  
+  for(i = n; i > 0; i--){
+    s += v(idx)*v(idx);
+    idx += d;
+  }
+  if(sq == 0){
+    s = std::pow(s, .5);
+    return s;
+  }
+  return s;
+}
+
+//Cholesky decomposition of posdef sym n x n matrix
+// [[Rcpp::export]]
+arma::vec cholesky(arma::vec A, int n) {
+  arma::vec L(n*n);
+  L.fill(0);
+  
+  for (int i = 0; i < n; i++){
+    for(int j = 0; j < (i+1); j++){
+      double s = 0;
+      for(int k = 0; k < j; k++){
+        s += L[i * n + k] * L[j * n + k];
+        }
+      if(i == j){
+        L[i * n + j] = sqrt(A[i * n + i] - s);
+        } else {
+          L[i * n + j] = (1.0 / L[j * n + j] * (A[i * n + j] - s));
+          }
+        }
+    }
+  return L;
+}
+
+//[[Rcpp::export]]
+arma::mat wa(arma::vec v, int dim){
+  arma::vec wv = v;
+  arma::mat work(dim, dim);
+  for(int row = 0; row < dim; row++){
+    for(int col = 0; col < dim; col++){
+      work(row, col) = wv(row * dim + col);
+    }
+  }
+  
+  work = arma::chol(work, "lower");
+  //arma::log_det(ldSig, sign, work);
+  return work;
+}
+
+//log determinant of a posdef sym matrix
+
+/*
+ * If the symmetric positive definite matrix A is represented by its Cholesky 
+ * decomposition A = LL' or A = U'U, then the determinant of this matrix can 
+ * be calculated as the product of squares of the diagonal elements of L or U.
+ * vector A of dim (n x n) x 1 stores the cholesky decomposition of the 
+ * (n x n) matrix whose log determinant we are looking for
+ * A n x n matrix whose determinant we want to compute 
+ */
+// [[Rcpp::export]]
+double logdet(arma::vec A, int n) {
+  arma::vec L(n*n);
+  L.fill(0);
+  double logdet = 0.0;
+  double de = 1.0;
+  
+  for (int i = 0; i < n; i++){
+    for(int j = 0; j < (i+1); j++){
+      double s = 0;
+      for(int k = 0; k < j; k++){
+        s += L[i * n + k] * L[j * n + k];
+      }
+      if(i == j){
+        L[i * n + j] = sqrt(A[i * n + i] - s);
+      } else {
+        L[i * n + j] = (1.0 / L[j * n + j] * (A[i * n + j] - s));
+      }
+      if(i == j){
+        de *= (A[i * n + i] - s);
+      }
+      logdet =log(de);
+    }
+  }
+    return logdet;
+}
+
+//[[Rcpp::export]]
+double wa_det(arma::vec v, int dim){
+  //arma::vec wv = v;
+  arma::mat work(dim, dim);
+  double res, sign;
+  for(int row = 0; row < dim; row++){
+    for(int col = 0; col < dim; col++){
+      work(row, col) = v(row * dim + col);
+    }
+  }
+  //work = arma::inv(work);
+  //work = arma::chol(work, "lower");
+  //work = work.t();
+  //Rcpp::Rcout << work << std::endl;
+  arma::log_det(res, sign, work);
+  //res =log(det(work));
+  return res;
 }
 
 // Inverse Gamma density
@@ -59,16 +223,36 @@ double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0
   
 }
 
-//Multivariate normal density
-// [[Rcpp::export]]
-/*
- * Sig è la precision matrix
+/* Multivariate normal density
+ * y is the observation vector for which the density will be computed
+ * mu is mean vector
+ * Sig è la VARIANCE matrix
+ * dim dimension of multivariate distribution
  * ld vuole log determinant variance matrix
+ * logout logical if 1 returns log density
  */
-double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, int logout){
+// [[Rcpp::export]]
+double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, 
+               int logout){
+  
+  int i, j, k;
+  arma::mat work(dim, dim);
+    
+    for(j = 0; j < dim; j++){
+      for(k = 0; k < dim; k++){
+        work(j, k) = Sig(j * dim + k);
+      }
+    }
+    work = arma::inv(work);
+    
+    for(j = 0; j < dim; j++){
+      for(k = 0; k < dim; k++){
+        Sig(j * dim + k) = work(j, k);
+      }
+    }
   
   arma::vec scr(dim);
-  int i;
+  
   double qf, out;
   for(i = 0; i < dim; i++){
     scr(i) = y(i) - mu(i);
@@ -79,9 +263,8 @@ double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, int
   return exp(out);
 }
 
-//Sampling Multivariate Normal
 // [[Rcpp::export]]
-arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim){
+arma::vec ran_mvnorm_old(arma::vec m, arma::vec Sig, int dim){
   
   int i,j;
   arma::mat cholV(dim, dim);
@@ -103,14 +286,39 @@ arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim){
   return out;
 }
 
+/* Sampling Multivariate Normal
+ * m vector of dimension dim storing the mean
+ * Sig vector for VARIANCE MATRIX
+ * dim dimension of multivarite normal distribution
+ */
+// [[Rcpp::export]]
+arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim){
+  int i,j;
+  arma::vec cholV(dim * dim);
+  cholV = cholesky(Sig, dim);
+  arma::vec z(dim);
+  arma::vec out(dim);
+  for(i = 0; i < dim; i++){
+    z(i) = R::rnorm(0,1);
+    out(i) = m(i);
+    for(j = 0; j <= i; j++){
+      out(i) += cholV(i * dim + j)*z(j);
+    }
+  }
+  return out;
+}
+
 /* The following provides a density function for the Inverse Wishart
-distribution.  This function relies heavily on matrix.c
-To use it I must create an matrix.o(object file)
-Sig is argument and S is parameter.
-*Sig - is SSigma^{-1} that is found in the trace of the density.  
-*In Hoff is S_0\Sigma^{-1}
-nu0 - degrees of freedom of the inverse-wishart function*/
-  
+ * distribution.  
+ * Sig is argument and S is parameter.
+ * SSiginv - is SSig^{-1} that is found in the trace of the density stored in a vec
+ * In Hoff is S_0\Sigma^{-1}
+ * dim id the dimension of the scale matrix distribution
+ * detSig is the determinant of Sig (argument)
+ * detS is the determinant of S (parameter)
+ * nu0 - degrees of freedom of the inverse-wishart function
+ * logout logical. if 1 returns logdensity
+ */
   // [[Rcpp::export]]
 double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0, 
                 int logout){
@@ -139,12 +347,10 @@ double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0,
   if(logout) return out;
   
   return exp(out);
-  
 }
 
-//Random Draw from Wishart distribution
 // [[Rcpp::export]]
-arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
+arma::vec ran_iwish_old(int nu, arma::vec Sig, int dim){
   
   //Rcpp::Rcout << "input" << Sig << std::endl;
   
@@ -197,16 +403,63 @@ arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
       }
     }
     
-    
   return outv;
 }
 
-// normal-normal Similarity function with x following normal and m a normal as well (v is fixed).
-// This is the result after integrating over mj.  One could also simply find the
-// ratio between likelihood multiplied by prior divided by posterior
+/* Random Draw from Wishart distribution
+ * nu degrees of freedom
+ * Sig matrix parameter NOT THE CHOLESKY DECOMPOSITION
+ * dim dimension of the Wishart distribution
+ */
+// [[Rcpp::export]]
+arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
+  
+  int i, j, k;
+  
+  arma::vec x(dim);
+  arma::vec zeros(dim);
+  zeros.fill(0.0);
+  //arma::vec outv(dim * dim);
+  arma::vec out(dim * dim);
+  out.fill(0.0);
+  
+  for(i = 0; i < nu; i++){
+    x = ran_mvnorm(zeros, Sig, dim);
+    for(j = 0; j < dim; j++){
+      for(k = 0; k <= j; k++){
+        out(j * dim + k) += x(j)*x(k);
+      }
+    }
+  }
+  
+  /* fill the upper triangular part with lower triangular part */
+  for(j=0; j<dim; j++){
+    for(k=0; k<j; k++){
+      out(k * dim + j) = out(j * dim + k);
+    }
+  }
+  
+  arma::mat outmat(dim, dim);
+  for(j = 0; j < dim; j++){
+    for(k = 0; k < dim; k++){
+      outmat(j,  k) = out(j * dim + k);
+    }
+  }
+  outmat = arma::inv(outmat);
+  
+  for(j = 0; j < dim; j++){
+    for(k = 0; k < dim; k++){
+      out(j * dim + k) = outmat(j,  k);
+      }
+    }
+  return out;
+}
 
-// The double dipper is included as an argument.
-
+/* normal-normal Similarity function with x following normal and m a normal as well (v is fixed).
+ * This is the result after integrating over mj.  One could also simply find the
+ * ratio between likelihood multiplied by prior divided by posterior
+ * The double dipper is included as an argument.
+ */
 double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2, double mle,
                  int n,  int DD, int cal, int logout){
   
@@ -228,7 +481,6 @@ double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2, do
   ld5 = R::dnorm(mle, m0, sqrt(s20),1);
   ld6 = R::dnorm(mle, mus, sqrt(s2s),1);
   
-  
   out = ld1 + ld2 - ld3;
   if(DD==1) out = ld1 + ld3 - ld4;
   if(cal==1) out = ld5 - ld6;
@@ -237,14 +489,12 @@ double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2, do
   
 }
 
-// normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
-// I didn't carry out integration explicitly over m and v. I simply used the fact that
-// marginal likelihood (similarity) is equal to likelihood x prior / posterior.  This
-// requires inserting a value for m and v which I use 0 and 1.
-
-// The double dipper is included as an argument.
-
-
+/* normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
+ * I didn't carry out integration explicitly over m and v. I simply used the fact that
+ * marginal likelihood (similarity) is equal to likelihood x prior / posterior.  This
+ * requires inserting a value for m and v which I use 0 and 1.
+ * The double dipper is included as an argument.
+ */
 double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, double sumx2,
                    double mnmle, double s2mle, int n, int DD, int cal, int logout){
   
@@ -275,25 +525,21 @@ double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, do
   ld6 = dN_IG(mnmle, s2mle, m0s, k0s, a0s, b0s, 1);
   
   out = ld1 + ld2 - ld3;
-  
-  
-  
+
   if(DD==1) out = ld1 + ld3 - ld4;
   if(cal==1) out = ld5 - ld6;
   if(!logout) out = exp(out);
   
-  //	Rprintf("out = %f\n", out);
   return(out);
-  
 }
 
-// Similarity function with for a categorical x  dirichlet-multinomial with out
-// where only on object is allocated (x_i is basically univariate that identifies which
-// category ith individual has).  The integral in reality is a product of two ratios,
-// but one of the ratios is constant in terms of $x$ and so disappears in the ratio
-// of similarity functions when updating cluster labels and so is ignored in the
-// function that follows.
-
+/* Similarity function with for a categorical x  dirichlet-multinomial with out
+ * where only on object is allocated (x_i is basically univariate that identifies which
+ * category ith individual has).  The integral in reality is a product of two ratios,
+ * but one of the ratios is constant in terms of $x$ and so disappears in the ratio
+ * of similarity functions when updating cluster labels and so is ignored in the
+ * function that follows.
+ */
 double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logout){
   
   int ii, sumc;
@@ -316,40 +562,37 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
   
   out = (R::lgammafn(tmp1) - tmp2) + (tmp4 - R::lgammafn(tmp3));
   
-  
-  //	Rprintf("out = %f\n", out);
-  
   if(DD==1) out = (R::lgammafn(tmp3) - tmp4) + (tmp6 - R::lgammafn(tmp5));
   if(sumc==0) out = log(1);
   if(!logout) out = exp(out);
-  return(out);
   
+  return(out);
 }
 
-// Multivariate normal-normal-inverse-wishart Similarity function with x following normal
-// and (m, V) following a N-IW.   I evaluate the ratio between likelihood multiplied by prior
-// divided by posterior.  Arguments are the following
-//
-  // m0 - is the prior mean vector of dimension dim
-// lam0 - is the prior scale parameter that is a scalar
-// nu0 - is the prior degrees of freedom and is a scalar
-// V0 - is the prior covariance matrix of dimension dim x dim
-//
-  // sumxvec - is a vector of dimension 1 x dim containing totals of covariates
-// SumSq - dim x dim matrix whose value is \sum_{i=1}^{n} (x_i - xbar) (x_i - xbar)'
-// sumsq - scalar whose value is \sum_{i=1}^{n} x_i'x_i
-// dim - is a scalar to provides dimension
-// n - is a scalar indication number of observations
-// DD - is a logical determining if double dipper should be used or auxiliary
-// logout - a logical indicating on whether log of g(x) should provided.
-//
-  // The double dipper is included as an argument.
-//
-  // NOTE: SINCE ARGUMENTS OF LIKELIHOOD ARE ARBITRARY, I USE THE FOLLOWING
-// m_j = zero vector
-// V_j = Identity
-// THIS IS REFLECTED IN THE VALUE OF THE "LIKELIHOOD"
-
+/* Multivariate normal-normal-inverse-wishart Similarity function with x following normal
+ * and (m, V) following a N-IW.   I evaluate the ratio between likelihood multiplied by prior
+ * divided by posterior.  Arguments are the following
+ *
+ * m0 - is the prior mean vector of dimension dim
+ * lam0 - is the prior scale parameter that is a scalar
+ * nu0 - is the prior degrees of freedom and is a scalar
+ * V0 - is the prior covariance matrix of dimension dim x dim
+ *
+ * sumxvec - is a vector of dimension 1 x dim containing totals of covariates
+ * SumSq - dim x dim matrix whose value is \sum_{i=1}^{n} (x_i - xbar) (x_i - xbar)'
+ * sumsq - scalar whose value is \sum_{i=1}^{n} x_i'x_i
+ * dim - is a scalar to provides dimension
+ * n - is a scalar indication number of observations
+ * DD - is a logical determining if double dipper should be used or auxiliary
+ * logout - a logical indicating on whether log of g(x) should provided.
+ *
+ * The double dipper is included as an argument.
+ *
+ * NOTE: SINCE ARGUMENTS OF LIKELIHOOD ARE ARBITRARY, I USE THE FOLLOWING
+ * m_j = zero vector
+ * V_j = Identity
+ * THIS IS REFLECTED IN THE VALUE OF THE "LIKELIHOOD"
+ */
 double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0, 
                         int dim, arma::vec sumxvec, arma::vec SumSq, double sumsq, 
                         int n,  int DD, int logout){
@@ -364,11 +607,7 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
   arma::vec scr3(dim);
   arma::vec scr4(dim * dim);
   arma::vec scr5(dim * dim);
-  //double *scr1, double *scr2, double *scr3, double *scr4, double *scr5
-  
   double lams, lamss, nus, nuss;
-  
-  //	RprintVecAsMat("SumSq", SumSq, dim, dim);
   
   // Loglikelihood evaluation
   ld1 = -0.5*n*dim*log(2*M_PI) -  0.5*sumsq;
@@ -380,9 +619,8 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
       scr1(j) = (lam0)*Sig0(j);
   } // scr1 = ((1/lam0)Sig_j)^{-1}
   ldet0 = -dim*log(lam0);
-  
-  ld2 = dmvnorm(m0, m0, scr1, dim, ldet0, 1) + 
-    dinvwish(Sig0, dim, 1.0,  1.0, nu0, 1);
+  //qui va messa la vvarianza invece della precisione (scr1) e ldet0 va messo con segno +
+  ld2 = dmvnorm(m0, m0, scr1, dim, ldet0, 1) + dinvwish(Sig0, dim, 1.0,  1.0, nu0, 1);
   
   // Auxiliary
   lams = lam0 + n;
@@ -392,15 +630,12 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
     scr1(j) = (1.0/n)*sumxvec(j) - m0(j); // scr1 is now (xbar-m0)
   }
   
-  
-  //	RprintVecAsMat("xbar_m0", xbar_m0, 1, dim);
-  
   for(i = 0; i < dim; i++){
     for(j = 0; j < dim; j++){
       work(i, j) = scr1(i * dim +j);
     }
   }
-  //qui mi serve matrix_product per fare tra 2 vettori il prodotto tra matrici
+  //qui mi serve matrix product per fare tra 2 vettori il prodotto tra matrici
   work = work * work;//scr1 * scr1;//matrix_product(scr1, scr1, scr2, dim, dim, 1); // scr2 is (xbar-m0)(xbar-m0)'
   
   for(i = 0; i < dim; i++){
@@ -408,19 +643,13 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
        scr2(i * dim +j) = work(i, j);
     }
   }
-  //	RprintVecAsMat("(xbar_m0) (xbar_m0)'", scr1, dim, dim);
-  
   for(j = 0; j < dim; j++){
     scr3(j) = (lam0*m0(j) + sumxvec(j))/(lam0 + n); // scr3 is Ms
-    
-    for(jj = 0; jj < dim; jj++){
-      
+      for(jj = 0; jj < dim; jj++){
       scr4(j * dim + jj) = Sig0(j * dim + jj) + SumSq(j * dim + jj) + ((lam0*n)/(lam0 + n))*scr2(j *dim + jj); // scr4 is Psis
       scr5(j * dim + jj) = scr4(j * dim + jj);
-      
       scr1(j * dim + jj) = (lams)*Sig0(j * dim + jj); // Now scr1 = ((1/lams)Sig_j)^{-1}
-      
-    }
+      }
   }
   ldets = -dim*log(lams);
   
@@ -440,9 +669,7 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
   arma::log_det(ldSig, sign, work);
   
   // Note, the first argument is m_j in notes which is arbitrary so I set it to m0
-  // scr1 = ((1/lams)Sig_j)^{-1}
-  // scr3 = Ms
-  // scr4 = Psis
+  //vd commento prima x dmvnorm
   ld3 = dmvnorm(m0, scr3, scr1, dim, ldets, 1) + dinvwish(scr4, dim, 1.0, exp(ldSig*sign), nus, 1);
   
   // double dipper
@@ -458,7 +685,7 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
       work(i, j) = scr1(i * dim +j);
     }
   }
-  //qui mi serve matrix_product per fare tra 2 vettori il prodotto tra matrici
+  //qui mi serve matrix product per fare tra 2 vettori il prodotto tra matrici
   work = work * work;//scr1 * scr1;//matrix_product(scr1, scr1, scr2, dim, dim, 1); // scr2 is (xbar-m0)(xbar-m0)'
   
   for(i = 0; i < dim; i++){
@@ -485,16 +712,8 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
     scr2(j) = (lamss)*Sig0(j); // scr2 = ((1/lamss)Sig_j)^{-1}
     }
   ldetss = -dim*log(lamss);
-  
-  // scr1 = Mss
-  // scr2 = ((1/lamss)Sig_j)^{-1}
-  // scr3 = not needed
-  // scr4 = Psiss (used to get determinant
-  // scr5 = Psiss
-  
-  //	Rprintf("dmvnorm(m0, Mss, lamssVj, dim, ldetss, scr2, 1) = %f\n", dmvnorm(m0, scr1, scr2, dim, ldetss, scr4, 1));
-  
-  for(i = 0; i < dim; i++){
+
+    for(i = 0; i < dim; i++){
     for(j = 0; j < dim; j++){
       work(i, j) = scr4(i * dim +j);
     }
@@ -508,9 +727,9 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
       scr4(i * dim +j) = work(i, j);
     }
   }
-  //cholesky(scr3, dim, &ldV);
   
   // Note, the first argument is m_j in notes which is arbitrary so I set it to m0
+  //vd commento prima x dmvnorm
   ld4 = dmvnorm(m0, scr1, scr2, dim, ldetss, 1) + dinvwish(scr5, dim, 1.0, exp(ldSig*sign), nuss, 1);
   
   out = ld1 + ld2 - ld3;
