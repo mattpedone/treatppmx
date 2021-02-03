@@ -34,3 +34,32 @@ plot(density(out$sig20), type='l')
 plot(X[,1], Y, ylab="weight", xlab="length", pch=20)
 points(X[,1], apply(out$fitted,2,mean), col='blue',pch="+", cex=1.5)
 
+rm(list=ls())
+devtools::load_all()
+library(rrr)
+library(dplyr)
+data(tobacco)
+tobacco <- as_data_frame(tobacco)
+tobacco_x <- tobacco %>%
+  select(starts_with("X"))
+
+tobacco_y <- tobacco %>% 
+  select(starts_with("Y"))
+
+#x <- as.matrix(tobacco_x)
+#y <- as.matrix(tobacco_y)
+
+modelpriors <- list()
+modelpriors$hP0_m0 <- rep(0, 3)
+modelpriors$hP0_L0 <- diag(1, 3)
+modelpriors$hP0_nu0 <- 2
+modelpriors$hP0_V0 <- diag(1, 3)
+
+my_mvn_ppmx(y = tobacco_y, X = tobacco_x, alpha=1, CC = 3, similarity = 1, consim=1, calibration=1,
+                        similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
+                        modelpriors,
+                        mhtune=c(0.5, 0.5),
+                        iter=1100,burn=100,thin=1)
+#correggi inizializzazione matrice sigma curr (anche mu_curr)
+##tra 492 e 453 e 725
+

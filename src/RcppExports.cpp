@@ -6,6 +6,37 @@
 
 using namespace Rcpp;
 
+// mvn_ppmx
+Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, arma::vec catvec, double alpha, int CC, int consim, int similarity, int calibration, arma::mat y, arma::vec xcon, arma::vec xcat, arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_V0, arma::vec mhtune);
+RcppExport SEXP _treatppmx_mvn_ppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP CCSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP similparamSEXP, SEXP hP0_m0SEXP, SEXP hP0_L0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_V0SEXP, SEXP mhtuneSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
+    Rcpp::traits::input_parameter< int >::type ncon(nconSEXP);
+    Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type catvec(catvecSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< int >::type CC(CCSEXP);
+    Rcpp::traits::input_parameter< int >::type consim(consimSEXP);
+    Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
+    Rcpp::traits::input_parameter< int >::type calibration(calibrationSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcon(xconSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcat(xcatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type similparam(similparamSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type hP0_m0(hP0_m0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type hP0_L0(hP0_L0SEXP);
+    Rcpp::traits::input_parameter< double >::type hP0_nu0(hP0_nu0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type hP0_V0(hP0_V0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mhtune(mhtuneSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvn_ppmx(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, consim, similarity, calibration, y, xcon, xcat, similparam, hP0_m0, hP0_L0, hP0_nu0, hP0_V0, mhtune));
+    return rcpp_result_gen;
+END_RCPP
+}
 // myppmx
 Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat, arma::vec catvec, double alpha, int CC, int cohesion, int similarity, int consim, arma::vec y, arma::vec xcon, arma::vec xcat, arma::vec similparam, arma::vec modelpriors, arma::vec mhtune, int calibration);
 RcppExport SEXP _treatppmx_myppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP CCSEXP, SEXP cohesionSEXP, SEXP similaritySEXP, SEXP consimSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP similparamSEXP, SEXP modelpriorsSEXP, SEXP mhtuneSEXP, SEXP calibrationSEXP) {
@@ -35,6 +66,83 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// inner_product
+double inner_product(arma::vec v1, int d1, arma::vec v2, int d2, int n);
+RcppExport SEXP _treatppmx_inner_product(SEXP v1SEXP, SEXP d1SEXP, SEXP v2SEXP, SEXP d2SEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type v1(v1SEXP);
+    Rcpp::traits::input_parameter< int >::type d1(d1SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type v2(v2SEXP);
+    Rcpp::traits::input_parameter< int >::type d2(d2SEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(inner_product(v1, d1, v2, d2, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// squared_norm
+double squared_norm(arma::vec v, int d, int n, int sq);
+RcppExport SEXP _treatppmx_squared_norm(SEXP vSEXP, SEXP dSEXP, SEXP nSEXP, SEXP sqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
+    Rcpp::traits::input_parameter< int >::type d(dSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type sq(sqSEXP);
+    rcpp_result_gen = Rcpp::wrap(squared_norm(v, d, n, sq));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cholesky
+arma::vec cholesky(arma::vec A, int n);
+RcppExport SEXP _treatppmx_cholesky(SEXP ASEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type A(ASEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(cholesky(A, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// wa
+arma::mat wa(arma::vec v, int dim);
+RcppExport SEXP _treatppmx_wa(SEXP vSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(wa(v, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// logdet
+double logdet(arma::vec A, int n);
+RcppExport SEXP _treatppmx_logdet(SEXP ASEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type A(ASEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(logdet(A, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// wa_det
+double wa_det(arma::vec v, int dim);
+RcppExport SEXP _treatppmx_wa_det(SEXP vSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(wa_det(v, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dmvnorm
 double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, int logout);
 RcppExport SEXP _treatppmx_dmvnorm(SEXP ySEXP, SEXP muSEXP, SEXP SigSEXP, SEXP dimSEXP, SEXP ldSEXP, SEXP logoutSEXP) {
@@ -48,6 +156,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type ld(ldSEXP);
     Rcpp::traits::input_parameter< int >::type logout(logoutSEXP);
     rcpp_result_gen = Rcpp::wrap(dmvnorm(y, mu, Sig, dim, ld, logout));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ran_mvnorm_old
+arma::vec ran_mvnorm_old(arma::vec m, arma::vec Sig, int dim);
+RcppExport SEXP _treatppmx_ran_mvnorm_old(SEXP mSEXP, SEXP SigSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(ran_mvnorm_old(m, Sig, dim));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -65,41 +186,63 @@ BEGIN_RCPP
 END_RCPP
 }
 // dinvwish
-double dinvwish(arma::vec Sig, int dim, double detSig, double detS, int nu0, int logout);
-RcppExport SEXP _treatppmx_dinvwish(SEXP SigSEXP, SEXP dimSEXP, SEXP detSigSEXP, SEXP detSSEXP, SEXP nu0SEXP, SEXP logoutSEXP) {
+double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0, int logout);
+RcppExport SEXP _treatppmx_dinvwish(SEXP SSiginvSEXP, SEXP dimSEXP, SEXP detSigSEXP, SEXP detSSEXP, SEXP nu0SEXP, SEXP logoutSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type SSiginv(SSiginvSEXP);
     Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< double >::type detSig(detSigSEXP);
     Rcpp::traits::input_parameter< double >::type detS(detSSEXP);
     Rcpp::traits::input_parameter< int >::type nu0(nu0SEXP);
     Rcpp::traits::input_parameter< int >::type logout(logoutSEXP);
-    rcpp_result_gen = Rcpp::wrap(dinvwish(Sig, dim, detSig, detS, nu0, logout));
+    rcpp_result_gen = Rcpp::wrap(dinvwish(SSiginv, dim, detSig, detS, nu0, logout));
     return rcpp_result_gen;
 END_RCPP
 }
-// ran_wish
-arma::mat ran_wish(int nu, arma::vec Sig, int dim);
-RcppExport SEXP _treatppmx_ran_wish(SEXP nuSEXP, SEXP SigSEXP, SEXP dimSEXP) {
+// ran_iwish_old
+arma::vec ran_iwish_old(int nu, arma::vec Sig, int dim);
+RcppExport SEXP _treatppmx_ran_iwish_old(SEXP nuSEXP, SEXP SigSEXP, SEXP dimSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type nu(nuSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
     Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
-    rcpp_result_gen = Rcpp::wrap(ran_wish(nu, Sig, dim));
+    rcpp_result_gen = Rcpp::wrap(ran_iwish_old(nu, Sig, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ran_iwish
+arma::vec ran_iwish(int nu, arma::vec Sig, int dim);
+RcppExport SEXP _treatppmx_ran_iwish(SEXP nuSEXP, SEXP SigSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(ran_iwish(nu, Sig, dim));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_treatppmx_mvn_ppmx", (DL_FUNC) &_treatppmx_mvn_ppmx, 21},
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
+    {"_treatppmx_inner_product", (DL_FUNC) &_treatppmx_inner_product, 5},
+    {"_treatppmx_squared_norm", (DL_FUNC) &_treatppmx_squared_norm, 4},
+    {"_treatppmx_cholesky", (DL_FUNC) &_treatppmx_cholesky, 2},
+    {"_treatppmx_wa", (DL_FUNC) &_treatppmx_wa, 2},
+    {"_treatppmx_logdet", (DL_FUNC) &_treatppmx_logdet, 2},
+    {"_treatppmx_wa_det", (DL_FUNC) &_treatppmx_wa_det, 2},
     {"_treatppmx_dmvnorm", (DL_FUNC) &_treatppmx_dmvnorm, 6},
+    {"_treatppmx_ran_mvnorm_old", (DL_FUNC) &_treatppmx_ran_mvnorm_old, 3},
     {"_treatppmx_ran_mvnorm", (DL_FUNC) &_treatppmx_ran_mvnorm, 3},
     {"_treatppmx_dinvwish", (DL_FUNC) &_treatppmx_dinvwish, 6},
-    {"_treatppmx_ran_wish", (DL_FUNC) &_treatppmx_ran_wish, 3},
+    {"_treatppmx_ran_iwish_old", (DL_FUNC) &_treatppmx_ran_iwish_old, 3},
+    {"_treatppmx_ran_iwish", (DL_FUNC) &_treatppmx_ran_iwish, 3},
     {NULL, NULL, 0}
 };
 

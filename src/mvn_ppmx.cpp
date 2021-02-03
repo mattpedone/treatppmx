@@ -5,15 +5,15 @@
 #include <Rmath.h>
 #include "utils.h"
 
-//Rcpp::List 
+//
 // [[Rcpp::export]]
-void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
+Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
                     arma::vec catvec, double alpha, int CC, int consim, 
-                    int similarity, arma::mat y, arma::vec xcon,
+                    int similarity, int calibration, arma::mat y, arma::vec xcon,
                     arma::vec xcat, arma::vec similparam, //arma::vec modelpriors,
                     arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
                     arma::vec hP0_V0,
-                    arma::vec mhtune, int calibration){
+                    arma::vec mhtune){
   
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -40,7 +40,7 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
 
   //sum of response vector
   arma::vec sumy(dim);
-  sumy = sum(y, 0);
+  sumy = arma::sum(y, 0).t();
 
   //compute mean and variance of each continuous covariate
   arma::vec xbar(ncon);
@@ -66,7 +66,6 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
    }
    }
   }*/
-  
   //////////////////////////
   ////Cluster-related stuff
   //////////////////////////
@@ -95,7 +94,6 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   for(i = 0; i < nobs; i++){
     if(nj_curr(i) > 0) nclu_curr += 1;
   }
-
   /*
    * questo è il vettore dei pesi, le probabilità per \rho (Alg 8, Neal 2000)
    * Ha lunghezza pari al massimo numeri di componenti possibile + il numero
@@ -113,7 +111,6 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
 
   arma::mat sigma_star_curr(nobs, dim * dim);
   sigma_star_curr.fill(1); //tbfilled from input
-  
   ////////////////////////////////////////////////////
   //// log determinant of matrices stuff
   ////////////////////////////////////////////////////
@@ -145,7 +142,6 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   /////////////////////////////////////
   // Storage for posterior predictive
   /////////////////////////////////////
-
   arma::mat ispred_iter(nobs, dim);
   ispred_iter.fill(0.0);
 
@@ -186,7 +182,6 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   ////////////////////////////////////////
   // Stuf needed for probabilities
   ////////////////////////////////////////
-  
   double maxwei, denwei;
   double uu, cweight;
   int newci, id_empty;
@@ -247,8 +242,7 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
    mnlike.fill(0.0);
    arma::vec mnllike(nobs);
    mnllike.fill(0.0);
-   
-  //	Hyper-prior parameters
+   //	Hyper-prior parameters
   /*
    // priors for mu0
    double m = modelpriors(0);
@@ -301,6 +295,14 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   
    ll = 0;
    */
+  
+  //Stuff for storage and return
+  arma::vec nclus(nout);
+  arma::mat mu_out(nout*nobs, dim);
+  arma::mat sigma_out(nout*nobs, dim*dim);
+  arma::vec Clui(nout * nobs, arma::fill::ones);
+  arma::vec like(nout * nobs, arma::fill::ones);
+  arma::mat ispred(nout * nobs, dim, arma::fill::ones);
   ////////////////////////////////////////
   //
   // HERE COMES THE MCMC
@@ -318,10 +320,10 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
      */
     
     for(mm = 0; mm < CC; mm++){
-      mu_empty.row(mm) = ran_mvnorm(hP0_m0, hP0_L0, dim);
-      sigma_empty.row(mm) = ran_iwish(hP0_nu0, hP0_V0, dim);
+      mu_empty.row(mm) = ran_mvnorm(hP0_m0, hP0_L0, dim).t();
+      sigma_empty.row(mm) = ran_iwish(hP0_nu0, hP0_V0, dim).t();
     }
-  
+    
     for(i = 0; i < nobs; i++){
     
       /////////////////////////////////////////
@@ -477,26 +479,29 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           /*
            * ogni volta controlla se i determinanti e le matrici di covarianza/precision le passo bene
            */
-           
+          
           if(calibration == 1){
-            
-            ldSig = logdet(sigma_star_curr.row(j), dim);
-            weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
-                     sigma_star_curr.row(j), dim, ldSig, 1) +
+            ldSig = logdet(sigma_star_curr.row(j).t(), dim);
+            Rcpp::Rcout << "qui, riga 485" << std::endl;
+          Rcpp::Rcout << "qui, riga 486: sing" << sigma_star_curr.row(j).t() <<std::endl;
+            weight(j) = /*dmvnorm(y.row(i).t(), mu_star_curr.row(j).t(),
+                     sigma_star_curr.row(j).t(), dim, ldSig, 1) +*/
                        log((double) nj_curr(j)) + // cohesion part
                        lgcatY - lgcatN + // Categorical part
                        lgconY - lgconN;  // Continuous part
-          } 
+            Rcpp::Rcout << "qui, riga 491" << std::endl;
+          }
+          Rcpp::Rcout << "qui, riga 492" << std::endl;
           if(calibration == 2){
               
-            ldSig = logdet(sigma_star_curr.row(j), dim);
+            ldSig = logdet(sigma_star_curr.row(j).t(), dim);
             weight(j) = dmvnorm(y.row(i), mu_star_curr.row(j),
                      sigma_star_curr.row(j), dim, ldSig, 1)+
                        log((double) nj_curr(j)) + // cohesion part
                        (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
             }
         }
-        
+        Rcpp::Rcout << "qui, riga 502" << std::endl;
         /*
          * qui ci va la normalizzazione dei pesi con l'exp per evitare gli 0
          * cfr ll. 68-70 raffaele
@@ -510,7 +515,7 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           //lgconN = 0.0;
           for(p = 0; p < (ncon); p++){
             tmp = xcon(i*(ncon) + p);
-          
+            Rcpp::Rcout << "qui, riga516" << std::endl;
           if(similarity==1){ // Auxilliary
               if(consim==1){//normal normal
                 //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
@@ -537,7 +542,7 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
               }
             }
           }//chiude ciclo su p covariate continue
-          
+          Rcpp::Rcout << "qui, riga 543" << std::endl;
           // Categorical Covariates
           lgcatdraw = 0.0;
           for(p = 0; p < (ncat); p++){
@@ -649,7 +654,7 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         for(j = 1; j < nclu_curr+ CC; j++){
           if(maxwei < weight(j)) maxwei = weight(j);
         }
-        
+        Rcpp::Rcout << "qui, riga 655" << std::endl;
         denwei = 0.0;
         for(j = 0; j < nclu_curr + CC; j++){
           weight(j) = exp(weight(j) - maxwei);
@@ -690,8 +695,8 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           sigma_star_curr.row(nclu_curr) = sigma_empty.row(id_empty);
           mu_star_curr.row(nclu_curr) = mu_empty.row(id_empty);
           //## update empty parameter
-          mu_empty.row(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
-          sigma_empty.row(id_empty) = ran_iwish(hP0_nu0, hP0_V0, dim);
+          mu_empty.row(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim).t();
+          sigma_empty.row(id_empty) = ran_iwish(hP0_nu0, hP0_V0, dim).t();
         }
         
       }/* 
@@ -714,13 +719,16 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
             nclu_curr -= 1;
           }
         }
+        Rcpp::Rcout << "qui, riga 719" << std::endl;
         for(ii = 0; ii < nobs; ii++){
+          Rcpp::Rcout << "ii" << ii << std::endl;
           if(curr_clu(ii)>zi){
+            Rcpp::Rcout << "zi" << zi << std::endl;
             curr_clu(ii) -= 1;
           }
         }
+        Rcpp::Rcout << "qui, riga 725" << std::endl;
         //FINE PARTA PROBLEMATICA
-        
         for(j = 0; j < nclu_curr; j++){
           
           // Continuous Covariates
@@ -1070,8 +1078,8 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         sigma_star_curr.row(nclu_curr) = sigma_empty.row(id_empty);
         mu_star_curr.row(nclu_curr) = mu_empty.row(id_empty);
         //## update empty parameter
-        mu_empty.row(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
-        sigma_empty.row(id_empty) = ran_iwish(hP0_nu0, hP0_V0, dim);
+        mu_empty.row(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim).t();
+        sigma_empty.row(id_empty) = ran_iwish(hP0_nu0, hP0_V0, dim).t();
       }
       }
       // Compute the CPO and lpml using the mixture
@@ -1156,8 +1164,8 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
          //Sigma(row, col) = hP0_L0(row * dim + col);
        }
      }
-     sigma_star_curr.row(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim);
-     mu_star_curr.row(j) = ran_mvnorm(theta, sigma_star_curr.row(j), dim);
+     sigma_star_curr.row(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim).t();
+     mu_star_curr.row(j) = ran_mvnorm(theta, sigma_star_curr.row(j), dim).t();
     }
 
     
@@ -1166,7 +1174,7 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     if((l > (burn-1)) & (l % (thin) == 0)){
       for(i = 0; i < nobs; i++){
         ispred_iter.row(i) = ran_mvnorm(mu_star_curr.row(curr_clu(i)-1), 
-                    sigma_star_curr.row(curr_clu(i)-1), dim);
+                    sigma_star_curr.row(curr_clu(i)-1), dim).t();
       }
     }
     
@@ -1174,23 +1182,21 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     // Save MCMC iterates
     //////////////////////
     
-    /*if((l > (burn-1)) & ((l + 1) % thin == 0)){
-      mu0(ll) = mu0_iter;
-      sig20(ll) = sig20_iter;
+    if((l > (burn-1)) & ((l + 1) % thin == 0)){
       
       nclus(ll) = nclu_curr;
       
       for(i = 0; i < nobs; i++){
-        mu(ll*(nobs) + i) = muh(curr_clu(i)-1);
-        sig2(ll*(nobs) + i) = sig2h(curr_clu(i)-1);
-        Si(ll*(nobs) + i) = curr_clu(i);
+        mu_out.row(ll*(nobs) + i) = mu_star_curr.row(curr_clu(i)-1);
+        sigma_out.row(ll*(nobs) + i) = sigma_star_curr.row(curr_clu(i)-1);
+        Clui(ll*(nobs) + i) = curr_clu(i);
         
         like(ll*(nobs) + i) = like_iter(i);
-        ispred(ll*(nobs) + i) = ispred_iter(i);
+        ispred.row(ll*(nobs) + i) = ispred_iter.row(i);
       }
       
       ll += 1;
-    }*/
+    }
     
   }//CLOSES MCMC iterations
   
@@ -1213,14 +1219,12 @@ void mvn_ppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   WAIC = -2*elppdWAIC;*/
   
   //RETURN
-  /*return Rcpp::List::create(Rcpp::Named("mu") = mu,
-                            Rcpp::Named("sig2") = sig2,
-                            Rcpp::Named("Si") = Si,
+  return Rcpp::List::create(Rcpp::Named("mu") = mu_out,
+                            Rcpp::Named("sigma") = sigma_out,
+                            Rcpp::Named("cl_lab") = Clui,
                             Rcpp::Named("like") = like,
                             Rcpp::Named("ispred") = ispred,
-                            Rcpp::Named("mu0") = mu0,
-                            Rcpp::Named("sig20") = sig20,
-                            Rcpp::Named("nclus") = nclus,
-                            Rcpp::Named("WAIC") = WAIC,
-                            Rcpp::Named("lpml") = lpml);*/
+                            Rcpp::Named("nclus") = nclus);
+                            //Rcpp::Named("WAIC") = WAIC,
+                            //Rcpp::Named("lpml") = lpml
 }
