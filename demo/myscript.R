@@ -38,13 +38,12 @@ rm(list=ls())
 devtools::load_all()
 library(rrr)
 library(dplyr)
+library(tidyselect)
 data(tobacco)
 tobacco <- as_data_frame(tobacco)
-tobacco_x <- tobacco %>%
-  select(starts_with("X"))
+tobacco_x <- tobacco[, -c(1:3)]
 
-tobacco_y <- tobacco %>% 
-  select(starts_with("Y"))
+tobacco_y <- tobacco[, c(1:3)]
 
 #x <- as.matrix(tobacco_x)
 #y <- as.matrix(tobacco_y)
@@ -52,14 +51,18 @@ tobacco_y <- tobacco %>%
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, 3)
 modelpriors$hP0_L0 <- diag(1, 3)
-modelpriors$hP0_nu0 <- 2
+modelpriors$hP0_nu0 <- nrow(tobacco_y) + 2
 modelpriors$hP0_V0 <- diag(1, 3)
 
-my_mvn_ppmx(y = tobacco_y, X = tobacco_x, alpha=1, CC = 3, similarity = 1, consim=1, calibration=1,
+mr <- my_mvn_ppmx(y = tobacco_y, X = tobacco_x, alpha=1, CC = 1, similarity = 2, consim=1, calibration=2,
                         similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
                         modelpriors,
                         mhtune=c(0.5, 0.5),
-                        iter=1100,burn=100,thin=1)
-#correggi inizializzazione matrice sigma curr (anche mu_curr)
-##tra 492 e 453 e 725
+                        iter=100,burn=50,thin=10)
+
+mr$nclu
+##è come se ci fosse un disallineamento tra curr_clu e nj_curr mi sembra che quando dei soggetti da un cluster vengono spostati
+## il cluster iniziale non sia svuotato. quindi il conteggio dei cluster viene correttamente "scalato"
+##la loro cardinalità non è aggiornata però.
+
 

@@ -51,7 +51,7 @@ my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, similarity = 1, consim=1, cal
   
   nout <- (iter-burn)/thin
   
-  nobs <- length(y)
+  nobs <- dim(y)[1]
   nxobs <- ifelse(is.null(X), 0, nrow(X))
   
   Xall <- rbind(X)
@@ -110,9 +110,10 @@ my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, similarity = 1, consim=1, cal
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0), 
                   as.vector(hP0_V0), as.vector(mhtune))
   
-  res <- list()
-  res$mu_out# <- matrix(out$mu, nrow=nout, byrow=TRUE)
-  res$sigma_out# <- matrix(out$sig2, nrow=nout, byrow=TRUE)
+  res <- NULL
+  #res$mu_out# <- matrix(out$mu, nrow=nout, byrow=TRUE)
+  #res$sigma_out# <- matrix(out$sig2, nrow=nout, byrow=TRUE)
+  res$nclu <- out$nclu
   #res$Si <- matrix(out$Si, nrow=nout, byrow=TRUE)
   #res$like <- matrix(out$like, nrow=nout, byrow=TRUE)
   #res$fitted <- matrix(out$ispred, nrow=nout, byrow=TRUE)
