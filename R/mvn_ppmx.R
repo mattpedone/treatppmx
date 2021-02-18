@@ -31,7 +31,7 @@
 # poi in R li metto in una lista 
 # se non funziona l output di myppmx deve essere una lista
 
-my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, similarity = 1, consim=1, calibration=0,
+my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, PPMx = 1, similarity = 1, consim=1, calibration=0,
                     similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
                     modelpriors,
                     mhtune=c(0.5, 0.5),
@@ -102,7 +102,7 @@ my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, similarity = 1, consim=1, cal
   hP0_V0 <- as.vector(modelpriors$hP0_V0)
   
   out <- mvn_ppmx(as.integer(iter), as.integer(burn), as.integer(thin), 
-                  as.integer(nobs), as.integer(ncon), as.integer(ncat), 
+                  as.integer(nobs), as.integer(PPMx), as.integer(ncon), as.integer(ncat), 
                   as.vector(catvec), as.double(alpha), as.integer(CC), 
                   as.integer(consim), as.integer(similarity), 
                   as.integer(calibration), as.matrix(y), 
@@ -111,10 +111,23 @@ my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, similarity = 1, consim=1, cal
                   as.vector(hP0_V0), as.vector(mhtune))
   
   res <- NULL
-  #res$mu_out# <- matrix(out$mu, nrow=nout, byrow=TRUE)
+  nclu <- out$nclus
+  res$nclu <- nclu
+  nclu_cs <- cumsum(nclu)
+  mu_out <- out$mu#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
+  mu_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
+  for(l in 1:nout){
+    for(i in 1:nclu[l]){
+      mu_ar[i, ,1] <- mu_out[i, ]
+      if(l > 1){
+        mu_ar[i, ,l] <- mu_out[i+nclu_cs[l-1], ]
+      }
+    }
+  }
   #res$sigma_out# <- matrix(out$sig2, nrow=nout, byrow=TRUE)
-  res$nclu <- out$nclu
-  #res$Si <- matrix(out$Si, nrow=nout, byrow=TRUE)
+  
+  res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
+  res$mu <- mu_ar
   #res$like <- matrix(out$like, nrow=nout, byrow=TRUE)
   #res$fitted <- matrix(out$ispred, nrow=nout, byrow=TRUE)
   #res$nclus <- out$nclus

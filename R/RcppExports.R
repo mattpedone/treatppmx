@@ -57,3 +57,7 @@ ran_iwish <- function(nu, Sig, dim) {
     .Call(`_treatppmx_ran_iwish`, nu, Sig, dim)
 }
 
+rppmx <- function(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights) {
+    .Call(`_treatppmx_rppmx`, nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights)
+}
+
