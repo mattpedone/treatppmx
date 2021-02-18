@@ -227,6 +227,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rppmx
+Rcpp::List rppmx(int nobs, int similarity, int similparam, double alpha, int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, double m0, double k0, double v0, double s20, double v, arma::vec dirweights);
+RcppExport SEXP _treatppmx_rppmx(SEXP nobsSEXP, SEXP similaritySEXP, SEXP similparamSEXP, SEXP alphaSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP CvecSEXP, SEXP m0SEXP, SEXP k0SEXP, SEXP v0SEXP, SEXP s20SEXP, SEXP vSEXP, SEXP dirweightsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
+    Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
+    Rcpp::traits::input_parameter< int >::type similparam(similparamSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< int >::type ncon(nconSEXP);
+    Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcon(xconSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcat(xcatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cvec(CvecSEXP);
+    Rcpp::traits::input_parameter< double >::type m0(m0SEXP);
+    Rcpp::traits::input_parameter< double >::type k0(k0SEXP);
+    Rcpp::traits::input_parameter< double >::type v0(v0SEXP);
+    Rcpp::traits::input_parameter< double >::type s20(s20SEXP);
+    Rcpp::traits::input_parameter< double >::type v(vSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type dirweights(dirweightsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rppmx(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_mvn_ppmx", (DL_FUNC) &_treatppmx_mvn_ppmx, 21},
@@ -243,6 +268,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_dinvwish", (DL_FUNC) &_treatppmx_dinvwish, 6},
     {"_treatppmx_ran_iwish_old", (DL_FUNC) &_treatppmx_ran_iwish_old, 3},
     {"_treatppmx_ran_iwish", (DL_FUNC) &_treatppmx_ran_iwish, 3},
+    {"_treatppmx_rppmx", (DL_FUNC) &_treatppmx_rppmx, 15},
     {NULL, NULL, 0}
 };
 

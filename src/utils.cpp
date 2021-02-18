@@ -740,3 +740,235 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
   return(out);
   
 }
+
+// [[Rcpp::export]]
+Rcpp::List rppmx(int nobs, int similarity, int similparam, double alpha, 
+           int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, 
+           double m0, double k0, double v0, double s20, double v, 
+           arma::vec dirweights){
+  /**************************************************************************************************
+   * Function that generates draws from a product partition model prior
+   *
+   * Inputs:
+   *
+   * similarity - an integer indicating which similarity function to use
+   1 - auxiliary model
+   2 - double dipper
+   3 - alpha*exp(-variance)
+   * simparm indicates which parametrization of similarity to use
+   1 - NN model
+   2 - NNIG model
+   * M - DP scale parameter
+   * N - integer that indicates number of observations
+   * ncon - integer indicating number of continuous covariates
+   * ncat - integer indicating number of categorical covariates
+   * xcon - m x ncon matrix containing continuous covariate values
+   * xcat - m x ncat integer matrix containing categorical covariate values
+   * Cvec = 1 x ncat integer indicating the number of categories for each categorical variable
+   * ppm = logical indicating if data comes from PPM (ppm=1) or PPMx (ppm=0)
+   * m0 -  double holding mean of NN NIG aux and DD
+   * k0 - double holding variance scale parameter (number of obs apriori)
+   * v0 - double holding degrees of freedom (number of obs apriori)
+   * s20 - double holding scale parameter
+   * v - double for "likelihood" variance when NN is used and variance known
+   * dirweights = max(cvec) x 1 vector of 0.1 as prior for Dir-Mult similarity
+   * alpha - tuning parameter associated with alpha*exp(-variance) similarity
+   *
+   * Outputs:
+   * Si - nx1 scratch array of contiguous memory that holds partition of n objects
+   * nk - an integer indicating number of clusters
+   * nh - an nkx1 scratch vector that holds number of subjects per cluster.
+   *
+   *************************************************************************************************/
+  
+  
+  int i, ii, k, p, c, iaux, njtmp;
+  double maxph, cprobh, denph, uu, xi;
+  double sumx0, sumx20, sumx, sumx2;
+  double lgconY, lgconN, lgcatY, lgcatN, lgcon1=0.0, lgcat1=0.0;
+  arma::vec pj(nobs);
+  arma::vec probj(nobs);
+  arma::vec njc0(nobs), njc(nobs), njc1(nobs);
+  arma::vec cluster_label(nobs);
+  cluster_label.fill(0);
+  arma::vec nj(nobs);
+  nj.fill(0);
+  
+  int n_clus = 1;
+  
+  cluster_label(0) = 1;
+  nj(0) = 1;
+  
+  arma::vec mnmle(ncon);
+  arma::vec s2mle(ncon);
+  for(p = 0; p < ncon; p++){
+    sumx = 0.0, sumx2=0.0;
+    for(ii = 0; ii < nobs; ii++){
+      sumx += xcon(ii*(ncon) + p);
+      sumx2 += xcon(ii*(ncon) + p)*xcon(ii*(ncon) + p);
+    }
+    
+    mnmle(p) = sumx/((double) nobs);
+    s2mle(p) = sumx2/((double) nobs) - mnmle(p)*mnmle(p);
+  }
+  
+  for(i = 1; i < nobs; i++){
+    //		Rprintf("i = %d ====================\n", i);
+    
+    for(k=0; k < n_clus; k++){
+      //			Rprintf("k = %d =========\n", k);
+      
+      
+      lgconY = 0.0;
+      lgconN = 0.0;
+      lgcon1 = 0.0;
+      
+      
+      for(p=0; p<(ncon); p++){
+        //				Rprintf("p = %d ====== \n", p) ;
+        njtmp = 0;
+        sumx0 = 0.0;
+        sumx20 = 0.0;
+        //				Rprintf("njtmp = %d\n", njtmp);
+        for(ii = 0; ii < i; ii++){
+          //					Rprintf("ii = %d ===\n", ii);
+          //					Rprintf("Si = %d\n", Si[ii]);
+          if(cluster_label(ii) == k+1){
+            sumx0 += xcon(ii*(ncon)+p);
+            sumx20 += xcon(ii*(ncon)+p)*xcon(ii*(ncon)+p);
+            njtmp = njtmp+1;
+            //						Rprintf("njtmp = %d\n", njtmp);
+          }
+        }
+        
+        xi = xcon(i*(ncon)+p);
+        
+        sumx = sumx0 + xi;
+        sumx2 = sumx20 + xi*xi;
+        
+        if(njtmp > 0){
+          if(similarity==1){ // Auxilliary
+            if(similparam==1){// NN model
+              lgconN += gsimconNN(m0, v, s20, sumx0, sumx20, mnmle[p], njtmp, 0, 0, 1);
+              lgconY += gsimconNN(m0, v, s20, sumx, sumx2, mnmle[p], njtmp+1, 0, 0, 1);
+              lgcon1 += gsimconNN(m0, v, s20, xi, xi*xi, mnmle[p], 1, 0, 0, 1);
+            }
+            if(similparam==2){// NNIG
+              lgconN += gsimconNNIG(m0, k0, v0, s20, sumx0, sumx20, mnmle[p], s2mle[p], njtmp, 0, 0, 1);
+              lgconY += gsimconNNIG(m0, k0, v0, s20, sumx, sumx2, mnmle[p], s2mle[p], njtmp+1, 0, 0, 1);
+              lgcon1 += gsimconNNIG(m0, k0, v0, s20, xi, xi*xi, mnmle[p],s2mle[p], 1, 0, 0, 1);
+            }
+            
+          }
+          if(similarity==2){ //Double Dipper
+            if(similparam==1){// NN model
+              lgconN += gsimconNN(m0, v, s20, sumx0, sumx20, mnmle[p], njtmp, 1, 0, 1);
+              lgconY += gsimconNN(m0, v, s20, sumx, sumx2, mnmle[p], njtmp+1, 1, 0, 1);
+              lgcon1 += gsimconNN(m0, v, s20, xi, xi*xi, mnmle[p], 1, 1, 0, 1);
+            }
+            
+            if(similarity==2){// NNIG
+              lgconN += gsimconNNIG(m0, k0, v0, s20, sumx0, sumx20, mnmle[p], s2mle[p], njtmp, 1, 0, 1);
+              lgconY += gsimconNNIG(m0, k0, v0, s20, sumx, sumx2, mnmle[p], s2mle[p], njtmp+1, 1, 0, 1);
+              lgcon1 += gsimconNNIG(m0, k0, v0, s20, xi, xi*xi, mnmle[p],s2mle[p], 1, 1, 0, 1);
+            }
+            
+          }
+        }
+        
+      }
+      
+      
+      lgcatY=0.0;
+      lgcatN=0.0;
+      lgcat1=0.0;
+      
+      for(p = 0; p < ncat; p++){
+        //				Rprintf("p = %d ====== \n", p) ;
+        for(c = 0; c < Cvec[p];c++){
+          njc0(c)=0;
+          njc1(c)=0;
+          njc(c)=0;
+        }
+        
+        njtmp = 0;
+        for(ii = 0; ii < i; ii++){
+          //					Rprintf("jj = %d\n", jj);
+          if(cluster_label(ii) == k+1){
+            njc0(xcat(ii*(ncat)+p)) += 1; // this needs to be a vectore
+            njc(xcat(ii*(ncat)+p)) += 1; // this needs to be a vectore
+            njtmp += 1;
+          }
+        }
+        
+        njc(xcat(i*(ncat)+p)) += 1;
+        njc1(xcat(i*(ncat)+p)) += 1;
+        
+        if(njtmp > 0){// Auxilliary
+          if(similarity == 1){
+            lgcatN = lgcatN + gsimcatDM(njc0, dirweights, Cvec(p), 0, 1);
+            lgcatY = lgcatY + gsimcatDM(njc,  dirweights, Cvec(p), 0, 1);
+            lgcat1 = lgcat1 + gsimcatDM(njc1,  dirweights, Cvec(p), 0, 1);
+          }
+          if(similarity == 2){// Double Dipper
+            lgcatN = lgcatN + gsimcatDM(njc0, dirweights, Cvec(p), 1, 1);
+            lgcatY = lgcatY + gsimcatDM(njc,  dirweights, Cvec(p), 1, 1);
+            lgcat1 = lgcat1 + gsimcatDM(njc1,  dirweights, Cvec(p), 1, 1);
+          }
+        }
+      }
+      
+      pj(k) = log((double) nj(k)) +
+        lgcatY - lgcatN +
+        lgconY - lgconN;
+    }
+    
+    pj(n_clus) = log(alpha) + lgcon1 + lgcat1;
+    
+    maxph = pj(0);
+    for(k = 1; k < n_clus+1; k++){
+      if(maxph < pj(k)) maxph = pj(k);
+    }
+    
+    denph = 0.0;
+    for(k = 0; k < n_clus+1; k++){
+      
+      pj(k) = exp(pj(k) - maxph);
+      denph = denph + pj(k);
+    }
+    
+    for(k = 0; k < n_clus+1; k++){
+      probj(k) = pj(k)/denph;
+    }
+    uu = R::runif(0.0,1.0);
+    
+    cprobh= 0.0;
+    iaux=n_clus+1;
+    for(k = 0; k < n_clus+1; k++){
+      
+      cprobh = cprobh + probj[k];
+      
+      if (uu < cprobh){
+        
+        iaux = k+1;
+        break;
+      }
+    }
+    
+    if(iaux <= n_clus){
+      
+      cluster_label(i) = iaux;
+      nj(cluster_label(i)-1) += 1;
+      
+    }else{
+      
+      n_clus += 1;
+      cluster_label(i) = n_clus;
+      nj(cluster_label(i)-1) = 1;
+      
+    }
+  }
+  return Rcpp::List::create(Rcpp::Named("cluster_label") = cluster_label,
+                            Rcpp::Named("nj") = nj,
+                            Rcpp::Named("nclus") = n_clus);
+}

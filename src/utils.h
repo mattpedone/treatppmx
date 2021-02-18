@@ -15,3 +15,5 @@ double dinvwish(arma::vec, int, double, double, int, int);
 arma::vec ran_iwish(int, arma::vec, int); 
 double gsimconMVN_MVNIW(arma::vec, double, double, arma::vec, int, arma::vec, 
                         arma::vec, double, int, int, int); 
+Rcpp::List rppmx(int, int, int, double, int, int, arma::vec, arma::vec, arma::vec, double, 
+      double, double, double, double, arma::vec);

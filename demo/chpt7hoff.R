@@ -108,6 +108,7 @@ y <- ran_mvnorm(mu0, L0, 2)
 ldmvnorm(y, mu0, matrix(L0, 2, 2))
 mvtnorm::dmvnorm(c(y), mu0, matrix(L0, 2, 2), log = TRUE)
 ld0 = determinant(matrix(L0, 2, 2), T)$modulus[1]
+logdet(c(matrix(L0, 2, 2)), 2)
 dmvnorm(y, mu0, c(matrix(L0, 2, 2)), 2, ld0, 1)
 
 y <- ran_wish(nu0, Sig = matrix(S0, 2, 2), 2)
