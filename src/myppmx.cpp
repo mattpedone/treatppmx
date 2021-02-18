@@ -296,23 +296,23 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   
   int nclus_iter = 0;
   int iaux;
-  arma::vec Si_iter(nobs);
-  Si_iter.fill(1);
-  arma::vec nh(nobs);
-  nh.fill(0);
-  arma::vec nhc((nobs)*(ncat));
+  arma::vec curr_clu(nobs);
+  curr_clu.fill(1);
+  arma::vec nj_curr(nobs);
+  nj_curr.fill(0);
+  arma::vec njc((nobs)*(ncat));
   
   arma::vec xcontmp(nobs);
   
   //cfr adr1
   for(i = 0; i < nobs; i++){
     for(ii = 0; ii < nobs; ii++){
-      if(Si_iter(i) == ii+1) nh(ii) = nh(ii) + 1;
+      if(curr_clu(i) == ii+1) nj_curr(ii) = nj_curr(ii) + 1;
     }
   }
   
   for(i = 0; i < nobs; i++){
-    if(nh(i) > 0) nclus_iter += 1;
+    if(nj_curr(i) > 0) nclus_iter += 1;
   }
   
   
@@ -333,7 +333,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
   ////////////////////////////////////////
   
   // update Si (cluster labels);
-  int nhtmp;
+  int njtmp;
   double auxm, auxs2, tmp;//, npdN, npdY, npd;
   double mudraw, sdraw, maxph, denph, cprobh, uu;
   double lgconN, lgconY, lgcatN, lgcatY, lgcondraw, lgcatdraw;
@@ -453,37 +453,41 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
     }
     
+    //qui inizializza parametri P0 x reuse (vettori di lunghezza CC)
+    
     /////////////////////////////////////////
     // update the cluster labels with NEAL 8 
     /////////////////////////////////////////
     
     for(i = 0; i < nobs; i++){
       
-      if(nh(Si_iter(i)-1) > 1){
-        // l'osservazione NON è un singoletto 
-        //Neal lo chiama n_{-1, c}
-        //nel modello di Raffaele S_{\tilde{j}}^{a\star, -i}
-        nh(Si_iter(i)-1) = nh(Si_iter(i)-1) - 1;
+      int zi = curr_clu(i)-1; //sottraggo 1 perché C conta da 0
+      if(nj_curr(zi) > 1){
+        /* l'osservazione NON è un singoletto 
+         * Neal lo chiama n_{-1, c}
+         * nel modello di Raffaele S_{\tilde{j}}^{a\star, -i}
+         */
+        nj_curr(zi) = nj_curr(zi) - 1;
       }else{
         // l'osservazione è un singoletto 
-        iaux = Si_iter(i);
+        iaux = curr_clu(i);
         if(iaux < nclus_iter){
           //questa condizione è vera se il singoletto "sta in mezzo" a non-singleton clusters
           //o meglio il singoletto non sta nell'ultimo cluster
           //quindi devo fare il relabel dei clusters
           //
-          // faccio lo swap cluster labels tra Si_iter(i) e nclus_iter
+          // faccio lo swap cluster labels tra curr_clu(i) e nclus_iter
           // ANCHE cluster specific parameters;
           
           // Metto tutti i membri dell'ultimo cluster nel cluster del soggetto i (iaux)
           for(ii = 0; ii < nobs; ii++){
-            if(Si_iter(ii) == nclus_iter){
-              Si_iter(ii) = iaux;
+            if(curr_clu(ii) == nclus_iter){
+              curr_clu(ii) = iaux;
             }
           }
           
           //metto il soggetto i (singoletto) come ultimo cluster
-          Si_iter(i) = nclus_iter;
+          curr_clu(i) = nclus_iter;
           
           // The following steps swaps order of cluster specific parameters
           // so that the newly labeled subjects from previous step retain
@@ -499,13 +503,13 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           
           
           // the number of members in cluster is also swapped with the last
-          nh(iaux-1) = nh(nclus_iter-1);
-          nh(nclus_iter-1) = 1;
+          nj_curr(iaux-1) = nj_curr(nclus_iter-1);
+          nj_curr(nclus_iter-1) = 1;
         }
         
         
         // Now remove the ith obs and last cluster;
-        nh(nclus_iter-1) = nh(nclus_iter-1) - 1;
+        nj_curr(nclus_iter-1) = nj_curr(nclus_iter-1) - 1;
         nclus_iter = nclus_iter - 1;
       }
       
@@ -518,18 +522,18 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         lgconY = 0.0;
         lgconN = 0.0;
         for(p = 0; p < (ncon); p++){
-          nhtmp = 0;
+          njtmp = 0;
           sumx = 0.0;
           sumx2 = 0.0;
           for(ii = 0; ii < nobs; ii++){
             if(ii != i){
-              if(Si_iter(ii) == j+1){
+              if(curr_clu(ii) == j+1){
                 tmp = xcon(ii*(ncon) + p);
                 
                 sumx = sumx + tmp;
                 sumx2 = sumx2 + tmp * tmp;
                 
-                nhtmp = nhtmp+1;
+                njtmp += 1;
               }
             }
           }
@@ -538,12 +542,12 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           if(similarity==1){ // Auxilliary
             if(consim==1){//normal normal
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), njtmp, 0, 0, 1);
               lgconN = lgconN + lgcont;
             }
             if(consim==2){//normal normal inverse gamma
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), njtmp, 0, 0, 1);
               lgconN = lgconN + lgcont;
             }
             
@@ -551,45 +555,45 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           if(similarity==2){ //Double Dipper
             if(consim==1){//normal normal
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), njtmp, 1, 0, 1);
               lgconN = lgconN + lgcont;
             }
             if(consim==2){//normal normal inverse gamma
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), njtmp, 1, 0, 1);
               lgconN = lgconN + lgcont;
             }
           }
           
           // now add ith individual back;
           
-          xcontmp(nhtmp) = xcon(i*(ncon)+p);
+          xcontmp(njtmp) = xcon(i*(ncon)+p);
           sumx = sumx + xcon(i*(ncon)+p);
           sumx2 = sumx2 + xcon(i*(ncon)+p)*xcon(i*(ncon)+p);
-          nhtmp = nhtmp+1;
+          njtmp += 1;
           
           if(similarity==1){ // Auxilliary
             if(consim==1){//normal normal
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 0, 0, 1);
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), njtmp, 0, 0, 1);
               lgconY = lgconY + lgcont;
             }
             if(consim==2){//normal normal inverse gamma
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 0, 0, 1);
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), njtmp, 0, 0, 1);
               lgconY = lgconY + lgcont;
             }
           }
           if(similarity==2){ //Double Dipper
             if(consim==1){//normal normal
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), nhtmp, 1, 0, 1);
+              lgcont = similarityf::gsimconNN(m0, v, s20, sumx, sumx2, mnmle(p), njtmp, 1, 0, 1);
               lgconY = lgconY + lgcont;
             }
             if(consim==2){
               //normal normal inverse gamma
               //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), nhtmp, 1, 0, 1);
+              lgcont = similarityf::gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, mnmle(p), s2mle(p), njtmp, 1, 0, 1);
               lgconY = lgconY + lgcont;
             }
           }
@@ -600,15 +604,15 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         lgcatN = 0.0;
         for(p = 0; p < (ncat); p++){
           for(c = 0; c < catvec(p); c++){
-            nhc(c) = 0;
+            njc(c) = 0;
           }
           
-          nhtmp = 0;
+          njtmp = 0;
           for(ii = 0; ii < nobs; ii++){
             if(ii != i){
-              if(Si_iter(ii) == (j + 1)){
-                nhc(xcat(ii*(ncat)+p)) = nhc(xcat(ii*(ncat)+p)) + 1; // this needs to be a vector
-                nhtmp += 1;
+              if(curr_clu(ii) == (j + 1)){
+                njc(xcat(ii*(ncat)+p)) = njc(xcat(ii*(ncat)+p)) + 1; // this needs to be a vector
+                njtmp += 1;
               }
             }
           }
@@ -617,29 +621,29 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
           if(similarity == 1){ // Auxiliary
             //Dirichlet-Multinomial
             //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+            lgcatt = similarityf::gsimcatDM(njc, dirweights, catvec(p), 0, 1);
             lgcatN = lgcatN + lgcatt;
           }
           if(similarity==2){// Double dipper
             //Dirichlet-Multinomial
             //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+            lgcatt = similarityf::gsimcatDM(njc, dirweights, catvec(p), 1, 1);
             lgcatN = lgcatN + lgcatt;
           }
           
-          nhc(xcat(i*(ncat)+p)) += 1;
-          nhtmp += 1;
+          njc(xcat(i*(ncat)+p)) += 1;
+          njtmp += 1;
           
           if(similarity==1){
             //Dirichlet-Multinomial
             //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+            lgcatt = similarityf::gsimcatDM(njc, dirweights, catvec(p), 0, 1);
             lgcatY = lgcatY + lgcatt;
           }
           if(similarity==2){
             //Dirichlet-Multinomial
             //vedi https://github.com/cran/ppmSuite/blob/master/src/Rutil.c
-            lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+            lgcatt = similarityf::gsimcatDM(njc, dirweights, catvec(p), 1, 1);
             lgcatY = lgcatY + lgcatt;
           }
         }//chiude ciclo su p covariate discrete
@@ -649,19 +653,19 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         //ASTERISCO
         ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
-          log((double) nh(j)) + // cohesion part
+          log((double) nj_curr(j)) + // cohesion part
           lgcatY - lgcatN + // Categorical part
           lgconY - lgconN;  // Continuous part
         
         if(calibration == 2){
           ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
-            log((double) nh(j)) + // cohesion part
+            log((double) nj_curr(j)) + // cohesion part
             (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
         }
         
         // Uniform cohesion
         if(cohesion==2){
-          ph(j) = ph(j) - log((double) nh(j));
+          ph(j) = ph(j) - log((double) nj_curr(j));
         }
       }//chiude il ciclo sui j cluster
       
@@ -710,17 +714,17 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       lgcatdraw = 0.0;
       for(p = 0; p < (ncat); p++){
         for(c = 0; c < catvec(p); c++){
-          nhc(c) = 0;
+          njc(c) = 0;
         }
         
-        nhc(xcat(i*(ncat)+p)) = 1;
+        njc(xcat(i*(ncat)+p)) = 1;
         
         if(similarity == 1){
-          lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 0, 1);
+          lgcatt = similarityf::gsimcatDM(njc, dirweights, catvec(p), 0, 1);
           lgcatdraw = lgcatdraw + lgcatt;
         }
         if(similarity == 2){
-          lgcatt = similarityf::gsimcatDM(nhc, dirweights, catvec(p), 1, 1);
+          lgcatt = similarityf::gsimcatDM(njc, dirweights, catvec(p), 1, 1);
           lgcatdraw = lgcatdraw + lgcatt;
         }
       }
@@ -784,11 +788,11 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
             lgtilYk = lgtilY(j) - log(sgY);
           
           ph(j) = R::dnorm(y(i), muh(j), sqrt(sig2h(j)), 1) +
-            log((double) nh(j)) +  // Cohesion part
+            log((double) nj_curr(j)) +  // Cohesion part
             lgtilYk - lgtilNk; //This takes into account both cont and cat vars
           
           if(cohesion == 2){
-            ph(j) = ph(j) - log((double) nh(j));
+            ph(j) = ph(j) - log((double) nj_curr(j));
           }
         }
         
@@ -839,8 +843,8 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
      
       if(iaux <= nclus_iter){
         
-        Si_iter(i) = iaux;
-        nh(Si_iter(i)-1) += 1;
+        curr_clu(i) = iaux;
+        nj_curr(curr_clu(i)-1) += 1;
         
         //Rcpp::Rcout << "muaug(0) " << muaug(0) << std::endl;
         //Rcpp::Rcout << "saug(0) " << saug(0) << std::endl;
@@ -852,17 +856,17 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         
         //Rcpp::Rcout << "here 3! " << std::endl;
         nclus_iter += 1;
-        Si_iter(i) = nclus_iter;
-        nh(Si_iter(i)-1) = 1;
+        curr_clu(i) = nclus_iter;
+        nj_curr(curr_clu(i)-1) = 1;
         
-        muh(Si_iter(i)-1) = mudraw;
-        sig2h(Si_iter(i)-1) = sdraw*sdraw;
+        muh(curr_clu(i)-1) = mudraw;
+        sig2h(curr_clu(i)-1) = sdraw*sdraw;
         
       }
       
       // Compute the CPO and lpml using the mixture
       
-      like_iter(i) = R::dnorm(y(i), muh[Si_iter(i)-1], sig2h(Si_iter(i)-1), 0);
+      like_iter(i) = R::dnorm(y(i), muh[curr_clu(i)-1], sig2h(curr_clu(i)-1), 0);
       
       if((l > (burn-1)) & (l % (thin) == 0)){
         
@@ -883,12 +887,12 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     for(j = 0; j < nclus_iter; j++){
       sumy = 0.0;
       for(i = 0; i < nobs; i++){
-        if(Si_iter(i) == j+1){
+        if(curr_clu(i) == j+1){
           sumy += y(i);
         }
       }
       
-      s2star = 1/((double) nh(j)/sig2h(j) + 1/sig20_iter);
+      s2star = 1/((double) nj_curr(j)/sig2h(j) + 1/sig20_iter);
       mstar = s2star*( (1/sig2h(j))*sumy + (1/sig20_iter)*mu0_iter);
       
       
@@ -944,7 +948,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
         lln = 0.0;
         llo = 0.0;
         for(i = 0; i < nobs; i++){
-          if(Si_iter(i) == j+1){
+          if(curr_clu(i) == j+1){
             llo = llo + R::dnorm(y(i), muh(j), osig,1);
             lln = lln + R::dnorm(y(i), muh(j), nsig,1);
           }
@@ -967,7 +971,7 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
     
     if((l > (burn-1)) & (l % (thin) == 0)){
       for(i = 0; i < nobs; i++){
-        ispred_iter(i) = R::rnorm(muh(Si_iter(i)-1), sqrt(sig2h(Si_iter(i)-1)));
+        ispred_iter(i) = R::rnorm(muh(curr_clu(i)-1), sqrt(sig2h(curr_clu(i)-1)));
       }
     }
     
@@ -982,9 +986,9 @@ Rcpp::List myppmx(int iter, int burn, int thin, int nobs, int ncon, int ncat,
       nclus(ll) = nclus_iter;
       
       for(i = 0; i < nobs; i++){
-        mu(ll*(nobs) + i) = muh(Si_iter(i)-1);
-        sig2(ll*(nobs) + i) = sig2h(Si_iter(i)-1);
-        Si(ll*(nobs) + i) = Si_iter(i);
+        mu(ll*(nobs) + i) = muh(curr_clu(i)-1);
+        sig2(ll*(nobs) + i) = sig2h(curr_clu(i)-1);
+        Si(ll*(nobs) + i) = curr_clu(i);
         
         like(ll*(nobs) + i) = like_iter(i);
         ispred(ll*(nobs) + i) = ispred_iter(i);
