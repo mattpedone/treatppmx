@@ -14,14 +14,14 @@ source("R/gendata.R")
 source("R/rppmx.R")
 #set.seed(24)
 n=100
-d <- genera_dati(n=n, P=200)
+d <- genera_dati(n=n, P = 2)
 
 X <- d$XX
 
-X$X1 <- as.factor(X$X1)
-X$X2 <- as.factor(X$X2)
+#X$X1 <- as.factor(X$X1)
+#X$X2 <- as.factor(X$X2)
 
-myppmx <- ran_ppmx(X=X, similarity = 2, simparm = 1, alpha=1, m0=0, s20=1,v=2, k0=10, v0=1)
+myppmx <- ran_ppmx(X=X, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v=2, k0=10, v0=1)
 myppmx
 
 par(mfrow=c(1, 2))
@@ -43,10 +43,10 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-system.time(out <- my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 10, PPMx = 1, similarity = 2, consim=1, calibration=2, 
+system.time(out <- my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 5, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=2, 
                    similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0), 
                    modelpriors, mhtune=c(0.5, 0.5), 
-                   iter=500,burn=250,thin=1))
+                   iter=5000,burn=2500,thin=1))
 
 #sum(myppmx$label==out$label[100,])
 mean(out$nclu)
@@ -79,3 +79,17 @@ plot(Y[which(mylab==6), ], col = "pink", ylim=c(-40, 20), xlim=c(-20, 20))
 out$mu[,,25]
 possmean
 
+out$lpml
+
+#mbm <- microbenchmark::microbenchmark("CC = 1 nc" =  my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 5, PPMx = 0, similarity = 1, consim=1, calibration=2, 
+#                                                              similparam=c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0), 
+#                                                              modelpriors, mhtune=c(0.5, 0.5), 
+#                                                              iter=5000,burn=2500,thin=50), 
+#                                      "CC = 5 nc" =  my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 10, PPMx = 0, similarity = 1, consim=1, calibration=2, 
+#                                                              similparam=c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0), 
+#                                                              modelpriors, mhtune=c(0.5, 0.5), 
+#                                                              iter=5000,burn=2500,thin=50), times = 10)
+#
+#mbm
+#ggplot2::autoplot(mbm)
+#

@@ -25,23 +25,23 @@ genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
     if(u<pro[1]){
       #cat(i,"ciao1","\n")
       #X e Z li devo costruire qui
-      XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, -2.1, .25)))
-      XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, -2.1, .25))
+      if(Q!=0){XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, -2.1, .25)))}
+      if(P!=0){XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, -2.1, .25))}
       #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
       #clusterlabel[i] <- 1
     }
     else{
       if(u<(pro[1]+pro[2])){
         #cat(i,"ciao2","\n")
-        XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, 0.0, .25)))
-        XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, 0.0, .25))
+        if(Q!=0){XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, 0.0, .25)))}
+        if(P!=0){XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, 0.0, .25))}
         #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
         #clusterlabel[i] <- 2
       }
       else{
         #cat(i,"ciao3","\n")
-        XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, 2.1, .25)))
-        XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, 2.1, .25))
+        if(Q!=0){XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, 2.1, .25)))}
+        if(P!=0){XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, 2.1, .25))}
         #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
         #clusterlabel[i] <- 3
       }
