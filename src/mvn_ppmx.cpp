@@ -59,8 +59,9 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
    * di ciascun cluster e l'int che mi dice il numero di cluster correnti
    */
   arma::vec curr_clu(nobs);
-  for(i = 0; i < nobs; i++){
-    curr_clu(i) = R::rbinom(5, 0.5) + 1;
+  curr_clu(0) = 1;//at least one is in the first cluster in initialization
+  for(i = 1; i < nobs; i++){
+    curr_clu(i) = R::rbinom(1, 0.5) + 1;
   }
 
   arma::vec nj_curr(nobs);
@@ -71,11 +72,13 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
       if(curr_clu(i) == ii+1) nj_curr(ii) += 1;
     }
   }
-  
   int nclu_curr = 0;
   for(i = 0; i < nobs; i++){
     if(nj_curr(i) > 0) nclu_curr += 1;
   }
+  
+  //Rcpp::Rcout << "nj_curr init" << nj_curr.t() << std::endl; 
+  //Rcpp::Rcout << "curr clu init" << curr_clu.t() << std::endl; 
   /*
    * questo è il vettore dei pesi, le probabilità per \rho (Alg 8, Neal 2000)
    * Ha lunghezza pari al massimo numeri di componenti possibile + il numero
@@ -229,7 +232,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
     /*if((l+1) % 10000 == 0){
       Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
     }*/
-  
+    //Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
     /* inizializzo latent variables per empty components da P0
      * per il Reuse algorithm (vettori di lunghezza CC)
      */
@@ -244,8 +247,10 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
       /////////////////////////////////////////
       // update the cluster labels with NEAL 8
       /////////////////////////////////////////
-      
-      zi = curr_clu(i)-1; //sottraggo 1 perché C conta da 0
+      zi = curr_clu(i)-1; //sottraggo 1 perché C conta da 0 ma conviene farlo ogni volta
+      //Rcpp::Rcout << "i " << i << ", zi " << zi << std::endl;
+      //Rcpp::Rcout << "curr clu adj 0" <<curr_clu.t() << std::endl;
+      //Rcpp::Rcout << "nj_curr(zi) " <<nj_curr.t() << std::endl;
       if(nj_curr(zi) > 1){// Case where the nj corresponding to zi is such that nj>1
         nj_curr(zi) -= 1; 
       } else {// Case where the nj corresponding to zi is such that nj=1
@@ -274,9 +279,9 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
           }
           //FINE PARTA PROBLEMATICA
         }
+      //Rcpp::Rcout << "curr clu adj 1" <<curr_clu.t() << std::endl; 
         //SIMILARITY & CALIBRATION CURRENT CLUSTERS
         for(j = 0; j < nclu_curr; j++){
-          
           if(PPMx == 1){
             // Continuous Covariates
             lgconY = 0.0;
@@ -413,6 +418,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
                      log((double) nj_curr(j)); // DP cohesion part
           }
         }
+        
         //SIMILARITY & CALIBRATION EMPTY CLUSTERS
         
         if(reuse == 0){
@@ -493,6 +499,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
                      log(alpha) - log(CC); //cohesion + auxiliary ptms
           }
         }
+        
         if((calibration == 1) & (PPMx == 1)){
           maxgtilN = gtilN(0);
           maxgtilY = gtilY(0);
@@ -540,8 +547,8 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
                      log(sgN);
             }
         }
+        
         //AVOID ZERO IN WEIGHTS
-        //Rcpp::Rcout << "weight: " << weight << std::endl;
         maxwei = weight(0);
         for(j = 1; j < nclu_curr+ CC; j++){
           if(maxwei < weight(j)) maxwei = weight(j);
@@ -557,7 +564,6 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
           pweight(j) = weight(j)/denwei;
         }
         
-        //Rcpp::Rcout << "weight: " << pweight << std::endl;
         
         //sample the new cluster for i-th observation
         uu = R::runif(0.0,1.0);
@@ -607,11 +613,11 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
         CPOinv(i) += pow((double) nout, -1.0) * pow(like_iter(i), -1.0);
       }
     }
-    
+    //Rcpp::Rcout << "curr clu fin" <<curr_clu.t() << std::endl; 
     //////////////////////////////////////////////////
     // update the cluster value with NEAL 8 (II step)
     //////////////////////////////////////////////////
-    for(int row = 0; row < dim; row++){
+    /*for(int row = 0; row < dim; row++){
       for(int col = 0; col < dim; col++){
         L0mInv(row, col) = hP0_L0(row * dim + col);
         S0m(row, col) = hP0_V0(row * dim + col);
@@ -658,7 +664,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
      sigma_star_curr.row(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim).t();
      mu_star_curr.row(j) = ran_mvnorm(theta, sigma_star_curr.row(j).t(), dim).t();
      }
-    
+    */
     /*if((l > (burn-1)) & (l % (thin) == 0)){
       for(i = 0; i < nobs; i++){
         ispred_iter.row(i) = ran_mvnorm(mu_star_curr.row(curr_clu(i)-1).t(), 
@@ -669,7 +675,6 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
     //////////////////////
     // Save MCMC iterates
     //////////////////////
-    
     if((l > (burn-1)) & ((l + 1) % thin == 0)){
       nclus(ll) = nclu_curr;
       for(i = 0; i < nobs; i++){
@@ -685,7 +690,6 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
     }
     
   }//CLOSES MCMC iterations
-  
   // calculate LPML
   lpml_iter=0.0;
   
