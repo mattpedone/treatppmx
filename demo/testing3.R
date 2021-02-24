@@ -16,8 +16,8 @@ source("R/mvn_ppmx.R")
 source("R/gendata.R")
 source("R/rppmx.R")
 #set.seed(24)
-n=10
-d <- genera_dati(n=n)
+n=100
+d <- genera_dati(n=n, P = 2)
 
 X <- d$XX
 
@@ -46,14 +46,19 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-mbm <- microbenchmark::microbenchmark("nocal" =  my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0, 
-                                                           similparam=c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0), 
-                                                           modelpriors, mhtune=c(0.5, 0.5), 
-                                                           iter=100,burn=0,thin=1), 
-                                      "cal" =  my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=2, 
-                                                            similparam=c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0), 
-                                                            modelpriors, mhtune=c(0.5, 0.5), 
-                                                            iter=100,burn=0,thin=1), times = 1000)
+set.seed(121)
+
+mbm <- microbenchmark::microbenchmark(
+  "row" =  my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 3, reuse = 1, PPMx = 1, 
+                       similarity = 1, consim=1, calibration=0, 
+                       similparam=c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0), 
+                       modelpriors, mhtune=c(0.5, 0.5), 
+                       iter=10,burn=0,thin=1)$lbml, 
+  "col" =  my_mvn_ppmx_bycol(y = Y, X = X, alpha=1, CC = 3, reuse = 1, PPMx = 1, 
+                             similarity = 1, consim=1, calibration=0, 
+                             similparam=c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0), 
+                             modelpriors, mhtune=c(0.5, 0.5), iter=10, burn=0, 
+                             thin=1)$lbml, times = 100, check="equal")
 
 mbm
 ggplot2::autoplot(mbm)

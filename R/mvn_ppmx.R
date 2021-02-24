@@ -32,10 +32,10 @@
 # se non funziona l output di myppmx deve essere una lista
 
 my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
-                    similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
-                    modelpriors,
-                    mhtune=c(0.5, 0.5),
-                    iter=1100,burn=100,thin=1){
+                              similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
+                              modelpriors,
+                              mhtune=c(0.5, 0.5),
+                              iter=1100,burn=100,thin=1){
   
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -102,13 +102,13 @@ my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   hP0_V0 <- as.vector(modelpriors$hP0_V0)
   
   out <- mvn_ppmx(as.integer(iter), as.integer(burn), as.integer(thin), 
-                  as.integer(nobs), as.integer(PPMx), as.integer(ncon), as.integer(ncat), 
-                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse), 
-                  as.integer(consim), as.integer(similarity), 
-                  as.integer(calibration), as.matrix(y), 
-                  as.vector(xcon), as.vector(xcat), as.vector(similparam), 
-                  as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0), 
-                  as.vector(hP0_V0), as.vector(mhtune))
+                        as.integer(nobs), as.integer(PPMx), as.integer(ncon), as.integer(ncat), 
+                        as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse), 
+                        as.integer(consim), as.integer(similarity), 
+                        as.integer(calibration), as.matrix(t(y)), 
+                        as.vector(xcon), as.vector(xcat), as.vector(similparam), 
+                        as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0), 
+                        as.vector(hP0_V0), as.vector(mhtune))
   
   res <- NULL
   nclu <- out$nclus
@@ -118,18 +118,21 @@ my_mvn_ppmx <- function(y,X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   mu_out <- out$mu#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
   mu_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
   for(l in 1:nout){
-   for(i in 1:nclu[l]){
-     mu_ar[i, ,1] <- mu_out[i, ]
-     if(l > 1){
-       mu_ar[i, ,l] <- mu_out[i+nclu_cs[l-1], ]
-     }
-   }
+    for(i in 1:nclu[l]){
+      mu_ar[i, ,1] <- mu_out[i, ]
+      if(l > 1){
+        mu_ar[i, ,l] <- mu_out[i+nclu_cs[l-1], ]
+      }
+    }
   }
   #res$sigma_out# <- matrix(out$sig2, nrow=nout, byrow=TRUE) 
   
   res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
   res$mu <- mu_ar
-  #res$like <- matrix(out$like, nrow=nout, byrow=TRUE)
+  ypred <- array(0, dim = c(nrow(y), ncol(y), nout))
+  
+  #ypred <- apply(ypred, c(1, 2), mean)
+  res$pred <- t(apply(out$ispred, c(1, 2), mean))
   #res$fitted <- matrix(out$ispred, nrow=nout, byrow=TRUE)
   #res$nclus <- out$nclus
   #res$WAIC <- out$WAIC
