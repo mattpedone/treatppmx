@@ -16,11 +16,11 @@ sourceCpp("src/mvn_ppmx.cpp")
 source("R/mvn_ppmx.R")
 source("R/rppmx.R")
 
-set.seed(121)
+#set.seed(121)
 
 ###### STUDIO 1
 ### Scenario b 
-KK <- 10#30
+KK <- 3
 res_1a <- matrix(0, KK, 8)
 res_2a <- matrix(0, KK, 8)
 res_3a <- matrix(0, KK, 8)
@@ -47,8 +47,8 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-iterations <- 100#00
-burnin <- 50#00
+iterations <- 10000
+burnin <- 2000
 thinning <- 10
 
 nout <- (iterations-burnin)/thinning
@@ -182,7 +182,7 @@ tab1NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2
                 sqrt(apply(res_5a, 2, var)))
 colnames(tab1NR) <- heading
 rownames(tab1NR) <- righe
-#save(tab1NR, file = "tab1NR.RData")
+save(tab1NR, file = "tab1NR.RData")
 
 ##################
 ## TABELLA 5R DELLO SCENARIO 2 DEL PRIMO STUDIO DI SIMULAZIONE
@@ -246,13 +246,13 @@ tab5R <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2a
                sqrt(apply(res_5a, 2, var)))
 colnames(tab5R) <- heading
 rownames(tab5R) <- righe
-#save(tab5R, file = "tab5R.RData")
+save(tab5R, file = "tab5R.RData")
 
 
 
 ##################
 ## TABELLA 5NR DELLO SCENARIO 2 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 500, P = 500, Q = 2, K = 5, CC = 5 REUSE = FALSE
+## n = 500, P = 500, Q = 2, K = 5, CC = 1 REUSE = FALSE
 ##################
 
 for(k in 1:KK){
@@ -312,7 +312,7 @@ tab5NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2
                 sqrt(apply(res_5a, 2, var)))
 colnames(tab5NR) <- heading
 rownames(tab5NR) <- righe
-#save(tab5NR, file = "tab5NR.RData")
+save(tab5NR, file = "tab5NR.RData")
 
 ##################
 ## TABELLA 10R DELLO SCENARIO 2 DEL PRIMO STUDIO DI SIMULAZIONE
@@ -376,7 +376,7 @@ tab10R <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2
                 sqrt(apply(res_5a, 2, var)))
 colnames(tab10R) <- heading
 rownames(tab10R) <- righe
-#save(tab10R, file = "tab10R.RData")
+save(tab10R, file = "tab10R.RData")
 
 ##################
 ## TABELLA 10NR DELLO SCENARIO 2 DEL PRIMO STUDIO DI SIMULAZIONE
@@ -440,7 +440,7 @@ tab10NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_
                  sqrt(apply(res_5a, 2, var)))
 colnames(tab10NR) <- heading
 rownames(tab10NR) <- righe
-#save(tab10NR, file = "tab10NR.RData")
+save(tab10NR, file = "tab10NR.RData")
 
 ##################
 ## TABELLA 30R DELLO SCENARIO 2 DEL PRIMO STUDIO DI SIMULAZIONE
@@ -504,7 +504,7 @@ tab30R <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2
                 sqrt(apply(res_5a, 2, var)))
 colnames(tab30R) <- heading
 rownames(tab30R) <- righe
-#save(tab30R, file = "tab30R.RData")
+save(tab30R, file = "tab30R.RData")
 
 
 
@@ -570,5 +570,5 @@ tab30NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_
                  sqrt(apply(res_5a, 2, var)))
 colnames(tab30NR) <- heading
 rownames(tab30NR) <- righe
-#save(tab30NR, file = "tab30NR.RData")
+save(tab30NR, file = "tab30NR.RData")
 
