@@ -3,17 +3,17 @@ rm(list=ls())
 devtools::load_all()
 
 ###### STUDIO 1
-### Scenario a
+### Scenario c
 
-KK <- 2#30
+KK <- 3
 res_1a <- matrix(0, KK, 8)
 res_2a <- matrix(0, KK, 8)
 res_3a <- matrix(0, KK, 8)
 res_4a <- matrix(0, KK, 8)
 res_5a <- matrix(0, KK, 8)
 #set.seed(121)
-K=2
-myppmx <- gcd(n=100, concov = 2, K, alpha = 1)
+K=5
+myppmx <- gcd(n=1000, concov = 1000, K, alpha = 1)
 cat("nclus: ", myppmx$nclus, "\n")
 Y <- myppmx$y
 colors <- c("#ebb678", "#1979a9", "#e07b39", "#69bdd2", "#80391e", "#cce7e8",
@@ -32,16 +32,16 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-iterations <- 10#000
-burnin <- 2#000
-thinning <- 1#0
+iterations <- 10000
+burnin <- 2000
+thinning <- 10
 
 nout <- (iterations-burnin)/thinning
 
 
 ##################
-## TABELLA 1R DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 1 REUSE = TRUE
+## TABELLA 1R DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 1 REUSE = TRUE
 ##################
 
 for(k in 1:KK){
@@ -96,18 +96,18 @@ for(k in 1:KK){
   res_5a[k,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
 }
 tab1R <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2a, 2, mean),
-      sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
-      apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
-      sqrt(apply(res_5a, 2, var)))
+               sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
+               apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
+               sqrt(apply(res_5a, 2, var)))
 colnames(tab1R) <- heading
 rownames(tab1R) <- righe
-save(tab1R, file = "tab1R.RData")
+#save(tab1R, file = "tab1R.RData")
 
 
 
 ##################
-## TABELLA 1NR DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 1 REUSE = FALSE
+## TABELLA 1NR DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 1 REUSE = FALSE
 ##################
 
 for(k in 1:KK){
@@ -162,16 +162,16 @@ for(k in 1:KK){
   res_5a[k,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
 }
 tab1NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2a, 2, mean),
-               sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
-               apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
-               sqrt(apply(res_5a, 2, var)))
+                sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
+                apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
+                sqrt(apply(res_5a, 2, var)))
 colnames(tab1NR) <- heading
 rownames(tab1NR) <- righe
 save(tab1NR, file = "tab1NR.RData")
 
 ##################
-## TABELLA 5R DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 5 REUSE = TRUE
+## TABELLA 5R DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 5 REUSE = TRUE
 ##################
 
 for(k in 1:KK){
@@ -236,8 +236,8 @@ save(tab5R, file = "tab5R.RData")
 
 
 ##################
-## TABELLA 5NR DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 1 REUSE = FALSE
+## TABELLA 5NR DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 1 REUSE = FALSE
 ##################
 
 for(k in 1:KK){
@@ -300,8 +300,8 @@ rownames(tab5NR) <- righe
 save(tab5NR, file = "tab5NR.RData")
 
 ##################
-## TABELLA 10R DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 10 REUSE = TRUE
+## TABELLA 10R DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 10 REUSE = TRUE
 ##################
 
 for(k in 1:KK){
@@ -356,16 +356,16 @@ for(k in 1:KK){
   res_5a[k,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
 }
 tab10R <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2a, 2, mean),
-               sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
-               apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
-               sqrt(apply(res_5a, 2, var)))
+                sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
+                apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
+                sqrt(apply(res_5a, 2, var)))
 colnames(tab10R) <- heading
 rownames(tab10R) <- righe
 save(tab10R, file = "tab10R.RData")
 
 ##################
-## TABELLA 10NR DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 10 REUSE = FALSE
+## TABELLA 10NR DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 10 REUSE = FALSE
 ##################
 
 for(k in 1:KK){
@@ -420,16 +420,16 @@ for(k in 1:KK){
   res_5a[k,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
 }
 tab10NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_2a, 2, mean),
-                sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
-                apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
-                sqrt(apply(res_5a, 2, var)))
+                 sqrt(apply(res_2a, 2, var)), apply(res_3a, 2, mean), sqrt(apply(res_3a, 2, var)),
+                 apply(res_4a, 2, mean), sqrt(apply(res_4a, 2, var)), apply(res_5a, 2, mean),
+                 sqrt(apply(res_5a, 2, var)))
 colnames(tab10NR) <- heading
 rownames(tab10NR) <- righe
 save(tab10NR, file = "tab10NR.RData")
 
 ##################
-## TABELLA 30R DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 30 REUSE = TRUE
+## TABELLA 30R DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 30 REUSE = TRUE
 ##################
 
 for(k in 1:KK){
@@ -494,8 +494,8 @@ save(tab30R, file = "tab30R.RData")
 
 
 ##################
-## TABELLA 30NR DELLO SCENARIO 1 DEL PRIMO STUDIO DI SIMULAZIONE
-## n = 100, P = 2, Q = 2, K = 2, CC = 30 REUSE = FALSE
+## TABELLA 30NR DELLO SCENARIO 3 DEL PRIMO STUDIO DI SIMULAZIONE
+## n = 1000, P = 1000, Q = 2, K = 5, CC = 30 REUSE = FALSE
 ##################
 
 for(k in 1:KK){
@@ -556,3 +556,4 @@ tab30NR <- rbind(apply(res_1a, 2, mean), sqrt(apply(res_1a, 2, var)), apply(res_
 colnames(tab30NR) <- heading
 rownames(tab30NR) <- righe
 save(tab30NR, file = "tab30NR.RData")
+

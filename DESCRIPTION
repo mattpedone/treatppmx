@@ -1,14 +1,17 @@
 Package: treatppmx
-Type: Package
-Title: trying to extend ppmx
-Version: 1.0
-Date: 2020-12-22
-Author: Matt
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: wip implementation of model in notex file. as far as now it is implemented Page Quintana (2018) Stat Com. Moreover, multiple auxiliary variables can be sampled (cfr Neal (2000) JCGS), even through the Reuse algorithm (Favaro and Teh (2013) Stat Sci).
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Matteo",
+           family = "Pedone",
+           role = c("aut", "cre"),
+           email = "matteo.pedone@unifi.it",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
 Encoding: UTF-8
-License: GPL-3
 LazyData: true
-Imports: Rcpp (>= 1.0.5)
-LinkingTo: Rcpp, RcppArmadillo
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+LinkingTo: Rcpp, RcppArmadillo
+Imports: Rcpp, coda, mcclust, mcclust.ext, mclust

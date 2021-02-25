@@ -5,4 +5,4 @@ fnchoff            library w/ function for chpt7 hoff book
 chpt7hoff          implementing chpt7 mvn example
 script_reuse1      script to evaluate PPMx w/Reuse MVN model
 script_reuse2      script to evaluate PPMx w/Reuse MVN model
-mv_script          principal script for mvn
+mvn_script          principal script for mvn

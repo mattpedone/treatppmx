@@ -1,13 +1,13 @@
 ran_ppmx <- function(X=NULL, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v=2, k0=10, v0=1){
-  
+
   out <- NULL
-  
+
   nobs <- nrow(X)
   if(!is.data.frame(X)) X <- data.frame(X)
-  
+
   classes <- sapply(X, class)
   catvars <- classes %in% c("factor","character")
-  
+
   # standardize continuous covariates
   if(sum(!catvars) > 0){
     xcon <- apply(X[,!catvars, drop=FALSE], 2, scale)
@@ -16,10 +16,10 @@ ran_ppmx <- function(X=NULL, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v
     xcon <- cbind(rep(0,nobs));
     ncon <- 0
   }
-  
+
   # Function that relabels categorical variables to begin with 0
   relab <- function(x) as.numeric(as.factor(as.character(x))) - 1
-  
+
   if(sum(catvars) > 0){
     # Change the factors or characters into integers with category starting at 0.
     xcat <- apply(X[, catvars,drop=FALSE], 2, relab)
@@ -33,10 +33,10 @@ ran_ppmx <- function(X=NULL, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v
   nk <- 1
   nh <- rep(0, nobs)
   Si <- rep(0, nobs)
-  
+
   dirweights <- rep(0.1, length=max(Cvec));
   #N <- m
-  
+
   #cat("xcon", as.vector(t(xcon)), "\n")
   #cat("xcat", as.vector(t(xcat)), "\n")
   #cat("Cvec", as.vector(t(Cvec)), "\n")
@@ -46,14 +46,14 @@ ran_ppmx <- function(X=NULL, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v
   #cat("s20", as.double(s20), "\n")
   #cat("v", as.double(v), "\n")
   #cat("dw", as.vector(dirweights), "\n")
-  
-  Cout <- rppmx(as.integer(nobs), as.integer(similarity), as.integer(simparm), as.double(alpha), 
-                as.integer(ncon), as.integer(ncat), as.vector(t(xcon)), 
-                as.vector(t(xcat)), as.vector(t(Cvec)), as.double(m0), 
+
+  Cout <- rppmx(as.integer(nobs), as.integer(similarity), as.integer(simparm), as.double(alpha),
+                as.integer(ncon), as.integer(ncat), as.vector(t(xcon)),
+                as.vector(t(xcat)), as.vector(t(Cvec)), as.double(m0),
                 as.double(k0), as.double(v0), as.double(s20),
                 as.double(v), as.vector(dirweights))
-  
-  
+
+
   label <- Cout$cluster_label
   nclus <- Cout$nclus
   nj <- Cout$nj
@@ -73,12 +73,12 @@ genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
   ncov <- Q + P
   ##prima ci stanno le binarie
   XX <- matrix(0, n, (ncov))
-  
+
   Y <- matrix(0, n, dim)
   beta1 <- matrix(1, ncov, dim)
   beta2 <- matrix(-1.3, ncov, dim)
   beta3 <- matrix(1.3, ncov, dim)
-  
+
   pro <- c(0.2,0.5,0.3)
   clusterlabel <- c()
   for(i in 1:n){
@@ -114,26 +114,30 @@ genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
   return(list(XX=data.frame(XX)))
 }
 
-gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1, 
+#' gendata
+#'
+#' @export
+#'
+gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
                 alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
   myinfopart <- NULL
   concov = 2
   n_obs = 100
   n = n_obs
   d <- genera_dati(n=n, P=concov)
-  
+
   X <- d$XX
-  
+
   X$X1 <- as.factor(X$X1)
   X$X2 <- as.factor(X$X2)
-  
+
   myinfopart$X <- X
-  
+
   myppmx <- ran_ppmx(X=X, similarity, simparm, alpha, m0, s20,v, k0, v0)
   myinfopart$label <- myppmx$label
   myinfopart$nclus <- myppmx$nclus
   myinfopart$nj <- myppmx$nj
-  
+
   possmean <- matrix(0, myppmx$nclus, K)
   for(i in 1:myppmx$nclus){
     possmean[i,] <- mvtnorm::rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
@@ -144,7 +148,7 @@ gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
     Y[i, ] <- mvtnorm::rmvnorm(1, possmean[myppmx$label[i],], sigma = diag(.25, K), method="svd")
   }
   myinfopart$y <- Y
-  
+
   if(plot==T){
     par(mfrow=c(1, 2))
     plot(possmean)
@@ -153,28 +157,33 @@ gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
   return(myinfopart)
 }
 
-postquant <- function(y = Y, output =out, lab = T, plot = F){
-  cls <- as.matrix(out$label)
+#' postquant
+#'
+#' @export
+#'
+
+postquant <- function(y, output, data, lab, plot){
+  cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
   mc <- minbinder.ext(psm)
   yhat <- out$pred
   #vec <- (c(y)-c(yhat))
   mmse <- mean((y-yhat)^2)
-  ari <- adjustedRandIndex(mc$cl, myppmx$label)
-  ess <- effectiveSize(out$nclu)
-  
-  mypostquant <- list("nclupost" = mean(out$nclu), "MSE" = mmse, 
-                      "lpml" = out$lpml, "ARI" = ari, 
+  ari <- adjustedRandIndex(mc$cl, data$label)
+  ess <- effectiveSize(output$nclu)
+
+  mypostquant <- list("nclupost" = mean(output$nclu), "MSE" = mmse,
+                      "lpml" = output$lpml, "ARI" = ari,
                       "comp_time" = mytime[1], "ESS" = ess)
   if(lab==T){
-    mypostquant <- list("nclupost" = mean(out$nclu), "MSE" = mmse, 
-                        "lpml" = out$lpml, "ARI" = ari, 
+    mypostquant <- list("nclupost" = mean(output$nclu), "MSE" = mmse,
+                        "lpml" = output$lpml, "ARI" = ari,
                         "comp_time" = mytime[1], "ESS" = ess, "lab" = mc$cl)
   }
   if(plot == T){
     par(mfrow=c(1,2))
-    plot(out$nclu, type="l")
-    acf(out$nclu)
+    plot(output$nclu, type="l")
+    acf(output$nclu)
   }
   return(mypostquant)
 }

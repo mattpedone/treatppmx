@@ -9,54 +9,6 @@ myppmx <- function(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesi
     .Call(`_treatppmx_myppmx`, iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesion, similarity, consim, y, xcon, xcat, similparam, modelpriors, mhtune, calibration)
 }
 
-inner_product <- function(v1, d1, v2, d2, n) {
-    .Call(`_treatppmx_inner_product`, v1, d1, v2, d2, n)
-}
-
-squared_norm <- function(v, d, n, sq) {
-    .Call(`_treatppmx_squared_norm`, v, d, n, sq)
-}
-
-cholesky <- function(A, n) {
-    .Call(`_treatppmx_cholesky`, A, n)
-}
-
-wa <- function(v, dim) {
-    .Call(`_treatppmx_wa`, v, dim)
-}
-
-logdet <- function(A, n) {
-    .Call(`_treatppmx_logdet`, A, n)
-}
-
-wa_det <- function(v, dim) {
-    .Call(`_treatppmx_wa_det`, v, dim)
-}
-
-dmvnorm <- function(y, mu, Sig, dim, ld, logout) {
-    .Call(`_treatppmx_dmvnorm`, y, mu, Sig, dim, ld, logout)
-}
-
-ran_mvnorm_old <- function(m, Sig, dim) {
-    .Call(`_treatppmx_ran_mvnorm_old`, m, Sig, dim)
-}
-
-ran_mvnorm <- function(m, Sig, dim) {
-    .Call(`_treatppmx_ran_mvnorm`, m, Sig, dim)
-}
-
-dinvwish <- function(SSiginv, dim, detSig, detS, nu0, logout) {
-    .Call(`_treatppmx_dinvwish`, SSiginv, dim, detSig, detS, nu0, logout)
-}
-
-ran_iwish_old <- function(nu, Sig, dim) {
-    .Call(`_treatppmx_ran_iwish_old`, nu, Sig, dim)
-}
-
-ran_iwish <- function(nu, Sig, dim) {
-    .Call(`_treatppmx_ran_iwish`, nu, Sig, dim)
-}
-
 rppmx <- function(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights) {
     .Call(`_treatppmx_rppmx`, nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights)
 }
