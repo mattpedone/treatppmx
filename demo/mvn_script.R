@@ -2,7 +2,7 @@ rm(list=ls())
 devtools::load_all()
 
 K=2
-myppmx <- gcd(n=100, concov = 10, K, alpha = 5)
+myppmx <- gcd(n=100, concov = 10, K, alpha = 1)
 Y <- myppmx$y
 X <- myppmx$X
 

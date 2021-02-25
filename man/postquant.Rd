@@ -4,7 +4,7 @@
 \alias{postquant}
 \title{postquant}
 \usage{
-postquant(y, output, data, lab, plot)
+postquant(y, output, data, lab, plot, minbinder = F)
 }
 \description{
 postquant

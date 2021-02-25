@@ -47,7 +47,7 @@ ran_ppmx <- function(X=NULL, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v
   #cat("v", as.double(v), "\n")
   #cat("dw", as.vector(dirweights), "\n")
 
-  Cout <- rppmx(as.integer(nobs), as.integer(similarity), as.integer(simparm), as.double(alpha),
+  Cout <- ranppmx(as.integer(nobs), as.integer(similarity), as.integer(simparm), as.double(alpha),
                 as.integer(ncon), as.integer(ncat), as.vector(t(xcon)),
                 as.vector(t(xcat)), as.vector(t(Cvec)), as.double(m0),
                 as.double(k0), as.double(v0), as.double(s20),
@@ -86,23 +86,23 @@ genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
     if(u<pro[1]){
       #cat(i,"ciao1","\n")
       #X e Z li devo costruire qui
-      if(Q!=0){XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, -2.1, .25)))}
-      if(P!=0){XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, -2.1, .25))}
+      if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, rnorm(Q, -2.1, .25)))}
+      if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, rnorm(P, -2.1, .25))}
       #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
       #clusterlabel[i] <- 1
     }
     else{
       if(u<(pro[1]+pro[2])){
         #cat(i,"ciao2","\n")
-        if(Q!=0){XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, 0.0, .25)))}
-        if(P!=0){XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, 0.0, .25))}
+        if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, rnorm(Q, 0.0, .25)))}
+        if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, rnorm(P, 0.0, .25))}
         #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
         #clusterlabel[i] <- 2
       }
       else{
         #cat(i,"ciao3","\n")
-        if(Q!=0){XX[i, c(1:Q)] <- discretize(mvtnorm::rmvnorm(1, rnorm(Q, 2.1, .25)))}
-        if(P!=0){XX[i, c((Q+1):ncov)] <- mvtnorm::rmvnorm(1, rnorm(P, 2.1, .25))}
+        if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, rnorm(Q, 2.1, .25)))}
+        if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, rnorm(P, 2.1, .25))}
         #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
         #clusterlabel[i] <- 3
       }
@@ -140,12 +140,12 @@ gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
 
   possmean <- matrix(0, myppmx$nclus, K)
   for(i in 1:myppmx$nclus){
-    possmean[i,] <- mvtnorm::rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
+    possmean[i,] <- rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
   }
   myinfopart$possmean <- possmean
   Y <- matrix(0, n, K)
   for(i in 1:n){
-    Y[i, ] <- mvtnorm::rmvnorm(1, possmean[myppmx$label[i],], sigma = diag(.25, K), method="svd")
+    Y[i, ] <- rmvnorm(1, possmean[myppmx$label[i],], sigma = diag(.25, K), method="svd")
   }
   myinfopart$y <- Y
 
@@ -162,23 +162,28 @@ gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
 #' @export
 #'
 
-postquant <- function(y, output, data, lab, plot){
+postquant <- function(y, output, data, lab, plot, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
-  mc <- minbinder.ext(psm)
-  yhat <- out$pred
-  #vec <- (c(y)-c(yhat))
+  if(minbinder == T){
+    mc <- minbinder.ext(psm)
+  } else {
+    mc <- minVI(psm)
+    }
+  yhat <- output$pred
+  vec <- (c(y)-c(yhat))
   mmse <- mean((y-yhat)^2)
   ari <- adjustedRandIndex(mc$cl, data$label)
   ess <- effectiveSize(output$nclu)
 
   mypostquant <- list("nclupost" = mean(output$nclu), "MSE" = mmse,
-                      "lpml" = output$lpml, "ARI" = ari,
-                      "comp_time" = mytime[1], "ESS" = ess)
+                      "lpml" = output$lpml, "ARI" = ari, "ESS" = ess)
+                      #"comp_time" = time[1],
   if(lab==T){
     mypostquant <- list("nclupost" = mean(output$nclu), "MSE" = mmse,
                         "lpml" = output$lpml, "ARI" = ari,
-                        "comp_time" = mytime[1], "ESS" = ess, "lab" = mc$cl)
+                        #"comp_time" = time[1],
+                        "ESS" = ess, "lab" = mc$cl)
   }
   if(plot == T){
     par(mfrow=c(1,2))

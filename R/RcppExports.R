@@ -9,7 +9,7 @@ myppmx <- function(iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesi
     .Call(`_treatppmx_myppmx`, iter, burn, thin, nobs, ncon, ncat, catvec, alpha, CC, cohesion, similarity, consim, y, xcon, xcat, similparam, modelpriors, mhtune, calibration)
 }
 
-rppmx <- function(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights) {
-    .Call(`_treatppmx_rppmx`, nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights)
+ranppmx <- function(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights) {
+    .Call(`_treatppmx_ranppmx`, nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights)
 }
 

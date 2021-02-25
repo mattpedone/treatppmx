@@ -68,9 +68,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rppmx
-Rcpp::List rppmx(int nobs, int similarity, int similparam, double alpha, int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, double m0, double k0, double v0, double s20, double v, arma::vec dirweights);
-RcppExport SEXP _treatppmx_rppmx(SEXP nobsSEXP, SEXP similaritySEXP, SEXP similparamSEXP, SEXP alphaSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP CvecSEXP, SEXP m0SEXP, SEXP k0SEXP, SEXP v0SEXP, SEXP s20SEXP, SEXP vSEXP, SEXP dirweightsSEXP) {
+// ranppmx
+Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha, int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, double m0, double k0, double v0, double s20, double v, arma::vec dirweights);
+RcppExport SEXP _treatppmx_ranppmx(SEXP nobsSEXP, SEXP similaritySEXP, SEXP similparamSEXP, SEXP alphaSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP CvecSEXP, SEXP m0SEXP, SEXP k0SEXP, SEXP v0SEXP, SEXP s20SEXP, SEXP vSEXP, SEXP dirweightsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,7 +89,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type s20(s20SEXP);
     Rcpp::traits::input_parameter< double >::type v(vSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type dirweights(dirweightsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rppmx(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights));
+    rcpp_result_gen = Rcpp::wrap(ranppmx(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -97,7 +97,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_mvn_ppmx", (DL_FUNC) &_treatppmx_mvn_ppmx, 23},
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
-    {"_treatppmx_rppmx", (DL_FUNC) &_treatppmx_rppmx, 15},
+    {"_treatppmx_ranppmx", (DL_FUNC) &_treatppmx_ranppmx, 15},
     {NULL, NULL, 0}
 };
 

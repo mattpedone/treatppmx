@@ -617,9 +617,8 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
   return(out);
 
 }
-
 // [[Rcpp::export]]
-Rcpp::List rppmx(int nobs, int similarity, int similparam, double alpha,
+Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
            int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec,
            double m0, double k0, double v0, double s20, double v,
            arma::vec dirweights){
