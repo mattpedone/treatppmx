@@ -2,7 +2,6 @@
 
 export(gcd)
 export(my_mvn_ppmx)
-export(my_ppmx)
 export(postquant)
 importFrom(Rcpp,sourceCpp)
 importFrom(coda,effectiveSize)

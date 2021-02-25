@@ -26,7 +26,7 @@
 #'   0 - no calibration
 #'   1 - standardize similarity value for each covariate
 #'   2 - coarsening is applied so that each similarity is raised to the 1/p power
-#' @export
+# @export
 # mancano come input tutti gli storage per l output che inizializzo in R e passo come input qui
 # poi in R li metto in una lista
 # se non funziona l output di myppmx deve essere una lista
