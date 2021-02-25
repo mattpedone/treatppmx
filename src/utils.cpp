@@ -94,7 +94,6 @@ double squared_norm(arma::vec v, int d, int n, int sq){
 }
 
 //Cholesky decomposition of posdef sym n x n matrix
-// [[Rcpp::export]]
 arma::vec cholesky(arma::vec A, int n) {
   arma::vec L(n*n);
   L.fill(0);
@@ -115,23 +114,6 @@ arma::vec cholesky(arma::vec A, int n) {
   return L;
 }
 
-//[[Rcpp::export]]
-arma::mat wa(arma::vec v, int dim){
-  arma::vec wv = v;
-  arma::mat work(dim, dim);
-  for(int row = 0; row < dim; row++){
-    for(int col = 0; col < dim; col++){
-      work(row, col) = wv(row * dim + col);
-    }
-  }
-  
-  work = arma::chol(work, "lower");
-  //arma::log_det(ldSig, sign, work);
-  return work;
-}
-
-//log determinant of a posdef sym matrix
-
 /*
  * If the symmetric positive definite matrix A is represented by its Cholesky 
  * decomposition A = LL' or A = U'U, then the determinant of this matrix can 
@@ -140,7 +122,6 @@ arma::mat wa(arma::vec v, int dim){
  * (n x n) matrix whose log determinant we are looking for
  * A n x n matrix whose determinant we want to compute 
  */
-// [[Rcpp::export]]
 double logdet(arma::vec A, int n) {
   arma::vec L(n*n);
   L.fill(0);
@@ -165,25 +146,6 @@ double logdet(arma::vec A, int n) {
     }
   }
     return logdet;
-}
-
-//[[Rcpp::export]]
-double wa_det(arma::vec v, int dim){
-  //arma::vec wv = v;
-  arma::mat work(dim, dim);
-  double res, sign;
-  for(int row = 0; row < dim; row++){
-    for(int col = 0; col < dim; col++){
-      work(row, col) = v(row * dim + col);
-    }
-  }
-  //work = arma::inv(work);
-  //work = arma::chol(work, "lower");
-  //work = work.t();
-  //Rcpp::Rcout << work << std::endl;
-  arma::log_det(res, sign, work);
-  //res =log(det(work));
-  return res;
 }
 
 // Inverse Gamma density
@@ -231,7 +193,6 @@ double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0
  * ld vuole log determinant variance matrix
  * logout logical if 1 returns log density
  */
-// [[Rcpp::export]]
 double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld, 
                int logout){
   
@@ -263,35 +224,11 @@ double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld,
   return exp(out);
 }
 
-// [[Rcpp::export]]
-arma::vec ran_mvnorm_old(arma::vec m, arma::vec Sig, int dim){
-  
-  int i,j;
-  arma::mat cholV(dim, dim);
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      cholV(i, j) = Sig(i * dim + j);
-    }
-  }
-  cholV = arma::chol(cholV, "lower");
-  arma::vec z(dim);
-  arma::vec out(dim);
-  for(i = 0; i < dim; i++){
-    z(i) = R::rnorm(0,1);
-    out(i) = m(i);
-    for(j = 0; j <= i; j++){
-      out(i) += cholV(i, j)*z(j);
-    }
-  }
-  return out;
-}
-
 /* Sampling Multivariate Normal
  * m vector of dimension dim storing the mean
  * Sig vector for VARIANCE MATRIX
  * dim dimension of multivarite normal distribution
  */
-// [[Rcpp::export]]
 arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim){
   int i,j;
   arma::vec cholV(dim * dim);
@@ -319,7 +256,6 @@ arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim){
  * nu0 - degrees of freedom of the inverse-wishart function
  * logout logical. if 1 returns logdensity
  */
-  // [[Rcpp::export]]
 double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0, 
                 int logout){
   
@@ -349,69 +285,11 @@ double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0,
   return exp(out);
 }
 
-// [[Rcpp::export]]
-arma::vec ran_iwish_old(int nu, arma::vec Sig, int dim){
-  
-  //Rcpp::Rcout << "input" << Sig << std::endl;
-  
-  int i, j, k;
-  arma::mat cholS(dim, dim, arma::fill::zeros);
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      cholS(i, j) = Sig(i * dim + j);
-    }
-  }
-  //Rcpp::Rcout << "chols" << cholS << std::endl;
-  
-  cholS = arma::chol(cholS, "lower");
-  
-  /* for(i = 0; i < dim; i++){
-  *  for(j = 0; j < dim; j++){
-  *    Sig(i * dim + j) = cholS(i, j);
-  *  }
-  }*/
-  
-  //Rcpp::Rcout << "Sig" << Sig << std::endl;
-  arma::vec x(dim);
-  arma::vec zeros(dim);
-  zeros.fill(0.0);
-  arma::vec outv(dim * dim);
-  arma::mat out(dim, dim);
-  out.fill(0.0);
-  
-  for(i = 0; i < nu; i++){
-    x = ran_mvnorm(zeros, Sig, dim);
-    for(j = 0; j < dim; j++){
-      for(k = 0; k <= j; k++){
-        out(j, k) += x(j)*x(k);
-      }
-    }
-  }
-  
-  /* fill the upper triangular part with lower triangular part */
-    for(j=0; j<dim; j++){
-      for(k=0; k<j; k++){
-        out(k, j) = out(j, k);
-      }
-    }
-    
-    out = arma::inv(out);
-  
-    for(j = 0; j < dim; j++){
-      for(k = 0; k < dim; k++){
-        outv(j * dim + k) = out(j, k);
-      }
-    }
-    
-  return outv;
-}
-
 /* Random Draw from Wishart distribution
  * nu degrees of freedom
  * Sig matrix parameter NOT THE CHOLESKY DECOMPOSITION
  * dim dimension of the Wishart distribution
  */
-// [[Rcpp::export]]
 arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
   
   int i, j, k;
@@ -741,7 +619,6 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
   
 }
 
-// [[Rcpp::export]]
 Rcpp::List rppmx(int nobs, int similarity, int similparam, double alpha, 
            int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, 
            double m0, double k0, double v0, double s20, double v, 

@@ -161,7 +161,7 @@ postquant <- function(y = Y, output =out, lab = T, plot = F){
   #vec <- (c(y)-c(yhat))
   mmse <- mean((y-yhat)^2)
   ari <- adjustedRandIndex(mc$cl, myppmx$label)
-  ess <- coda::effectiveSize(out$nclu)
+  ess <- effectiveSize(out$nclu)
   
   mypostquant <- list("nclupost" = mean(out$nclu), "MSE" = mmse, 
                       "lpml" = out$lpml, "ARI" = ari, 

@@ -9,4 +9,8 @@
 #'
 #' @useDynLib treatppmx, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom mcclust comp.psm
+#' @importFrom mcclust.ext minbinder.ext
+#' @importFrom mclust adjustedRandIndex
+#' @importFrom coda effectiveSize
 NULL
