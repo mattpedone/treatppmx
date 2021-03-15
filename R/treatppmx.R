@@ -18,5 +18,5 @@
 #' @importFrom stats rnorm
 #' @importFrom stats acf
 #' @importFrom graphics par
-# @importFrom mvtnorm rmvnorm
+#' @importFrom mvtnorm rmvnorm
 NULL
