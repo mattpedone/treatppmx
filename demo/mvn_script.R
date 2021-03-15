@@ -8,8 +8,8 @@ devtools::load_all()
 KK <- 1#numero di repliche
 res <- matrix(0, KK, 7)
 par(mfrow=c(1,1))
-K=4#dimensioni
-myppmx <- gcd(n=500, concov = 200, K, alpha = 1)
+K=2#dimensioni
+myppmx <- gcd(n=100, concov = 100, K, alpha = 1)
 cat("nclus: ", myppmx$nclus, "\n")
 Y <- myppmx$y
 colors <- c("#ebb678", "#1979a9", "#e07b39", "#69bdd2", "#80391e", "#cce7e8",
@@ -29,12 +29,12 @@ modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
 iterations <- 10000
-burnin <- 0#2000
-thinning <- 1
+burnin <- 2000
+thinning <- 10
 
 nout <- (iterations-burnin)/thinning
 
-#for(k in 1:KK){
+for(k in 1:KK){
   mytime <- system.time(
     out <- my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 5, reuse = 1, PPMx = 1,
                        similarity = 1, consim=1, calibration=1,
@@ -43,39 +43,6 @@ nout <- (iterations-burnin)/thinning
                        modelpriors, mhtune=c(0.5, 0.5),
                        iter=iterations,burn=burnin,thin=thinning))
 
-  #res[1,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = T)), myppmx$nclus, nout)
-  cat("non thinned:", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = T)), myppmx$nclus, nout), "\n")
-#}
-
-#colnames(res) <- heading
-#res
-
-#par(mfrow=c(1,2))
-#plot(out$nc, type="l")
-#coda::effectiveSize(out$nc)
-#acf(out$nc)
-#apply(out$mu, c(1, 2), mean)
-#out$mu[,,250]
-#myppmx$possmean
-
-iterations <- 10000
-burnin <- 2000
-thinning <- 10
-
-nout <- (iterations-burnin)/thinning
-
-#for(k in 1:KK){
-mytime <- system.time(
-  out <- my_mvn_ppmx(y = Y, X = X, alpha=1, CC = 5, reuse = 1, PPMx = 1,
-                     similarity = 1, consim=1, calibration=1,
-                     #similparam=c(0.0, 10.0, 0.5, 1.0, 10.0, 0.1, 1.0),
-                     similparam = c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0),
-                     modelpriors, mhtune=c(0.5, 0.5),
-                     iter=iterations,burn=burnin,thin=thinning))
-
-cat("thinned:", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout), "\n")
-#cat("thinned:", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = T)), myppmx$nclus, nout), "\n")
-#}
-
-#colnames(res) <- heading
-#res
+  res[1,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
+  #cat("non thinned:", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout), "\n")
+}

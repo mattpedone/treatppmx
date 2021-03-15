@@ -162,7 +162,7 @@ gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
 #' @export
 #'
 
-postquant <- function(y, output, data, lab, plot, minbinder = F){
+postquant <- function(y, output, data, lab, plot, minbinder = T){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
   if(minbinder == T){

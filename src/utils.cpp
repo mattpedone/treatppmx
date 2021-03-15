@@ -617,6 +617,42 @@ double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
   return(out);
 
 }
+
+// [[Rcpp::export]]
+double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
+                       int Log){
+  /* function that compute log linear predictor.
+   * inputs:
+   * - eta: mvn intercept (BNP)
+   * - curr_clu: labels of cluster assignement
+   * - k, i: indices
+   * - Log if == 1 returns log gamma
+   */
+
+  double lg = 0.0;
+
+  lg = eta(k, curr_clu(i) - 1);
+
+  if(Log == 1){
+    return lg;
+  } else{
+    return (exp(lg));
+  }
+}
+
+/*Rcpp::List eta_update(){
+  /
+   *
+   /
+
+  // Return output
+  Rcpp::List eta_up(3);
+  //between[ 0 ] = zeta;
+  //between[ 1 ] = phi;
+  //between[ 2 ] = loggamma;
+  return eta_up;
+}*/
+
 // [[Rcpp::export]]
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
            int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec,
