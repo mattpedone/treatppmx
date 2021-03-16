@@ -640,6 +640,20 @@ double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
   }
 }
 
+double log_mult(arma::mat y, arma::mat JJ){
+  //multinomial probability mass function expressed using gamma function
+  int nobs, i;
+  double log_mult = 0.0;
+  nobs = JJ.n_rows;
+
+  for(i = 0; i < nobs; i++){
+    log_mult += lgamma(arma::sum(y.row(i)) + 1) +
+      arma::sum(-lgamma(y.row(i) + 1) + y.row(i)%log(JJ.row(i)));
+  }
+
+  return log_mult;
+}
+
 /*
  * the following function updates the mvn intercept clusterwise
  * $\boldsymbol{\eta}_{j}^{\star}$

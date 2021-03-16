@@ -20,3 +20,4 @@ Rcpp::List ranppmx(int, int, int, double, int, int, arma::vec, arma::vec, arma::
 double calculate_gamma(arma::mat, arma::vec, int, int, int);
 Rcpp::List eta_update(arma::mat, arma::vec, int, arma::vec, arma::vec, arma::vec, arma::vec,
            arma::vec, arma::vec, int);
+double log_mult(arma::mat, arma::mat);
