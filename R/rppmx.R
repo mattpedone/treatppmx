@@ -118,11 +118,11 @@ genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
 #'
 #' @export
 #'
-gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
+gcd <- function(n_obs, concov = 2, K = 2, similarity = 1, simparm = 1,
                 alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
   myinfopart <- NULL
-  concov = 2
-  n_obs = 100
+  #concov = 2
+  #n_obs = 100
   n = n_obs
   d <- genera_dati(n=n, P=concov)
 
@@ -162,7 +162,7 @@ gcd <- function(n_obs = 100, concov = 2, K = 2, similarity = 1, simparm = 1,
 #' @export
 #'
 
-postquant <- function(y, output, data, lab, plot, minbinder = T){
+postquant <- function(y, output, data, lab, plot, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
   if(minbinder == T){

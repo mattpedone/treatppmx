@@ -660,7 +660,7 @@ Rcpp::List mvn_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, 
      }
      }
      sigma_star_curr.col(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim);
-     mu_star_curr.col(j) = ran_mvnorm(theta, sigma_star_curr.col(j), dim);
+     mu_star_curr.col(j) = theta; //ran_mvnorm(theta, sigma_star_curr.col(j), dim);
      }
 
     if((l > (burn-1)) & (l % (thin) == 0)){

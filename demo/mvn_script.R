@@ -8,8 +8,9 @@ devtools::load_all()
 KK <- 1#numero di repliche
 res <- matrix(0, KK, 7)
 par(mfrow=c(1,1))
-K=2#dimensioni
-myppmx <- gcd(n=100, concov = 100, K, alpha = 1)
+#K=2#dimensioni
+myppmx <- gcd(n_obs = 100, concov = 2, K = 4, similarity = 1, simparm = 1,
+              alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F)
 cat("nclus: ", myppmx$nclus, "\n")
 Y <- myppmx$y
 colors <- c("#ebb678", "#1979a9", "#e07b39", "#69bdd2", "#80391e", "#cce7e8",
@@ -28,9 +29,9 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-iterations <- 10000
-burnin <- 2000
-thinning <- 10
+iterations <- 5000
+burnin <- 0#2000
+thinning <- 1#10
 
 nout <- (iterations-burnin)/thinning
 
@@ -43,6 +44,6 @@ for(k in 1:KK){
                        modelpriors, mhtune=c(0.5, 0.5),
                        iter=iterations,burn=burnin,thin=thinning))
 
-  res[1,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
-  #cat("non thinned:", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout), "\n")
+  #res[k,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
+  cat("res", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout), "\n")
 }
