@@ -18,3 +18,5 @@ double gsimconMVN_MVNIW(arma::vec, double, double, arma::vec, int, arma::vec,
 Rcpp::List ranppmx(int, int, int, double, int, int, arma::vec, arma::vec, arma::vec, double,
       double, double, double, double, arma::vec);
 double calculate_gamma(arma::mat, arma::vec, int, int, int);
+Rcpp::List eta_update(arma::mat, arma::vec, int, arma::vec, arma::vec, arma::vec, arma::vec,
+           arma::vec, arma::vec, int);

@@ -640,18 +640,115 @@ double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
   }
 }
 
-/*Rcpp::List eta_update(){
-  /
-   *
-   /
+/*
+ * the following function updates the mvn intercept clusterwise
+ * $\boldsymbol{\eta}_{j}^{\star}$
+ */
+Rcpp::List eta_update(arma::mat JJ, arma::vec loggamma,
+                      int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
+                      arma::vec eta, arma::vec eta_flag,
+                      arma::vec mu_star, arma::vec sigma_star, int jj){
+  /*
+   * JJ: matrix of independent gamma variables
+   * loggamma: matrix of log-linear predictor
+   * nclu_curr: number of current clusters
+   * curr_clu: vectors of labels of current cluster assignment
+   * nj_curr: vectors of number of individuals in each cluster
+   * eta: vector of mvn intercept of the jj-th cluster
+   * eta_flag: flag for eta MH acceptance
+   * mu_star: vector of jj-th cluster prior mean
+   * sigma_star: vector of jj-th cluster prior covariance (matrix stored in array)
+   * jj: cluster we are working on
+   */
+
+  int ncat = JJ.n_cols;
+  int nobs = JJ.n_rows;
+
+  int i, k, ii;
+ /*
+  * indices for:
+  * i: individuals
+  * k: categories
+  * ii: second index for individuals
+  */
+
+
+  double log_num, log_den, ln_acp, lnu, ld;
+  /*
+   * log_num: numerator for MH ratio
+   * log_den: denumerator for MH ratio
+   * ln_acp: MH ratio
+   * lnu: random value for MH acceptance
+   * ld: log determinant
+   */
+
+  arma::vec eta_p(ncat);
+
+  arma::mat JJtemp(nj_curr(jj), ncat);
+  arma::mat loggammatemp(nj_curr(jj), ncat);
+  arma::mat loggammatemp_p(nj_curr(jj), ncat);
+  ii = 0;
+  for(i = 0; i < nobs; i++){
+    if(curr_clu(i) == (jj + 1)){
+      JJtemp.row(ii) = JJ.row(i);
+      loggammatemp.row(ii) = loggamma.row(i);
+      ii += 1;
+    }
+  }//this closes for loop on observation, to consider only those belonging to current cluster j
+
+  //calculate denominator of MH ratio
+  for(k = 0; k < ncat; k++){
+    log_den = log_den - arma::sum(lgamma(exp(loggammatemp.col(k)))) +
+      arma::sum(exp(loggammatemp.col(k))%log(JJtemp.col(k)));
+  }
+  ld = logdet(sigma_star, ncat);
+  log_den += dmvnorm(eta, mu_star, sigma_star, ncat, ld, 1);
+
+  /*
+   * propose new value for eta
+   * I sample it from updated priors (for now)
+   */
+  eta_p = ran_mvnorm(mu_star, sigma_star, ncat);
+
+  //aggiusta loggamma temp p  con eta p
+  for(k = 0; k < ncat; k++){
+    loggammatemp_p.col(k) = loggammatemp.col(k) - eta(k) + eta_p(k);
+  }
+
+  //calculate numerator of MH ratio
+  for(k = 0; k < ncat; k++){
+    log_num = log_num - arma::sum(lgamma(exp(loggammatemp_p.col(k)))) +
+      arma::sum(exp(loggammatemp_p.col(k))%log(JJtemp.col(k)));
+  }
+  log_num += dmvnorm(eta_p, mu_star, sigma_star, ncat, ld, 1);
+
+  ln_acp = log_num - log_den;
+
+  lnu = R::runif(0.0, 1.0);
+
+  if(lnu < ln_acp){
+    // If accepted, update both eta and loggamma, and keep
+    // track of acceptances
+    eta_flag(jj) += 1;
+    eta = eta_p;
+
+    ii = 0;
+    for(i = 0; i < nobs; i++){
+      if(curr_clu(i) == (jj + 1)){
+        loggamma.row(i) = loggammatemp.row(ii);
+        ii += 1;
+      }
+    }
+  }//closes if accepted
 
   // Return output
   Rcpp::List eta_up(3);
-  //between[ 0 ] = zeta;
-  //between[ 1 ] = phi;
-  //between[ 2 ] = loggamma;
+  // eta, loggamma, acceptance,
+  eta_up[0] = eta;
+  eta_up[1] = eta_flag;
+  eta_up[2] = loggamma;
   return eta_up;
-}*/
+}
 
 // [[Rcpp::export]]
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
