@@ -644,6 +644,7 @@ double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
  * the following function updates the mvn intercept clusterwise
  * $\boldsymbol{\eta}_{j}^{\star}$
  */
+// [[Rcpp::export]]
 Rcpp::List eta_update(arma::mat JJ, arma::vec loggamma,
                       int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
                       arma::vec eta, arma::vec eta_flag,
@@ -745,8 +746,8 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec loggamma,
   Rcpp::List eta_up(3);
   // eta, loggamma, acceptance,
   eta_up[0] = eta;
-  eta_up[1] = eta_flag;
-  eta_up[2] = loggamma;
+  eta_up[1] = loggamma;
+  eta_up[2] = eta_flag;
   return eta_up;
 }
 

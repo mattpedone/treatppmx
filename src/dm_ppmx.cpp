@@ -151,6 +151,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   ////////////////////////////////
 
   arma::mat eta(dim, nobs, arma::fill::randu);
+  arma::vec eta_flag(nobs, arma::fill::zeros);
 
   // the linear predictor matrix, represented as a vector, is in the log scale
   // log-linear function on the prognostic marker n x K
@@ -242,7 +243,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::mat L0mInv(dim, dim);
   arma::mat S0m(dim, dim);
   arma::mat Sigma(dim, dim);
-  arma::mat nSigmaInv(dim, dim);
+  arma::mat SigmaInv(dim, dim);
   arma::vec mun(dim);
   arma::vec theta(dim);
   arma::vec Snv(dim * dim);
@@ -253,17 +254,20 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // Stuff to compute lpml (log pseudo marginal likelihood),
   // likelihood, and WAIC widely applicable information criterion (WAIC),
   // also known as Watanabe–Akaike information criterion
-  double lpml_iter, elppdWAIC;
+  double lpml_iter;
   arma::vec CPOinv(nobs);
   CPOinv.fill(0.0);
   arma::vec like_iter(nobs);
   like_iter.fill(0.0);
+  /*double elppdWAIC;
   arma::vec mnlike(nobs);
   mnlike.fill(0.0);
   arma::vec mnllike(nobs);
-  mnllike.fill(0.0);
+  mnllike.fill(0.0);*/
 
   //Stuff for storage and return
+  Rcpp::List eta_out(2);
+
   arma::vec nclus(nout);
   arma::mat mu_out(1, dim);
   arma::mat sigma_out(1, dim*dim);
@@ -670,11 +674,16 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     for(int row = 0; row < dim; row++){
      for(int col = 0; col < dim; col++){
       L0mInv(row, col) = hP0_L0(row * dim + col);
-      S0m(row, col) = hP0_V0(row * dim + col);
      }
     }
-     L0mInv = arma::inv(L0mInv);
+    L0mInv = arma::inv(L0mInv);
+
      for(j = 0; j < nclu_curr; j++){
+     /*
+      * qst non mi serve più perché è come se avessi una sola osservazione.
+      * calcolo le full conditional cmq
+      *
+      *
      arma::mat etatemp(dim, nj_curr(j));
      int idxy = 0;
      for(ii = 0; ii < nobs; ii++){
@@ -685,41 +694,50 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       }
      }
 
-     etabar = etabar/nj_curr(j);
+       etabar = etabar/nj_curr(j);
+
+       */
+
      for(int row = 0; row < dim; row++){
       for(int col = 0; col < dim; col++){
         Sigma(row, col) = sigma_star_curr(row * dim + col, j);
       }
      }
+     SigmaInv = arma::inv(Sigma);
 
-     nSigmaInv = arma::inv(Sigma);
-     nSigmaInv = nj_curr(j) * nSigmaInv;
-     Lnm = arma::inv(L0mInv + nSigmaInv);
-     mun = Lnm * (L0mInv * hP0_m0 + nSigmaInv * etabar);
+            //nSigmaInv = nj_curr(j) * nSigmaInv;
+     Lnm = arma::inv(L0mInv + SigmaInv);
+     mun = Lnm * (L0mInv * hP0_m0 + SigmaInv);
      for(int row = 0; row < dim; row++){
       for(int col = 0; col < dim; col++){
         Lnv(row * dim + col) = Lnm(row, col);
+        S0m(row, col) = hP0_V0(row * dim + col);
         }
       }
      mu_star_curr.col(j) = ran_mvnorm(mun, Lnv, dim);
-     Snm = arma::inv(S0m + ((etatemp.each_col()-mu_star_curr.col(j)) *
+     /*qui devo calcolarlo attentamente
+      *
+     Snm = arma::inv(S0m + ((eta.each_col()-mu_star_curr.col(j)) *
        (etatemp.each_col()-mu_star_curr.col(j)).t()));
+      */
+     Snm = arma::inv(S0m + ((eta.col(j)-mu_star_curr.col(j)) * (eta.col(j)-mu_star_curr.col(j)).t()));
      //Snm = arma::inv(S0m + ((ytemp.each_row()-theta.t()).t() * (ytemp.each_row()-theta.t())));
      for(int row = 0; row < dim; row++){
       for(int col = 0; col < dim; col++){
         Snv(row * dim + col) = Snm(row, col);
       }
      }
-     sigma_star_curr.col(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim);
+     //sigma_star_curr.col(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim);
+     sigma_star_curr.col(j) = ran_iwish(hP0_nu0 + 1, Snv, dim);
      }
 
-
-    if((l > (burn-1)) & (l % (thin) == 0)){
-     for(i = 0; i < nobs; i++){
-      ispred_iter.col(i) = ran_mvnorm(mu_star_curr.col(curr_clu(i)-1),
-                      sigma_star_curr.col(curr_clu(i)-1), dim);
+     for(j = 0; j < nclu_curr; j++){
+       eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
+                  eta.col(j), eta_flag.col(j), mu_star_curr.col(j), sigma_star_curr.col(j), j);
+       eta.col(j) = Rcpp::as<arma::vec>(eta_out[0]);
+       loggamma = Rcpp::as<arma::mat>(eta_out[1]);
+       eta_flag.col(j) = Rcpp::as<arma::vec>(eta_out[2]);
      }
-    }
 
     /*////////////////////////////////////////////////
     * update random variables:
@@ -743,6 +761,13 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     for(i = 0 ; i < nobs ; i++){
       ss(i) = R::rgamma(ypiu(i), 1.0/TT(i));
     }
+
+    /*if((l > (burn-1)) & (l % (thin) == 0)){
+     for(i = 0; i < nobs; i++){
+     ispred_iter.col(i) = ran_mvnorm(mu_star_curr.col(curr_clu(i)-1),
+     sigma_star_curr.col(curr_clu(i)-1), dim);
+     }
+    }*/
 
     //////////////////////
     // Save MCMC iterates
