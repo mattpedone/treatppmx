@@ -266,11 +266,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   mnllike.fill(0.0);*/
 
   //Stuff for storage and return
-  Rcpp::List eta_out(2);
+  Rcpp::List l_eta_out(2);
 
   arma::vec nclus(nout);
   arma::mat mu_out(1, dim);
   arma::mat sigma_out(1, dim*dim);
+  arma::mat eta_out(1, dim);
   arma::vec Clui(nout * nobs, arma::fill::ones);
   arma::vec like(nout * nobs, arma::fill::ones);
   arma::cube ispred(dim, nobs, nout, arma::fill::zeros);
@@ -652,20 +653,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         mu_empty.col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
         sigma_empty.col(id_empty) = ran_iwish(hP0_nu0, hP0_V0, dim);
       }
-      //}
-      // Compute the CPO and lpml using the mixture
-      //Rcpp::Rcout << "punto 000 - 999 " << std::endl;
-      ldSig = logdet(sigma_star_curr.col(curr_clu(i)-1), dim);
-      like_iter(i) = dmvnorm(eta.col(i), mu_star_curr.col(curr_clu(i)-1),
-                sigma_star_curr.col(curr_clu(i)-1), dim, ldSig, 0);
-
-      if((l > (burn-1)) & (l % (thin) == 0)){
-        // These are needed for WAIC
-        //mnlike(i) = mnlike(i) + (like_iter(i))/(double) nout;
-        //mnllike(i) = mnllike(i) + log(like_iter(i))/(double) nout;
-
-        CPOinv(i) += pow((double) nout, -1.0) * pow(like_iter(i), -1.0);
-      }
     }
     //Rcpp::Rcout << "curr clu fin" <<curr_clu.t() << std::endl;
     //////////////////////////////////////////////////
@@ -732,11 +719,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
      }
 
      for(j = 0; j < nclu_curr; j++){
-       eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
+       l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
                   eta.col(j), eta_flag.col(j), mu_star_curr.col(j), sigma_star_curr.col(j), j);
-       eta.col(j) = Rcpp::as<arma::vec>(eta_out[0]);
-       loggamma = Rcpp::as<arma::mat>(eta_out[1]);
-       eta_flag.col(j) = Rcpp::as<arma::vec>(eta_out[2]);
+       eta.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
+       loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
+       eta_flag.col(j) = Rcpp::as<arma::vec>(l_eta_out[2]);
      }
 
     /*////////////////////////////////////////////////
@@ -780,15 +767,28 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         ispred.slice(ll) = ispred_iter;
       }
       ll += 1;
-      for(i = 0; i < nclu_curr; i++){
-        mu_out.insert_rows(lll, mu_star_curr.col(i).t());
-        sigma_out.insert_rows(lll, sigma_star_curr.col(i).t());
+      for(j = 0; j < nclu_curr; j++){
+        mu_out.insert_rows(lll, mu_star_curr.col(j).t());
+        sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
+        eta_out.insert_rows(lll, eta.col(j).t());
         lll += 1;
       }
     }
 
   }//CLOSES MCMC iterations
   // calculate LPML
+
+  /*like_iter(i) = dmvnorm(eta.col(i), mu_star_curr.col(curr_clu(i)-1),
+            sigma_star_curr.col(curr_clu(i)-1), dim, ldSig, 0);
+
+  if((l > (burn-1)) & (l % (thin) == 0)){
+    // These are needed for WAIC
+    //mnlike(i) = mnlike(i) + (like_iter(i))/(double) nout;
+    //mnllike(i) = mnllike(i) + log(like_iter(i))/(double) nout;
+
+    CPOinv(i) += pow((double) nout, -1.0) * pow(like_iter(i), -1.0);
+  }
+
   lpml_iter=0.0;
 
   for(i = 0; i < nobs; i++){
@@ -796,7 +796,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     lpml_iter += log(pow(CPOinv(i), -1.0));
     //Rcpp::Rcout << "lpml_iter" << lpml_iter <<std::endl;
   }
-  double lpml = lpml_iter;
+  double lpml = lpml_iter;*/
 
 
   // Computing WAIC  (see Gelman article)
@@ -812,9 +812,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   return Rcpp::List::create(Rcpp::Named("mu") = mu_out,
                             Rcpp::Named("sigma") = sigma_out,
                             Rcpp::Named("cl_lab") = Clui,
-                            Rcpp::Named("like") = like,
-                            Rcpp::Named("ispred") = ispred,
-                            Rcpp::Named("nclus") = nclus,
+                            //Rcpp::Named("like") = like,
+                            //Rcpp::Named("ispred") = ispred,
+                            Rcpp::Named("nclus") = nclus);//,
                             //Rcpp::Named("WAIC") = WAIC,
-                            Rcpp::Named("lpml") = lpml);
+                            //Rcpp::Named("lpml") = lpml);
 }
