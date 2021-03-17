@@ -449,24 +449,39 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           gtilY(j) = lgconY + lgcatY;
           gtilN(j) = lgconN + lgcatN;
 
-          ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = dmvnorm(eta.col(i), mu_star_curr.col(j),
-                 sigma_star_curr.col(j), dim, ldSig, 1) + //density
+          //ldSig = logdet(sigma_star_curr.col(j), dim);
+          weight(j) = 0.0;
+          for(k = 0; k < ncat; k++){
+            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          }
+          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+                 sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                    log((double) nj_curr(j)) + // cohesion part
                    lgcatY - lgcatN + // Categorical part
                    lgconY - lgconN;  // Continuous part
 
           if(calibration == 2){
-            ldSig = logdet(sigma_star_curr.col(j), dim);
-            weight(j) = dmvnorm(eta.col(i), mu_star_curr.col(j),
-                   sigma_star_curr.col(j), dim, ldSig, 1)+
+            //ldSig = logdet(sigma_star_curr.col(j), dim);
+            weight(j) = 0.0;
+            for(k = 0; k < ncat; k++){
+              weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+            }
+            weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+            weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+     sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                      log((double) nj_curr(j)) + // cohesion part
                      (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
           }
         } else{//quello che segue è PPM (no covariate)
-          ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = dmvnorm(eta.col(i), mu_star_curr.col(j),
-                 sigma_star_curr.col(j), dim, ldSig, 1)+
+          //ldSig = logdet(sigma_star_curr.col(j), dim);
+          weight(j) = 0.0;
+          for(k = 0; k < ncat; k++){
+            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          }
+          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+     sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                    log((double) nj_curr(j)); // DP cohesion part
         }
       }
@@ -530,24 +545,39 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           gtilY(j) = lgcondraw + lgcatdraw;
           gtilN(j) = lgcondraw + lgcatdraw;
 
-          ldSig = logdet(sigma_empty.col(j - nclu_curr), dim);
-          weight(j) = dmvnorm(eta.col(i), mu_empty.col(j - nclu_curr),
-                 sigma_empty.col(j - nclu_curr), dim, ldSig, 1) +
+          //ldSig = logdet(sigma_empty.col(j - nclu_curr), dim);
+          weight(j) = 0.0;
+          for(k = 0; k < ncat; k++){
+            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          }
+          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+ sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                    log(alpha) - log(CC) + //cohesion + auxiliary ptms
                    lgcondraw + // Continuous covariate part
                    lgcatdraw; // categorical covariate part
 
           if(calibration == 2){
-            ldSig = logdet(sigma_empty.col(j - nclu_curr), dim);
-            weight(j) = dmvnorm(eta.col(i), mu_empty.col(j - nclu_curr),
-                   sigma_empty.col(j - nclu_curr), dim, ldSig, 1) +
+            //ldSig = logdet(sigma_star_curr.col(j), dim);
+            weight(j) = 0.0;
+            for(k = 0; k < ncat; k++){
+              weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+            }
+            weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+            weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+ sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                      log(alpha) - log(CC) +
                      (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
           }
         } else {// di seguito ppm
-          ldSig = logdet(sigma_empty.col(j - nclu_curr), dim);
-          weight(j) = dmvnorm(eta.col(i), mu_empty.col(j - nclu_curr),
-                 sigma_empty.col(j - nclu_curr), dim, ldSig, 1) +
+          //ldSig = logdet(sigma_star_curr.col(j), dim);
+          weight(j) = 0.0;
+          for(k = 0; k < ncat; k++){
+            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          }
+          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+ sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                    log(alpha) - log(CC); //cohesion + auxiliary ptms
         }
       }
@@ -581,19 +611,28 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           lgtilNk = lgtilN(j) - log(sgN);
           lgtilYk = lgtilY(j) - log(sgY);
 
-          ldSig = logdet(sigma_star_curr.col(j), dim);
-
-          weight(j) = dmvnorm(eta.col(i), mu_star_curr.col(j),
-                 sigma_star_curr.col(j), dim, ldSig, 1) +
+          //ldSig = logdet(sigma_star_curr.col(j), dim);
+          weight(j) = 0.0;
+          for(k = 0; k < ncat; k++){
+            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          }
+          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+ sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                    log((double) nj_curr(j)) +  // Cohesion part
                    lgtilYk - lgtilNk; //This takes into account both cont and cat vars
         }
 
         // calibration for empty clusters
         for(j = nclu_curr; j < nclu_curr + CC; j++){
-          ldSig = logdet(sigma_empty.col(j - nclu_curr), dim);
-          weight(j) = dmvnorm(eta.col(i), mu_empty.col(j - nclu_curr),
-                 sigma_empty.col(j - nclu_curr), dim, ldSig, 1) +
+          //ldSig = logdet(sigma_star_curr.col(j), dim);
+          weight(j) = 0.0;
+          for(k = 0; k < ncat; k++){
+            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          }
+          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
+          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
+ sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
                    log(alpha) - log(CC) +
                    lgtilN(j) - // Continuous covariate part
                    log(sgN);

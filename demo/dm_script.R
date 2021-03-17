@@ -8,8 +8,8 @@ devtools::load_all()
 KK <- 1#numero di repliche
 res <- matrix(0, KK, 7)
 par(mfrow=c(1,1))
-K=3#dimensioni
-myppmx <- gcd_dm(n_obs = 100, concov = 20, K, similarity = 1, simparm = 1,
+K=5#dimensioni
+myppmx <- gcd_dm(n_obs = 100, concov = 2, K, similarity = 1, simparm = 1,
               alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F)
 cat("nclus: ", myppmx$nclus, "\n")
 Y <- myppmx$y
@@ -29,9 +29,9 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-iterations <- 50
-burnin <- 0#2000
-thinning <- 1#10
+iterations <- 25000
+burnin <- 15000#2000
+thinning <- 20#10
 
 nout <- (iterations-burnin)/thinning
 
@@ -45,4 +45,4 @@ mytime <- system.time(
 
 #res[k,] <- c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout)
 #cat("res", c(unlist(postquant(y = Y, output = out, data = myppmx, lab = F, plot = F)), myppmx$nclus, nout), "\n")
-postquant_dm(y = Y, output = out, data = myppmx, plot = F)
+postquant_dm(y = Y, output = out, data = myppmx, plot = T)
