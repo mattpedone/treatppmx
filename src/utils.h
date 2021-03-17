@@ -13,11 +13,9 @@ double gsimconNN(double, double, double, double, double, double, int, int, int, 
 double gsimconNNIG(double, double, double, double, double, double, double,
                    double, int, int, int, int);
 double gsimcatDM(arma::vec, arma::vec, int, int, int);
-double gsimconMVN_MVNIW(arma::vec, double, double, arma::vec, int, arma::vec,
-                        arma::vec, double, int, int, int);
 Rcpp::List ranppmx(int, int, int, double, int, int, arma::vec, arma::vec, arma::vec, double,
       double, double, double, double, arma::vec);
 double calculate_gamma(arma::mat, arma::vec, int, int, int);
-Rcpp::List eta_update(arma::mat, arma::vec, int, arma::vec, arma::vec, arma::vec, arma::vec,
+Rcpp::List eta_update(arma::mat, arma::mat, int, arma::vec, arma::vec, arma::vec, arma::vec,
            arma::vec, arma::vec, int);
 double log_mult(arma::mat, arma::mat);

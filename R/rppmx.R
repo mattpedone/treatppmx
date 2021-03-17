@@ -157,6 +157,58 @@ gcd <- function(n_obs, concov = 2, K = 2, similarity = 1, simparm = 1,
   return(myinfopart)
 }
 
+#' gendata dm
+#'
+#' @export
+#'
+gcd_dm <- function(n_obs, concov = 2, K = 4, similarity = 1, simparm = 1,
+                alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
+  myinfopart <- NULL
+  #concov = 2
+  #n_obs = 100
+  n = n_obs
+  d <- genera_dati(n=n, P=concov)
+
+  X <- d$XX
+
+  X$X1 <- as.factor(X$X1)
+  X$X2 <- as.factor(X$X2)
+
+  myinfopart$X <- X
+
+  myppmx <- ran_ppmx(X=X, similarity, simparm, alpha, m0, s20,v, k0, v0)
+  myinfopart$label <- myppmx$label
+  myinfopart$nclus <- myppmx$nclus
+  myinfopart$nj <- myppmx$nj
+
+  possmean <- matrix(0, myppmx$nclus, K)
+  for(i in 1:myppmx$nclus){
+    possmean[i,] <- rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
+  }
+  myinfopart$possmean <- possmean
+  Y <- matrix(0, n, K)
+  intercept <- matrix(0, n, K)
+
+  for(i in 1:n){
+    intercept[i,] <- rmvnorm(1, possmean[myppmx$label[i], ], sigma = diag(.25, K), method = "svd")
+  }
+
+  for(i in 1:n){
+    thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
+    pi = thisrow/sum(thisrow)
+    Y[i, ] = rmultinom(1, 1, pi)
+  }
+
+  myinfopart$y <- Y
+
+  if(plot==T){
+    par(mfrow=c(1, 2))
+    plot(possmean)
+    plot(Y)
+  }
+  return(myinfopart)
+}
+
 #' postquant
 #'
 #' @export
@@ -185,6 +237,37 @@ postquant <- function(y, output, data, lab, plot, minbinder = F){
                         #"comp_time" = time[1],
                         "ESS" = ess, "lab" = mc$cl)
   }
+  if(plot == T){
+    par(mfrow=c(1,2))
+    plot(output$nclu, type="l")
+    acf(output$nclu)
+  }
+  return(mypostquant)
+}
+
+#' postquant
+#'
+#' @export
+#'
+
+postquant_dm <- function(y, output, data, plot, minbinder = F){
+  cls <- as.matrix(output$label)
+  psm <- comp.psm(cls)
+  if(minbinder == T){
+    mc <- minbinder.ext(psm)
+  } else {
+    mc <- minVI(psm)
+  }
+  #yhat <- output$pred
+  #vec <- (c(y)-c(yhat))
+  #mmse <- mean((y-yhat)^2)
+  ari <- adjustedRandIndex(mc$cl, data$label)
+  ess <- effectiveSize(output$nclu)
+  mypostquant <- list("nclupost" = mean(output$nclu),# "MSE" = mmse,
+                      #"lpml" = output$lpml,
+                      "ARI" = ari,
+                      #"comp_time" = time[1],
+                      "ESS" = ess, "lab" = mc$cl)
   if(plot == T){
     par(mfrow=c(1,2))
     plot(output$nclu, type="l")

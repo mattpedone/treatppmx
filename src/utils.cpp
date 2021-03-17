@@ -446,178 +446,6 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
   return(out);
 }
 
-/* Multivariate normal-normal-inverse-wishart Similarity function with x following normal
- * and (m, V) following a N-IW.   I evaluate the ratio between likelihood multiplied by prior
- * divided by posterior.  Arguments are the following
- *
- * m0 - is the prior mean vector of dimension dim
- * lam0 - is the prior scale parameter that is a scalar
- * nu0 - is the prior degrees of freedom and is a scalar
- * V0 - is the prior covariance matrix of dimension dim x dim
- *
- * sumxvec - is a vector of dimension 1 x dim containing totals of covariates
- * SumSq - dim x dim matrix whose value is \sum_{i=1}^{n} (x_i - xbar) (x_i - xbar)'
- * sumsq - scalar whose value is \sum_{i=1}^{n} x_i'x_i
- * dim - is a scalar to provides dimension
- * n - is a scalar indication number of observations
- * DD - is a logical determining if double dipper should be used or auxiliary
- * logout - a logical indicating on whether log of g(x) should provided.
- *
- * The double dipper is included as an argument.
- *
- * NOTE: SINCE ARGUMENTS OF LIKELIHOOD ARE ARBITRARY, I USE THE FOLLOWING
- * m_j = zero vector
- * V_j = Identity
- * THIS IS REFLECTED IN THE VALUE OF THE "LIKELIHOOD"
- */
-double gsimconMVN_MVNIW(arma::vec m0, double lam0, double nu0, arma::vec Sig0,
-                        int dim, arma::vec sumxvec, arma::vec SumSq, double sumsq,
-                        int n,  int DD, int logout){
-
-  int i, j, jj;
-  double ld1, ld2, ld3, ld4;
-  double ldSig, sign, ldet0, ldets, ldetss;
-  double out;
-  arma::vec scr1(dim * dim);
-  arma::mat work(dim, dim);
-  arma::vec scr2(dim * dim); //*dim ?
-  arma::vec scr3(dim);
-  arma::vec scr4(dim * dim);
-  arma::vec scr5(dim * dim);
-  double lams, lamss, nus, nuss;
-
-  // Loglikelihood evaluation
-  ld1 = -0.5*n*dim*log(2*M_PI) -  0.5*sumsq;
-
-  // This is the log prior evaluation for auxiliary
-  // Note, the first argument of dmvnorm is m_j.  Since this value can be selected
-  // arbitrarily I set it to m0
-  for(j = 0; j < dim * dim; j++){
-      scr1(j) = (lam0)*Sig0(j);
-  } // scr1 = ((1/lam0)Sig_j)^{-1}
-  ldet0 = -dim*log(lam0);
-  //qui va messa la vvarianza invece della precisione (scr1) e ldet0 va messo con segno +
-  ld2 = dmvnorm(m0, m0, scr1, dim, ldet0, 1) + dinvwish(Sig0, dim, 1.0,  1.0, nu0, 1);
-
-  // Auxiliary
-  lams = lam0 + n;
-  nus = nu0 + n;
-
-  for(j = 0; j < dim; j++){
-    scr1(j) = (1.0/n)*sumxvec(j) - m0(j); // scr1 is now (xbar-m0)
-  }
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      work(i, j) = scr1(i * dim +j);
-    }
-  }
-  //qui mi serve matrix product per fare tra 2 vettori il prodotto tra matrici
-  work = work * work;//scr1 * scr1;//matrix_product(scr1, scr1, scr2, dim, dim, 1); // scr2 is (xbar-m0)(xbar-m0)'
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-       scr2(i * dim +j) = work(i, j);
-    }
-  }
-  for(j = 0; j < dim; j++){
-    scr3(j) = (lam0*m0(j) + sumxvec(j))/(lam0 + n); // scr3 is Ms
-      for(jj = 0; jj < dim; jj++){
-      scr4(j * dim + jj) = Sig0(j * dim + jj) + SumSq(j * dim + jj) + ((lam0*n)/(lam0 + n))*scr2(j *dim + jj); // scr4 is Psis
-      scr5(j * dim + jj) = scr4(j * dim + jj);
-      scr1(j * dim + jj) = (lams)*Sig0(j * dim + jj); // Now scr1 = ((1/lams)Sig_j)^{-1}
-      }
-  }
-  ldets = -dim*log(lams);
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      work(i, j) = scr5(i * dim +j);
-    }
-  }
-
-  work = arma::chol(work, "lower");
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      scr5(i * dim +j) = work(i, j);
-    }
-  }
-  arma::log_det(ldSig, sign, work);
-
-  // Note, the first argument is m_j in notes which is arbitrary so I set it to m0
-  //vd commento prima x dmvnorm
-  ld3 = dmvnorm(m0, scr3, scr1, dim, ldets, 1) + dinvwish(scr4, dim, 1.0, exp(ldSig*sign), nus, 1);
-
-  // double dipper
-  lamss = lams + n;
-  nuss = nus + n;
-
-  for(j = 0; j < dim; j++){
-    scr1(j) = (1.0/n)*sumxvec(j) - scr3(j); // scr1 = (xbar-Ms) recall scr3=Ms
-  }
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      work(i, j) = scr1(i * dim +j);
-    }
-  }
-  //qui mi serve matrix product per fare tra 2 vettori il prodotto tra matrici
-  work = work * work;//scr1 * scr1;//matrix_product(scr1, scr1, scr2, dim, dim, 1); // scr2 is (xbar-m0)(xbar-m0)'
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      scr2(i * dim +j) = work(i, j);
-    }
-  }
-
-  //scr2 = scr1 * scr1;//matrix_product(scr1, scr1, scr2, dim, dim, 1); // scr2 = (xbar-Ms)(xbar-Ms)'
-
-  for(j = 0; j < dim; j++){
-    scr1(j) = (lams*scr3(j) + sumxvec(j))/(lams + n); // scr1 = Mss
-    for(jj = 0; jj < dim; jj++){
-
-      scr5(j * dim + jj) = scr4(j * dim + jj) + SumSq(j * dim + jj) +  // scr4 = Psis, scr5=Psiss
-        ((lams*n)/(lams + n))*scr2(j * dim + jj); //
-
-    }
-  }
-
-  //CONTROLLA!!!! scr 3 ora mi serve come matrice (posso usare scr4)
-  for(j = 0; j < dim * dim; j++){
-    scr3(j) = scr5(j); // extra Psiss to get log determinant
-    scr2(j) = (lamss)*Sig0(j); // scr2 = ((1/lamss)Sig_j)^{-1}
-    }
-  ldetss = -dim*log(lamss);
-
-    for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      work(i, j) = scr4(i * dim +j);
-    }
-  }
-
-  work = arma::chol(work, "lower");
-  arma::log_det(ldSig, sign, work);
-
-  for(i = 0; i < dim; i++){
-    for(j = 0; j < dim; j++){
-      scr4(i * dim +j) = work(i, j);
-    }
-  }
-
-  // Note, the first argument is m_j in notes which is arbitrary so I set it to m0
-  //vd commento prima x dmvnorm
-  ld4 = dmvnorm(m0, scr1, scr2, dim, ldetss, 1) + dinvwish(scr5, dim, 1.0, exp(ldSig*sign), nuss, 1);
-
-  out = ld1 + ld2 - ld3;
-
-  if(DD==1) out = ld1 + ld3 - ld4;
-  if(!logout) out = exp(out);
-  //	Rprintf("out = %f\n", out);
-  return(out);
-
-}
-
 // [[Rcpp::export]]
 double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
                        int Log){
@@ -640,6 +468,29 @@ double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
   }
 }
 
+arma::vec ran_dir(arma::vec param, double delta, double rho){
+  int J = param.size();
+  arma::vec dir_sample(J);
+  dir_sample.zeros();
+  double sum = 0;
+  arma::vec param_scale_shift(J);
+  param_scale_shift = param*rho + delta;
+
+  for( int j = 0; j < J; j++){
+    dir_sample[ j ] = R::rgamma(param_scale_shift(j), 1);//[0];
+    sum += dir_sample[j];
+  }
+
+  // Protect against dividing by zero
+  if(sum == 0){
+    sum = 1;
+  }
+
+  dir_sample = dir_sample/sum;
+
+  return dir_sample;
+}
+
 double log_mult(arma::mat y, arma::mat JJ){
   //multinomial probability mass function expressed using gamma function
   int nobs, i;
@@ -659,7 +510,7 @@ double log_mult(arma::mat y, arma::mat JJ){
  * $\boldsymbol{\eta}_{j}^{\star}$
  */
 // [[Rcpp::export]]
-Rcpp::List eta_update(arma::mat JJ, arma::vec loggamma,
+Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
                       int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
                       arma::vec eta, arma::vec eta_flag,
                       arma::vec mu_star, arma::vec sigma_star, int jj){

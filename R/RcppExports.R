@@ -17,6 +17,10 @@ calculate_gamma <- function(eta, curr_clu, k, i, Log) {
     .Call(`_treatppmx_calculate_gamma`, eta, curr_clu, k, i, Log)
 }
 
+eta_update <- function(JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag, mu_star, sigma_star, jj) {
+    .Call(`_treatppmx_eta_update`, JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag, mu_star, sigma_star, jj)
+}
+
 ranppmx <- function(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights) {
     .Call(`_treatppmx_ranppmx`, nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights)
 }

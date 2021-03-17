@@ -186,12 +186,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     sigma_empty.col(i) = sigma_empty.col(0);
   }
 
-  /////////////////////////////////////
-  // Storage for posterior predictive
-  /////////////////////////////////////
-  arma::mat ispred_iter(dim, nobs);
-  ispred_iter.fill(0.0);
-
   ////////////////////////////////////////
   // Stuff needed for similarities
   ////////////////////////////////////////
@@ -265,8 +259,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::vec mnllike(nobs);
   mnllike.fill(0.0);*/
 
-  //Stuff for storage and return
-  Rcpp::List l_eta_out(2);
+  ////////////////////////////////////////
+  // Stuff for storage and return
+  ////////////////////////////////////////
+
+  Rcpp::List l_eta_out(3);
 
   arma::vec nclus(nout);
   arma::mat mu_out(1, dim);
@@ -274,7 +271,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::mat eta_out(1, dim);
   arma::vec Clui(nout * nobs, arma::fill::ones);
   arma::vec like(nout * nobs, arma::fill::ones);
-  arma::cube ispred(dim, nobs, nout, arma::fill::zeros);
+  arma::cube pigreco(nobs, dim, nout, arma::fill::zeros);
   ll = 0;
   lll = 0;
   ////////////////////////////////////////
@@ -658,6 +655,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     //////////////////////////////////////////////////
     // update the cluster value with NEAL 8 (II step)
     //////////////////////////////////////////////////
+
     for(int row = 0; row < dim; row++){
      for(int col = 0; col < dim; col++){
       L0mInv(row, col) = hP0_L0(row * dim + col);
@@ -692,16 +690,17 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
      }
      SigmaInv = arma::inv(Sigma);
 
-            //nSigmaInv = nj_curr(j) * nSigmaInv;
      Lnm = arma::inv(L0mInv + SigmaInv);
-     mun = Lnm * (L0mInv * hP0_m0 + SigmaInv);
+     mun = Lnm * (L0mInv * hP0_m0 + SigmaInv * eta.col(j));
      for(int row = 0; row < dim; row++){
       for(int col = 0; col < dim; col++){
         Lnv(row * dim + col) = Lnm(row, col);
         S0m(row, col) = hP0_V0(row * dim + col);
         }
       }
+
      mu_star_curr.col(j) = ran_mvnorm(mun, Lnv, dim);
+
      /*qui devo calcolarlo attentamente
       *
      Snm = arma::inv(S0m + ((eta.each_col()-mu_star_curr.col(j)) *
@@ -720,10 +719,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
      for(j = 0; j < nclu_curr; j++){
        l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
-                  eta.col(j), eta_flag.col(j), mu_star_curr.col(j), sigma_star_curr.col(j), j);
+                  eta.col(j), eta_flag, mu_star_curr.col(j), sigma_star_curr.col(j), j);
        eta.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
        loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
-       eta_flag.col(j) = Rcpp::as<arma::vec>(l_eta_out[2]);
+       eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
      }
 
     /*////////////////////////////////////////////////
@@ -733,9 +732,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     ////////////////////////////////////////////////*/
 
     // update JJ and consequently TT
-    for(i = 0 ; i < nobs ; i++){
-      TT(ii) = 0.0;
-      for(k = 0 ; k < dim; k++){
+    for(i = 0; i < nobs ; i++){
+      TT(i) = 0.0;
+      for(k = 0; k < dim; k++){
         JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
         if(JJ(i, k) < pow(10.0, -100.0)){
           JJ(i, k) = pow(10.0, -100.0);
@@ -749,13 +748,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       ss(i) = R::rgamma(ypiu(i), 1.0/TT(i));
     }
 
-    /*if((l > (burn-1)) & (l % (thin) == 0)){
-     for(i = 0; i < nobs; i++){
-     ispred_iter.col(i) = ran_mvnorm(mu_star_curr.col(curr_clu(i)-1),
-     sigma_star_curr.col(curr_clu(i)-1), dim);
-     }
-    }*/
-
     //////////////////////
     // Save MCMC iterates
     //////////////////////
@@ -764,7 +756,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       for(i = 0; i < nobs; i++){
         Clui(ll*(nobs) + i) = curr_clu(i);
         like(ll*(nobs) + i) = like_iter(i);
-        ispred.slice(ll) = ispred_iter;
+        pigreco.slice(ll).row(i) = JJ.row(i)/TT(i);
       }
       ll += 1;
       for(j = 0; j < nclu_curr; j++){
@@ -810,10 +802,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   //RETURN
   return Rcpp::List::create(Rcpp::Named("mu") = mu_out,
+                            Rcpp::Named("eta") = eta_out,
                             Rcpp::Named("sigma") = sigma_out,
                             Rcpp::Named("cl_lab") = Clui,
+                            Rcpp::Named("pi") = pigreco,
                             //Rcpp::Named("like") = like,
-                            //Rcpp::Named("ispred") = ispred,
                             Rcpp::Named("nclus") = nclus);//,
                             //Rcpp::Named("WAIC") = WAIC,
                             //Rcpp::Named("lpml") = lpml);

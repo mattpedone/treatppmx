@@ -116,6 +116,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// eta_update
+Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma, int nclu_curr, arma::vec curr_clu, arma::vec nj_curr, arma::vec eta, arma::vec eta_flag, arma::vec mu_star, arma::vec sigma_star, int jj);
+RcppExport SEXP _treatppmx_eta_update(SEXP JJSEXP, SEXP loggammaSEXP, SEXP nclu_currSEXP, SEXP curr_cluSEXP, SEXP nj_currSEXP, SEXP etaSEXP, SEXP eta_flagSEXP, SEXP mu_starSEXP, SEXP sigma_starSEXP, SEXP jjSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type JJ(JJSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type loggamma(loggammaSEXP);
+    Rcpp::traits::input_parameter< int >::type nclu_curr(nclu_currSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type curr_clu(curr_cluSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type nj_curr(nj_currSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type eta_flag(eta_flagSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mu_star(mu_starSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sigma_star(sigma_starSEXP);
+    Rcpp::traits::input_parameter< int >::type jj(jjSEXP);
+    rcpp_result_gen = Rcpp::wrap(eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag, mu_star, sigma_star, jj));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ranppmx
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha, int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, double m0, double k0, double v0, double s20, double v, arma::vec dirweights);
 RcppExport SEXP _treatppmx_ranppmx(SEXP nobsSEXP, SEXP similaritySEXP, SEXP similparamSEXP, SEXP alphaSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP CvecSEXP, SEXP m0SEXP, SEXP k0SEXP, SEXP v0SEXP, SEXP s20SEXP, SEXP vSEXP, SEXP dirweightsSEXP) {
@@ -147,6 +167,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_mvn_ppmx", (DL_FUNC) &_treatppmx_mvn_ppmx, 23},
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
     {"_treatppmx_calculate_gamma", (DL_FUNC) &_treatppmx_calculate_gamma, 5},
+    {"_treatppmx_eta_update", (DL_FUNC) &_treatppmx_eta_update, 10},
     {"_treatppmx_ranppmx", (DL_FUNC) &_treatppmx_ranppmx, 15},
     {NULL, NULL, 0}
 };
