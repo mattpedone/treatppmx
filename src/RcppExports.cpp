@@ -136,6 +136,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dweight
+double dweight(arma::mat loggamma, arma::mat JJ, int i);
+RcppExport SEXP _treatppmx_dweight(SEXP loggammaSEXP, SEXP JJSEXP, SEXP iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type loggamma(loggammaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type JJ(JJSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    rcpp_result_gen = Rcpp::wrap(dweight(loggamma, JJ, i));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ranppmx
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha, int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, double m0, double k0, double v0, double s20, double v, arma::vec dirweights);
 RcppExport SEXP _treatppmx_ranppmx(SEXP nobsSEXP, SEXP similaritySEXP, SEXP similparamSEXP, SEXP alphaSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP CvecSEXP, SEXP m0SEXP, SEXP k0SEXP, SEXP v0SEXP, SEXP s20SEXP, SEXP vSEXP, SEXP dirweightsSEXP) {
@@ -168,6 +181,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
     {"_treatppmx_calculate_gamma", (DL_FUNC) &_treatppmx_calculate_gamma, 5},
     {"_treatppmx_eta_update", (DL_FUNC) &_treatppmx_eta_update, 10},
+    {"_treatppmx_dweight", (DL_FUNC) &_treatppmx_dweight, 3},
     {"_treatppmx_ranppmx", (DL_FUNC) &_treatppmx_ranppmx, 15},
     {NULL, NULL, 0}
 };

@@ -530,7 +530,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   int ncat = JJ.n_cols;
   int nobs = JJ.n_rows;
 
-  int i, k, ii;
+  int i, k;//, ii;
  /*
   * indices for:
   * i: individuals
@@ -550,7 +550,8 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
 
   arma::vec eta_p(ncat);
 
-  arma::mat JJtemp(nj_curr(jj), ncat);
+  arma::mat loggamma_p(nobs, ncat);
+  /*arma::mat JJtemp(nj_curr(jj), ncat);
   arma::mat loggammatemp(nj_curr(jj), ncat);
   arma::mat loggammatemp_p(nj_curr(jj), ncat);
   ii = 0;
@@ -561,11 +562,21 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
       ii += 1;
     }
   }//this closes for loop on observation, to consider only those belonging to current cluster j
-
+*/
   //calculate denominator of MH ratio
-  for(k = 0; k < ncat; k++){
+  /*for(k = 0; k < ncat; k++){
     log_den = log_den - arma::sum(lgamma(exp(loggammatemp.col(k)))) +
       arma::sum(exp(loggammatemp.col(k))%log(JJtemp.col(k)));
+  }*/
+
+  log_den = 0.0;
+  for(i = 0; i < nobs; i++){
+    if(curr_clu(i) == (jj + 1)){
+      for(k = 0; k < ncat; k++){
+        log_den += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+      }
+      log_den -= lgamma(arma::sum(exp(loggamma.row(i))));
+    }
   }
   ld = logdet(sigma_star, ncat);
   log_den += dmvnorm(eta, mu_star, sigma_star, ncat, ld, 1);
@@ -577,14 +588,31 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   eta_p = ran_mvnorm(mu_star, sigma_star, ncat);
 
   //aggiusta loggamma temp p  con eta p
-  for(k = 0; k < ncat; k++){
+  /*for(k = 0; k < ncat; k++){
     loggammatemp_p.col(k) = loggammatemp.col(k) - eta(k) + eta_p(k);
+  }*/
+
+  for(k = 0; k < ncat; k++){
+    for(i = 0; i < nobs; i++){
+      if(curr_clu(i) == (jj + 1)){
+        loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
+      }
+    }
   }
 
   //calculate numerator of MH ratio
-  for(k = 0; k < ncat; k++){
+  /*for(k = 0; k < ncat; k++){
     log_num = log_num - arma::sum(lgamma(exp(loggammatemp_p.col(k)))) +
       arma::sum(exp(loggammatemp_p.col(k))%log(JJtemp.col(k)));
+  }*/
+  log_num = 0.0;
+  for(i = 0; i < nobs; i++){
+    if(curr_clu(i) == (jj + 1)){
+      for(k = 0; k < ncat; k++){
+        log_den += lgamma(exp(loggamma_p(i, k))) + (exp(loggamma_p(i, k) * JJ(i, k)));
+      }
+      log_den -= lgamma(arma::sum(exp(loggamma_p.row(i))));
+    }
   }
   log_num += dmvnorm(eta_p, mu_star, sigma_star, ncat, ld, 1);
 
@@ -598,11 +626,11 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
     eta_flag(jj) += 1;
     eta = eta_p;
 
-    ii = 0;
+    //ii = 0;
     for(i = 0; i < nobs; i++){
       if(curr_clu(i) == (jj + 1)){
-        loggamma.row(i) = loggammatemp.row(ii);
-        ii += 1;
+        loggamma.row(i) = loggamma.row(i);
+        //ii += 1;
       }
     }
   }//closes if accepted
@@ -614,6 +642,21 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   eta_up[1] = loggamma;
   eta_up[2] = eta_flag;
   return eta_up;
+}
+
+//[[Rcpp::export]]
+double dweight(arma::mat loggamma, arma::mat JJ, int i){
+
+  int ncat = loggamma.n_cols;
+  int k;
+  double dw = 0.0;
+
+  for(k = 0; k < ncat; k++){
+    dw = dw - arma::sum(lgamma(exp(loggamma(i, k)))) +
+      arma::sum(exp(loggamma(i, k))*log(JJ(i, k)));
+  }
+
+  return dw;
 }
 
 // [[Rcpp::export]]

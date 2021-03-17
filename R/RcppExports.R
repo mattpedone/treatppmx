@@ -21,6 +21,10 @@ eta_update <- function(JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag
     .Call(`_treatppmx_eta_update`, JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag, mu_star, sigma_star, jj)
 }
 
+dweight <- function(loggamma, JJ, i) {
+    .Call(`_treatppmx_dweight`, loggamma, JJ, i)
+}
+
 ranppmx <- function(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights) {
     .Call(`_treatppmx_ranppmx`, nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights)
 }

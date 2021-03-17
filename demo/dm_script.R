@@ -29,8 +29,8 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-iterations <- 500
-burnin <- 10#2000
+iterations <- 50
+burnin <- 0#2000
 thinning <- 1#10
 
 nout <- (iterations-burnin)/thinning
