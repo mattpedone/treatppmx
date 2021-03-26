@@ -19,4 +19,5 @@
 #' @importFrom stats acf
 #' @importFrom graphics par
 #' @importFrom mvtnorm rmvnorm
+#' @importFrom scatterplot3d scatterplot3d
 NULL

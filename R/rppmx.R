@@ -183,15 +183,17 @@ gcd_dm <- function(n_obs, concov = 2, K = 4, similarity = 1, simparm = 1,
 
   possmean <- matrix(0, myppmx$nclus, K)
   for(i in 1:myppmx$nclus){
-    possmean[i,] <- rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
+    possmean[i,] <- rmvnorm(1, seq(-2.3, 2.3, length.out = K), sigma = diag(1, K), method="svd")
   }
   myinfopart$possmean <- possmean
   Y <- matrix(0, n, K)
   intercept <- matrix(0, n, K)
 
   for(i in 1:n){
-    intercept[i,] <- rmvnorm(1, possmean[myppmx$label[i], ], sigma = diag(.25, K), method = "svd")
+    #intercept[i,] <- rmvnorm(1, possmean[myppmx$label[i], ], sigma = diag(.25, K), method = "svd")
+    intercept[i,] <- possmean[myppmx$label[i], ]
   }
+  myinfopart$intercept <- intercept
 
   for(i in 1:n){
     thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
@@ -214,14 +216,14 @@ gcd_dm <- function(n_obs, concov = 2, K = 4, similarity = 1, simparm = 1,
 #' @export
 #'
 
-postquant <- function(y, output, data, lab, plot, minbinder = F){
+postquant <- function(y, output, data, lab, plot){#, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
-  if(minbinder == T){
-    mc <- minbinder.ext(psm)
-  } else {
+  #if(minbinder == T){
+  #  mc <- minbinder.ext(psm)
+  #} else {
     mc <- minVI(psm)
-    }
+  #  }
   yhat <- output$pred
   vec <- (c(y)-c(yhat))
   mmse <- mean((y-yhat)^2)

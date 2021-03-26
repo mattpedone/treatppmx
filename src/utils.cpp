@@ -447,21 +447,21 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
 }
 
 // [[Rcpp::export]]
-double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i,
+double calculate_gamma(arma::mat eta, int clu_lg, int k, int i,
                        int Log){
   /* function that compute log linear predictor.
    * inputs:
    * - eta: mvn intercept (BNP)
-   * - curr_clu: labels of cluster assignement
+   * - clu_lg: cluster of loggamma we are currently working on
    * - k, i: indices
    * - Log if == 1 returns log gamma
    */
 
   double lg = 0.0;
 
-  lg = eta(k, curr_clu(i) - 1);
+  lg = eta(k, clu_lg);
 
-  if(Log == 1){
+  if(Log != 0){
     return lg;
   } else{
     return (exp(lg));
@@ -527,7 +527,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
    * jj: cluster we are working on
    */
 
-  int ncat = JJ.n_cols;
+  int dim = JJ.n_cols;
   int nobs = JJ.n_rows;
 
   int i, k;//, ii;
@@ -548,77 +548,51 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
    * ld: log determinant
    */
 
-  arma::vec eta_p(ncat);
+  arma::vec eta_p(dim);
 
-  arma::mat loggamma_p(nobs, ncat);
-  /*arma::mat JJtemp(nj_curr(jj), ncat);
-  arma::mat loggammatemp(nj_curr(jj), ncat);
-  arma::mat loggammatemp_p(nj_curr(jj), ncat);
-  ii = 0;
-  for(i = 0; i < nobs; i++){
-    if(curr_clu(i) == (jj + 1)){
-      JJtemp.row(ii) = JJ.row(i);
-      loggammatemp.row(ii) = loggamma.row(i);
-      ii += 1;
-    }
-  }//this closes for loop on observation, to consider only those belonging to current cluster j
-*/
-  //calculate denominator of MH ratio
-  /*for(k = 0; k < ncat; k++){
-    log_den = log_den - arma::sum(lgamma(exp(loggammatemp.col(k)))) +
-      arma::sum(exp(loggammatemp.col(k))%log(JJtemp.col(k)));
-  }*/
+  arma::mat loggamma_p(nobs, dim);
 
   log_den = 0.0;
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
-      for(k = 0; k < ncat; k++){
-        log_den += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+      for(k = 0; k < dim; k++){
+        log_den = log_den - lgamma(exp(loggamma(i, k))) + exp(loggamma(i, k)) * log(JJ(i, k));
       }
-      log_den -= lgamma(arma::sum(exp(loggamma.row(i))));
     }
   }
-  ld = logdet(sigma_star, ncat);
-  log_den += dmvnorm(eta, mu_star, sigma_star, ncat, ld, 1);
+  ld = logdet(sigma_star, dim);
+  log_den += dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
 
   /*
    * propose new value for eta
    * I sample it from updated priors (for now)
    */
-  eta_p = ran_mvnorm(mu_star, sigma_star, ncat);
+  for(k = 0; k < dim; k++){
+    eta_p(k) = eta(k)+R::runif(-0.5, .5);
+  }
 
-  //aggiusta loggamma temp p  con eta p
-  /*for(k = 0; k < ncat; k++){
-    loggammatemp_p.col(k) = loggammatemp.col(k) - eta(k) + eta_p(k);
-  }*/
 
-  for(k = 0; k < ncat; k++){
-    for(i = 0; i < nobs; i++){
-      if(curr_clu(i) == (jj + 1)){
-        loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
+  for(i = 0; i < nobs; i++){
+    if(curr_clu(i) == (jj + 1)){
+      for(k = 0; k < dim; k++){
+        loggamma_p(i, k) =  loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
   }
 
-  //calculate numerator of MH ratio
-  /*for(k = 0; k < ncat; k++){
-    log_num = log_num - arma::sum(lgamma(exp(loggammatemp_p.col(k)))) +
-      arma::sum(exp(loggammatemp_p.col(k))%log(JJtemp.col(k)));
-  }*/
   log_num = 0.0;
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
-      for(k = 0; k < ncat; k++){
-        log_den += lgamma(exp(loggamma_p(i, k))) + (exp(loggamma_p(i, k) * JJ(i, k)));
+      for(k = 0; k < dim; k++){
+        log_num = log_num - lgamma(exp(loggamma_p(i, k))) + exp(loggamma_p(i, k)) * log(JJ(i, k));
       }
-      log_den -= lgamma(arma::sum(exp(loggamma_p.row(i))));
     }
   }
-  log_num += dmvnorm(eta_p, mu_star, sigma_star, ncat, ld, 1);
+  log_num += dmvnorm(eta_p, mu_star, sigma_star, dim, ld, 1);
 
   ln_acp = log_num - log_den;
 
-  lnu = R::runif(0.0, 1.0);
+  lnu = log(R::runif(0.0, 1.0));
 
   if(lnu < ln_acp){
     // If accepted, update both eta and loggamma, and keep
@@ -626,11 +600,9 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
     eta_flag(jj) += 1;
     eta = eta_p;
 
-    //ii = 0;
     for(i = 0; i < nobs; i++){
       if(curr_clu(i) == (jj + 1)){
-        loggamma.row(i) = loggamma.row(i);
-        //ii += 1;
+        loggamma.row(i) = loggamma_p.row(i);
       }
     }
   }//closes if accepted
@@ -644,6 +616,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   return eta_up;
 }
 
+/*
 //[[Rcpp::export]]
 double dweight(arma::mat loggamma, arma::mat JJ, int i){
 
@@ -658,6 +631,7 @@ double dweight(arma::mat loggamma, arma::mat JJ, int i){
 
   return dw;
 }
+*/
 
 // [[Rcpp::export]]
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,

@@ -20,11 +20,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // c - categorical variable index
   // p - number of covariates index
   // j - cluster index
+  // jj - empty cluster index
   // t - subset of covariates index
   // mm - for auxiliary parameters
   // zi is the latent variable
   // k - categories index
-  int l, ll, lll, i, ii, c, p, j, mm, zi, k;
+  int l, ll, lll, i, ii, c, p, j, jj, mm, zi, k;
   int dim = y.n_cols;
 
   int nout = (iter - burn)/(thin); //number of saved iterations
@@ -34,12 +35,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   //// DM scheme stuff
   //////////////////////////
 
-  arma::vec ypiu(nobs, arma::fill::zeros);
-  for(i = 0 ; i < nobs ; i++){
+  arma::vec ypiu(nobs, arma::fill::ones);
+  /*for(i = 0 ; i < nobs ; i++){
     for(k = 0 ; k < dim ; k++){
       ypiu(i) += y(i, k);
     }
-  }
+  }*/
 
   // initialize latent variable: JJ ~ gamma()
   arma::mat JJ(nobs, dim);
@@ -128,63 +129,39 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   //// cluster specific parameters stuff
   ////////////////////////////////////////////////////
 
-  arma::mat mu_star_curr(dim, nobs);
-  arma::mat sigma_star_curr(dim * dim, nobs);
-
-  /*for(i = 0; i < nobs; i++){
-   mu_star_curr.row(ii) = ran_mvnorm(hP0_m0, hP0_L0, dim).t();
-   sigma_star_curr.row(ii) = ran_iwish(hP0_nu0, hP0_V0, dim).t();
-  }*/
-  mu_star_curr.fill(0); //tbfilled from input
-  sigma_star_curr.fill(0);
-  int idx = 0;
-  for(i = 0; i < dim; i++){
-    sigma_star_curr(idx, 0) = 1;
-    idx += (dim + 1);
-  }
-  for(i = 1; i < nobs; i++){
-    sigma_star_curr.col(i) = sigma_star_curr.col(0);
-  }
+  arma::mat eta_star_curr(dim, nobs, arma::fill::randu);
 
   ////////////////////////////////
   //// Model stuff
   ////////////////////////////////
 
-  arma::mat eta(dim, nobs, arma::fill::randu);
   arma::vec eta_flag(nobs, arma::fill::zeros);
 
   // the linear predictor matrix, represented as a vector, is in the log scale
   // log-linear function on the prognostic marker n x K
+  int clu_lg;
 
   arma::mat loggamma(nobs, dim, arma::fill::zeros);
-  for(i = 0 ; i < nobs; i++){
-    for(k = 0 ; k < dim; k++){
-      loggamma(i, k) = calculate_gamma(eta, curr_clu, k, i, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
+  for(i = 0; i < nobs; i++){
+      clu_lg = curr_clu(i)-1;
+    for(k = 0; k < dim; k++){
+      loggamma(i, k) = calculate_gamma(eta_star_curr, clu_lg, k, i, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
     }
   }
 
   ////////////////////////////////////////////////////
   //// log determinant of matrices stuff
   ////////////////////////////////////////////////////
-  int row, col;
-  arma::mat work(dim, dim);
-  arma::vec wv(dim*dim);
-  double ldSig;
+  //int row, col;
+  //arma::mat work(dim, dim);
+  //arma::vec wv(dim*dim);
+  //double ldSig;
 
   ////////////////////////////////////////////////////
   //// reuse algorithm stuff
   ////////////////////////////////////////////////////
 
-  arma::mat mu_empty(dim, CC, arma::fill::zeros);
-  arma::mat sigma_empty(dim * dim, CC, arma::fill::zeros);
-  idx = 0;
-  for(i = 0; i < dim; i++){
-    sigma_empty(idx, 0) = 1;
-    idx += (dim + 1);
-  }
-  for(i = 1; i < CC; i++){
-    sigma_empty.col(i) = sigma_empty.col(0);
-  }
+  arma::mat eta_empty(dim, CC, arma::fill::zeros);
 
   ////////////////////////////////////////
   // Stuff needed for similarities
@@ -223,6 +200,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   ////////////////////////////////////////
   // Stuf needed for probabilities
   ////////////////////////////////////////
+
+  double wo;
   double maxwei, denwei;
   double uu, cweight;
   int newci, id_empty;
@@ -232,7 +211,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // (alg 8 Neal 2 step)
   ////////////////////////////////////////
 
-  arma::vec Lnv(dim * dim);
+  /*arma::vec Lnv(dim * dim);
   arma::mat Lnm(dim, dim);
   arma::mat L0mInv(dim, dim);
   arma::mat S0m(dim, dim);
@@ -243,14 +222,14 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::vec Snv(dim * dim);
   arma::mat Snm(dim, dim);
   arma::vec etabar(dim);
-  etabar.fill(0.0);
+  etabar.fill(0.0);*/
 
   // Stuff to compute lpml (log pseudo marginal likelihood),
   // likelihood, and WAIC widely applicable information criterion (WAIC),
   // also known as Watanabe–Akaike information criterion
-  double lpml_iter;
+  /*double lpml_iter;
   arma::vec CPOinv(nobs);
-  CPOinv.fill(0.0);
+  CPOinv.fill(0.0);*/
   arma::vec like_iter(nobs);
   like_iter.fill(0.0);
   /*double elppdWAIC;
@@ -266,8 +245,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   Rcpp::List l_eta_out(3);
 
   arma::vec nclus(nout);
-  arma::mat mu_out(1, dim);
-  arma::mat sigma_out(1, dim*dim);
+  //arma::mat mu_out(1, dim);
+  //arma::mat sigma_out(1, dim*dim);
   arma::mat eta_out(1, dim);
   arma::vec Clui(nout * nobs, arma::fill::ones);
   arma::vec like(nout * nobs, arma::fill::ones);
@@ -290,8 +269,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
      */
     if(reuse == 1){
       for(mm = 0; mm < CC; mm++){
-        mu_empty.col(mm) = ran_mvnorm(hP0_m0, hP0_L0, dim);
-        sigma_empty.col(mm) = ran_iwish(hP0_nu0, hP0_V0, dim);
+        eta_empty.col(mm) = ran_mvnorm(hP0_m0, hP0_L0, dim);
       }
     }
 
@@ -300,9 +278,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       // update the cluster labels with NEAL 8
       /////////////////////////////////////////
       zi = curr_clu(i)-1; //sottraggo 1 perché C conta da 0 ma conviene farlo ogni volta
-      //Rcpp::Rcout << "i " << i << ", zi " << zi << std::endl;
-      //Rcpp::Rcout << "curr clu adj 0" <<curr_clu.t() << std::endl;
-      //Rcpp::Rcout << "nj_curr(zi) " <<nj_curr.t() << std::endl;
+
       if(nj_curr(zi) > 1){// Case where the nj corresponding to zi is such that nj>1
         nj_curr(zi) -= 1;
       } else {// Case where the nj corresponding to zi is such that nj=1
@@ -310,8 +286,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         dval *= CC;
         id_empty = floor(dval);//praticamente ho fatto un sample()
 
-        sigma_empty.col(id_empty) = sigma_star_curr.col(zi);
-        mu_empty.col(id_empty) = mu_star_curr.col(zi);
+        eta_empty.col(id_empty) = eta_star_curr.col(zi);
 
         //ADJUST CARDINALITY, \star ptms, NUMB OF CLUSTERS AND LABELS
         nclu_curr -= 1;
@@ -319,8 +294,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         for(ii = 0; ii < nclu_curr; ii++){
           if(ii >= (zi)){
             nj_curr(ii) = nj_curr(ii+1);
-            sigma_star_curr.col(ii) = sigma_star_curr.col(ii + 1);
-            mu_star_curr.col(ii) = mu_star_curr.col(ii + 1);
+            eta_star_curr.col(ii) = eta_star_curr.col(ii + 1);
           }
         }
 
@@ -331,7 +305,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         }
         //FINE PARTA PROBLEMATICA
       }
-      //Rcpp::Rcout << "curr clu adj 1" <<curr_clu.t() << std::endl;
+
       //SIMILARITY & CALIBRATION CURRENT CLUSTERS
       for(j = 0; j < nclu_curr; j++){
         if(PPMx == 1){
@@ -374,6 +348,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconN += lgcont;
               }
             }
+
 
             // now add ith individual back;
             xcontmp(njtmp) = xcon(i*(ncon)+p);
@@ -449,53 +424,49 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           gtilY(j) = lgconY + lgcatY;
           gtilN(j) = lgconN + lgcatN;
 
-          //ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = 0.0;
-          for(k = 0; k < ncat; k++){
-            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          weight(j) = log((double) nj_curr(j)) + // cohesion part
+            lgcatY - lgcatN + // Categorical part
+            lgconY - lgconN;  // Continuous part
+          for(k = 0; k < dim; k++){
+            wo = calculate_gamma(eta_star_curr, j, k, i, 0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            if(y(i, k) != 1){
+              weight(j) -=  log(JJ(i, k));
+            }
           }
-          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
-                 sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                   log((double) nj_curr(j)) + // cohesion part
-                   lgcatY - lgcatN + // Categorical part
-                   lgconY - lgconN;  // Continuous part
 
           if(calibration == 2){
-            //ldSig = logdet(sigma_star_curr.col(j), dim);
-            weight(j) = 0.0;
-            for(k = 0; k < ncat; k++){
-              weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+            weight(j) = log((double) nj_curr(j)) + // cohesion part
+              (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
+            for(k = 0; k < dim; k++){
+              wo = calculate_gamma(eta_star_curr, j, k, i, 0);
+              weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+              if(y(i, k) != 1){
+                weight(j) -=  log(JJ(i, k));
+              }
             }
-            weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-            weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
-     sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                     log((double) nj_curr(j)) + // cohesion part
-                     (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
           }
         } else{//quello che segue è PPM (no covariate)
-          //ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = 0.0;
-          for(k = 0; k < ncat; k++){
-            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          weight(j) = log((double) nj_curr(j)); // DP cohesion part
+          for(k = 0; k < dim; k++){
+            wo = calculate_gamma(eta_star_curr, j, k, i, 0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            if(y(i, k) != 1){
+              weight(j) -=  log(JJ(i, k));
+            }
           }
-          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
-     sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                   log((double) nj_curr(j)); // DP cohesion part
         }
-      }
+      }//chiude la similarity & calibration for current clusters
 
       //SIMILARITY & CALIBRATION EMPTY CLUSTERS
-
       if(reuse == 0){
         for(mm = 0; mm < CC; mm++){
-          mu_empty.col(mm) = ran_mvnorm(hP0_m0, hP0_L0, dim);
-          sigma_empty.col(mm) = ran_iwish(hP0_nu0, hP0_V0, dim);
+          eta_empty.col(mm) = ran_mvnorm(hP0_m0, hP0_L0, dim);
         }
       }
 
       for(j = nclu_curr; j < (nclu_curr + CC); j++){
+        jj = j - nclu_curr;
         if(PPMx == 1){
           // Continuous Covariates
           lgcondraw = 0.0;
@@ -545,40 +516,38 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           gtilY(j) = lgcondraw + lgcatdraw;
           gtilN(j) = lgcondraw + lgcatdraw;
 
-          //ldSig = logdet(sigma_empty.col(j - nclu_curr), dim);
-          weight(j) = 0.0;
-          for(k = 0; k < ncat; k++){
-            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          weight(j) = log(alpha) - log(CC) + //cohesion + auxiliary ptms
+            lgcondraw + // Continuous covariate part
+            lgcatdraw; // categorical covariate part
+          for(k = 0; k < dim; k++){
+            wo = calculate_gamma(eta_empty, jj, k, i, 0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            if(y(i, k) != 1){
+              weight(j) -=  log(JJ(i, k));
+            }
           }
-          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
- sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                   log(alpha) - log(CC) + //cohesion + auxiliary ptms
-                   lgcondraw + // Continuous covariate part
-                   lgcatdraw; // categorical covariate part
 
           if(calibration == 2){
-            //ldSig = logdet(sigma_star_curr.col(j), dim);
-            weight(j) = 0.0;
-            for(k = 0; k < ncat; k++){
-              weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+            weight(j) = log(alpha) - log(CC) +
+              (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+            for(k = 0; k < dim; k++){
+              wo = calculate_gamma(eta_empty, jj, k, i, 0);
+              weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+              if(y(i, k) != 1){
+                weight(j) -=  log(JJ(i, k));
+              }
             }
-            weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-            weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
- sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                     log(alpha) - log(CC) +
-                     (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
           }
+
         } else {// di seguito ppm
-          //ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = 0.0;
-          for(k = 0; k < ncat; k++){
-            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          weight(j) = log(alpha) - log(CC); //cohesion + auxiliary ptms
+          for(k = 0; k < dim; k++){
+            wo = calculate_gamma(eta_empty, jj, k, i, 0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            if(y(i, k) != 1){
+              weight(j) -=  log(JJ(i, k));
+            }
           }
-          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
- sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                   log(alpha) - log(CC); //cohesion + auxiliary ptms
         }
       }
 
@@ -611,33 +580,34 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           lgtilNk = lgtilN(j) - log(sgN);
           lgtilYk = lgtilY(j) - log(sgY);
 
-          //ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = 0.0;
-          for(k = 0; k < ncat; k++){
-            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          weight(j) = log((double) nj_curr(j)) +  // Cohesion part
+            lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+          for(k = 0; k < dim; k++){
+            wo = calculate_gamma(eta_star_curr, j, k, i, 0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            if(y(i, k) != 1){
+              weight(j) -=  log(JJ(i, k));
+            }
           }
-          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
- sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                   log((double) nj_curr(j)) +  // Cohesion part
-                   lgtilYk - lgtilNk; //This takes into account both cont and cat vars
         }
 
         // calibration for empty clusters
         for(j = nclu_curr; j < nclu_curr + CC; j++){
-          //ldSig = logdet(sigma_star_curr.col(j), dim);
-          weight(j) = 0.0;
-          for(k = 0; k < ncat; k++){
-            weight(j) += lgamma(exp(loggamma(i, k))) + (exp(loggamma(i, k) * JJ(i, k)));
+          jj = j - nclu_curr;
+          weight(j) = log(alpha) - log(CC) +
+            lgtilN(j) - // Continuous covariate part
+            log(sgN);
+          for(k = 0; k < dim; k++){
+            wo = calculate_gamma(eta_empty, jj, k, i, 0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);;
+            if(y(i, k) != 1){
+              weight(j) -=  log(JJ(i, k));
+            }
           }
-          weight(j) -= lgamma(arma::sum(exp(loggamma.row(i))));
-          weight(j) += /*dmvnorm(eta.col(i), mu_star_curr.col(j),
- sigma_star_curr.col(j), dim, ldSig, 1) +*/ //density
-                   log(alpha) - log(CC) +
-                   lgtilN(j) - // Continuous covariate part
-                   log(sgN);
         }
       }
+
+      Rcpp::Rcout << "pesi0: " << weight.t() << std::endl;
 
       //AVOID ZERO IN WEIGHTS
       maxwei = weight(0);
@@ -645,16 +615,22 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         if(maxwei < weight(j)) maxwei = weight(j);
       }
 
+      Rcpp::Rcout << "max pesi: " << maxwei << std::endl;
+
       denwei = 0.0;
 
       for(j = 0; j < nclu_curr + CC; j++){
         weight(j) = exp(weight(j) - maxwei);
         denwei += weight(j);
       }
+
+      Rcpp::Rcout << "pesi1: " << weight.t() << std::endl;
+
       for(j = 0; j < nclu_curr + CC; j++){
         pweight(j) = weight(j)/denwei;
       }
 
+      Rcpp::Rcout << "pesi: " << pweight.t() << std::endl;
 
       //sample the new cluster for i-th observation
       uu = R::runif(0.0,1.0);
@@ -684,85 +660,22 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         curr_clu(i) = nclu_curr;
         nj_curr(nclu_curr-1) = 1;
 
-        sigma_star_curr.col(nclu_curr-1) = sigma_empty.col(id_empty);
-        mu_star_curr.col(nclu_curr-1) = mu_empty.col(id_empty);
-        mu_empty.col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
-        sigma_empty.col(id_empty) = ran_iwish(hP0_nu0, hP0_V0, dim);
+        eta_star_curr.col(nclu_curr-1) = eta_empty.col(id_empty);
+        eta_empty.col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
       }
     }
-    //Rcpp::Rcout << "curr clu fin" <<curr_clu.t() << std::endl;
+
     //////////////////////////////////////////////////
     // update the cluster value with NEAL 8 (II step)
     //////////////////////////////////////////////////
 
-    for(int row = 0; row < dim; row++){
-     for(int col = 0; col < dim; col++){
-      L0mInv(row, col) = hP0_L0(row * dim + col);
-     }
+    for(j = 0; j < nclu_curr; j++){
+     l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
+                eta_star_curr.col(j), eta_flag, hP0_m0, hP0_L0, j);
+     eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
+     loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
+     eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
     }
-    L0mInv = arma::inv(L0mInv);
-
-     for(j = 0; j < nclu_curr; j++){
-     /*
-      * qst non mi serve più perché è come se avessi una sola osservazione.
-      * calcolo le full conditional cmq
-      *
-      *
-     arma::mat etatemp(dim, nj_curr(j));
-     int idxy = 0;
-     for(ii = 0; ii < nobs; ii++){
-      if(curr_clu(ii) == (j+1)){
-        etatemp.col(idxy) = eta.col(ii);
-        etabar += eta.col(ii);
-        idxy += 1;
-      }
-     }
-
-       etabar = etabar/nj_curr(j);
-
-       */
-
-     for(int row = 0; row < dim; row++){
-      for(int col = 0; col < dim; col++){
-        Sigma(row, col) = sigma_star_curr(row * dim + col, j);
-      }
-     }
-     SigmaInv = arma::inv(Sigma);
-
-     Lnm = arma::inv(L0mInv + SigmaInv);
-     mun = Lnm * (L0mInv * hP0_m0 + SigmaInv * eta.col(j));
-     for(int row = 0; row < dim; row++){
-      for(int col = 0; col < dim; col++){
-        Lnv(row * dim + col) = Lnm(row, col);
-        S0m(row, col) = hP0_V0(row * dim + col);
-        }
-      }
-
-     mu_star_curr.col(j) = ran_mvnorm(mun, Lnv, dim);
-
-     /*qui devo calcolarlo attentamente
-      *
-     Snm = arma::inv(S0m + ((eta.each_col()-mu_star_curr.col(j)) *
-       (etatemp.each_col()-mu_star_curr.col(j)).t()));
-      */
-     Snm = arma::inv(S0m + ((eta.col(j)-mu_star_curr.col(j)) * (eta.col(j)-mu_star_curr.col(j)).t()));
-     //Snm = arma::inv(S0m + ((ytemp.each_row()-theta.t()).t() * (ytemp.each_row()-theta.t())));
-     for(int row = 0; row < dim; row++){
-      for(int col = 0; col < dim; col++){
-        Snv(row * dim + col) = Snm(row, col);
-      }
-     }
-     //sigma_star_curr.col(j) = ran_iwish(hP0_nu0+nj_curr(j), Snv, dim);
-     sigma_star_curr.col(j) = ran_iwish(hP0_nu0 + 1, Snv, dim);
-     }
-
-     for(j = 0; j < nclu_curr; j++){
-       l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
-                  eta.col(j), eta_flag, mu_star_curr.col(j), sigma_star_curr.col(j), j);
-       eta.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
-       loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
-       eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
-     }
 
     /*////////////////////////////////////////////////
     * update random variables:
@@ -771,10 +684,14 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     ////////////////////////////////////////////////*/
 
     // update JJ and consequently TT
-    for(i = 0; i < nobs ; i++){
+    for(i = 0; i < nobs; i++){
       TT(i) = 0.0;
       for(k = 0; k < dim; k++){
-        JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
+        if(y(i, k) != 1){
+          JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
+        } else {
+          JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1), 1.0/(ss(i) + 1.0));
+        }
         if(JJ(i, k) < pow(10.0, -100.0)){
           JJ(i, k) = pow(10.0, -100.0);
         }
@@ -799,9 +716,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       }
       ll += 1;
       for(j = 0; j < nclu_curr; j++){
-        mu_out.insert_rows(lll, mu_star_curr.col(j).t());
-        sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
-        eta_out.insert_rows(lll, eta.col(j).t());
+        //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
+        //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
+        eta_out.insert_rows(lll, eta_star_curr.col(j).t());
         lll += 1;
       }
     }
@@ -840,9 +757,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
    WAIC = -2*elppdWAIC;*/
 
   //RETURN
-  return Rcpp::List::create(Rcpp::Named("mu") = mu_out,
+  return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
                             Rcpp::Named("eta") = eta_out,
-                            Rcpp::Named("sigma") = sigma_out,
+                            //Rcpp::Named("sigma") = sigma_out,
                             Rcpp::Named("cl_lab") = Clui,
                             Rcpp::Named("pi") = pigreco,
                             //Rcpp::Named("like") = like,

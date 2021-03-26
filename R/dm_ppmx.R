@@ -95,7 +95,7 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
     xcat <- cbind(rep(0,1));
   }
 
-  alpha <- similparam[7]
+  alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
   hP0_nu0 <- as.double(modelpriors$hP0_nu0)
@@ -115,16 +115,16 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   res$nclu <- nclu
 
   nclu_cs <- cumsum(nclu)
-  mu_out <- out$mu#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
-  mu_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
-  for(l in 1:nout){
-    for(i in 1:nclu[l]){
-      mu_ar[i, ,1] <- mu_out[i, ]
-      if(l > 1){
-        mu_ar[i, ,l] <- mu_out[i+nclu_cs[l-1], ]
-      }
-    }
-  }
+  #mu_out <- out$mu#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
+  #mu_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
+  #for(l in 1:nout){
+  #  for(i in 1:nclu[l]){
+  #    mu_ar[i, ,1] <- mu_out[i, ]
+  #    if(l > 1){
+  #      mu_ar[i, ,l] <- mu_out[i+nclu_cs[l-1], ]
+  #    }
+  #  }
+  #}
 
   eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
   eta_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
@@ -140,7 +140,7 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   pi_out <- out$pi
 
   res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
-  res$mu <- mu_ar
+  #res$mu <- mu_ar
   res$eta <- eta_ar
   ypred <- array(0, dim = c(nrow(y), ncol(y), nout))
 

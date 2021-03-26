@@ -102,17 +102,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // calculate_gamma
-double calculate_gamma(arma::mat eta, arma::vec curr_clu, int k, int i, int Log);
-RcppExport SEXP _treatppmx_calculate_gamma(SEXP etaSEXP, SEXP curr_cluSEXP, SEXP kSEXP, SEXP iSEXP, SEXP LogSEXP) {
+double calculate_gamma(arma::mat eta, int clu_lg, int k, int i, int Log);
+RcppExport SEXP _treatppmx_calculate_gamma(SEXP etaSEXP, SEXP clu_lgSEXP, SEXP kSEXP, SEXP iSEXP, SEXP LogSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type curr_clu(curr_cluSEXP);
+    Rcpp::traits::input_parameter< int >::type clu_lg(clu_lgSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
     Rcpp::traits::input_parameter< int >::type Log(LogSEXP);
-    rcpp_result_gen = Rcpp::wrap(calculate_gamma(eta, curr_clu, k, i, Log));
+    rcpp_result_gen = Rcpp::wrap(calculate_gamma(eta, clu_lg, k, i, Log));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -133,19 +133,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type sigma_star(sigma_starSEXP);
     Rcpp::traits::input_parameter< int >::type jj(jjSEXP);
     rcpp_result_gen = Rcpp::wrap(eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag, mu_star, sigma_star, jj));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dweight
-double dweight(arma::mat loggamma, arma::mat JJ, int i);
-RcppExport SEXP _treatppmx_dweight(SEXP loggammaSEXP, SEXP JJSEXP, SEXP iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type loggamma(loggammaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type JJ(JJSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    rcpp_result_gen = Rcpp::wrap(dweight(loggamma, JJ, i));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -181,7 +168,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
     {"_treatppmx_calculate_gamma", (DL_FUNC) &_treatppmx_calculate_gamma, 5},
     {"_treatppmx_eta_update", (DL_FUNC) &_treatppmx_eta_update, 10},
-    {"_treatppmx_dweight", (DL_FUNC) &_treatppmx_dweight, 3},
     {"_treatppmx_ranppmx", (DL_FUNC) &_treatppmx_ranppmx, 15},
     {NULL, NULL, 0}
 };
