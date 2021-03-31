@@ -25,7 +25,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // mm - for auxiliary parameters
   // zi is the latent variable
   // k - categories index
-  int l, ll, lll, i, ii, c, p, j, jj, mm, zi, k;
+  int l, ll, lll, i, ii, iii, c, p, j, jj, mm, zi, k;
   int dim = y.n_cols;
 
   int nout = (iter - burn)/(thin); //number of saved iterations
@@ -161,7 +161,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   //// reuse algorithm stuff
   ////////////////////////////////////////////////////
 
-  arma::mat eta_empty(dim, CC, arma::fill::zeros);
+  arma::mat eta_empty(dim, CC, arma::fill::randu);
 
   ////////////////////////////////////////
   // Stuff needed for similarities
@@ -211,18 +211,33 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // (alg 8 Neal 2 step)
   ////////////////////////////////////////
 
-  /*arma::vec Lnv(dim * dim);
-  arma::mat Lnm(dim, dim);
-  arma::mat L0mInv(dim, dim);
-  arma::mat S0m(dim, dim);
-  arma::mat Sigma(dim, dim);
-  arma::mat SigmaInv(dim, dim);
-  arma::vec mun(dim);
-  arma::vec theta(dim);
-  arma::vec Snv(dim * dim);
-  arma::mat Snm(dim, dim);
-  arma::vec etabar(dim);
-  etabar.fill(0.0);*/
+  /*arma::vec thetaj(dim, arma::fill::zeros);
+
+  arma::mat Sigma(dim, dim, arma::fill::zeros);
+  arma::mat SigmaInv(dim, dim, arma::fill::zeros);
+
+  arma::vec mu0(dim);
+  mu0 = hP0_m0;
+
+  arma::vec L0v(dim * dim);
+  L0v = hP0_L0;
+  arma::mat L0m(dim, dim, arma::fill::zeros);
+  arma::mat L0mInv(dim, dim, arma::fill::zeros);
+
+  double nuiw = hP0_nu0;
+
+  arma::vec S0v(dim * dim);
+  S0v = hP0_V0;
+  arma::mat S0m(dim, dim, arma::fill::zeros);
+
+  arma::vec Sthetav(dim * dim, arma::fill::zeros);
+  arma::mat Sthetam(dim, dim, arma::fill::zeros);
+
+  arma::vec Lpv(dim * dim);
+  arma::mat Lpm(dim, dim, arma::fill::zeros);
+  arma::mat LpmInv(dim, dim, arma::fill::zeros);
+
+  arma::vec mup(dim, arma::fill::zeros);*/
 
   // Stuff to compute lpml (log pseudo marginal likelihood),
   // likelihood, and WAIC widely applicable information criterion (WAIC),
@@ -260,10 +275,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   ////////////////////////////////////////
 
   for(l = 0; l < iter; l++){
-    /*if((l+1) % 10000 == 0){
-     Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
-     }*/
-    //Rcpp::Rcout << "mcmc iter =  " << l+1 << std::endl;
     /* inizializzo latent variables per empty components da P0
      * per il Reuse algorithm (vettori di lunghezza CC)
      */
@@ -291,16 +302,24 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         //ADJUST CARDINALITY, \star ptms, NUMB OF CLUSTERS AND LABELS
         nclu_curr -= 1;
 
-        for(ii = 0; ii < nclu_curr; ii++){
-          if(ii >= (zi)){
-            nj_curr(ii) = nj_curr(ii+1);
-            eta_star_curr.col(ii) = eta_star_curr.col(ii + 1);
+        for(j = 0; j < nclu_curr; j++){
+          if(j >= (zi)){
+            nj_curr(j) = nj_curr(j+1);
+            eta_star_curr.col(j) = eta_star_curr.col(j + 1);
           }
         }
 
         for(ii = 0; ii < nobs; ii++){
           if(curr_clu(ii)>(zi)){
             curr_clu(ii) -= 1;
+          }
+        }
+
+        for(ii = 0; ii < nobs; ii++){
+          if(ii != i){
+            for(k = 0; k < dim; k++){
+              loggamma(ii, k) = calculate_gamma(eta_star_curr.col(curr_clu(ii)-1), 0, k, ii, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
+            }
           }
         }
         //FINE PARTA PROBLEMATICA
@@ -429,7 +448,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
             lgconY - lgconN;  // Continuous part
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_star_curr, j, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -440,7 +459,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
               (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
             for(k = 0; k < dim; k++){
               wo = calculate_gamma(eta_star_curr, j, k, i, 0);
-              weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+
+              weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
               if(y(i, k) != 1){
                 weight(j) -=  log(JJ(i, k));
               }
@@ -450,7 +470,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           weight(j) = log((double) nj_curr(j)); // DP cohesion part
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_star_curr, j, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -521,7 +541,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
             lgcatdraw; // categorical covariate part
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_empty, jj, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -532,7 +552,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
               (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
             for(k = 0; k < dim; k++){
               wo = calculate_gamma(eta_empty, jj, k, i, 0);
-              weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+              weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
               if(y(i, k) != 1){
                 weight(j) -=  log(JJ(i, k));
               }
@@ -543,7 +563,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           weight(j) = log(alpha) - log(CC); //cohesion + auxiliary ptms
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_empty, jj, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -584,7 +604,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
             lgtilYk - lgtilNk; //This takes into account both cont and cat vars
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_star_curr, j, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -599,7 +619,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
             log(sgN);
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_empty, jj, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) + JJ(i, k) * (ss(i) + 1.0);;
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);;
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -607,15 +627,13 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         }
       }
 
-      Rcpp::Rcout << "pesi0: " << weight.t() << std::endl;
+      //Rcpp::Rcout << "pesi0: " << weight.t() << std::endl;
 
       //AVOID ZERO IN WEIGHTS
       maxwei = weight(0);
       for(j = 1; j < nclu_curr+ CC; j++){
         if(maxwei < weight(j)) maxwei = weight(j);
       }
-
-      Rcpp::Rcout << "max pesi: " << maxwei << std::endl;
 
       denwei = 0.0;
 
@@ -624,13 +642,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         denwei += weight(j);
       }
 
-      Rcpp::Rcout << "pesi1: " << weight.t() << std::endl;
-
       for(j = 0; j < nclu_curr + CC; j++){
         pweight(j) = weight(j)/denwei;
+        //mysws += pweight(j);
       }
-
-      Rcpp::Rcout << "pesi: " << pweight.t() << std::endl;
 
       //sample the new cluster for i-th observation
       uu = R::runif(0.0,1.0);
@@ -651,6 +666,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         //Point 2a page 345 Favaro and Teh, second column
         curr_clu(i) = newci;
         nj_curr(newci - 1) += 1;
+        //Rcpp::Rcout << "if 1" << curr_clu.t() << std::endl;
+
       }else{
         /*id_empty: it identifies which of the augmented has been chosen
          * 2b  page 345 Favaro and Teh, second column
@@ -661,6 +678,13 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         nj_curr(nclu_curr-1) = 1;
 
         eta_star_curr.col(nclu_curr-1) = eta_empty.col(id_empty);
+
+        //NEED TO UPDATE GAMMA TOO
+        for(ii = 0; ii < nobs; ii++){
+          for(k = 0; k < dim; k++){
+            loggamma(ii, k) = calculate_gamma(eta_star_curr.col(curr_clu(ii)-1), 0, k, ii, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
+          }
+        }
         eta_empty.col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
       }
     }
@@ -668,13 +692,16 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     //////////////////////////////////////////////////
     // update the cluster value with NEAL 8 (II step)
     //////////////////////////////////////////////////
+    /*Sthetam = (eta_star_curr.col(j) - thetaj)*(eta_star_curr.col(j) - thetaj).t();
+     Sthetam = arma::inv(S0m + Sthetam);
+     Sigma = ran_iwish(nuiw + 1, Sthetam, dim);*/
 
     for(j = 0; j < nclu_curr; j++){
-     l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
+      l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
                 eta_star_curr.col(j), eta_flag, hP0_m0, hP0_L0, j);
-     eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
-     loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
-     eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
+      eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
+      loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
+      eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
     }
 
     /*////////////////////////////////////////////////
@@ -690,7 +717,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         if(y(i, k) != 1){
           JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
         } else {
-          JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1), 1.0/(ss(i) + 1.0));
+          JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
         }
         if(JJ(i, k) < pow(10.0, -100.0)){
           JJ(i, k) = pow(10.0, -100.0);

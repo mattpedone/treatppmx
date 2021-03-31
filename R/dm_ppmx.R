@@ -62,6 +62,12 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   classes <- sapply(Xall, class)
   catvars <- classes %in% c("factor","character")
 
+  if(PPMx == 0){
+    ncon = 0
+    ncat = 0
+    catvec = 0
+  }
+
   # standardize continuous covariates
   if(nxobs > 0){
     if(sum(!catvars) > 0){

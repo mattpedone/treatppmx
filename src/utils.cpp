@@ -458,14 +458,16 @@ double calculate_gamma(arma::mat eta, int clu_lg, int k, int i,
    */
 
   double lg = 0.0;
+  double gamma_ik;
 
   lg = eta(k, clu_lg);
 
-  if(Log != 0){
-    return lg;
+  if(Log == 1){
+    gamma_ik = lg;
   } else{
-    return (exp(lg));
+    gamma_ik = exp(lg);
   }
+  return gamma_ik;
 }
 
 arma::vec ran_dir(arma::vec param, double delta, double rho){
@@ -552,11 +554,13 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
 
   arma::mat loggamma_p(nobs, dim);
 
+
   log_den = 0.0;
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
         log_den = log_den - lgamma(exp(loggamma(i, k))) + exp(loggamma(i, k)) * log(JJ(i, k));
+        //log_den = log_den + R::dnorm4(eta(k), 0, 1.0, 1);
       }
     }
   }
@@ -566,16 +570,19 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   /*
    * propose new value for eta
    * I sample it from updated priors (for now)
-   */
+
   for(k = 0; k < dim; k++){
-    eta_p(k) = eta(k)+R::runif(-0.5, .5);
-  }
+    eta_p(k) = eta(k)+R::runif(-0.05, .05);
+  }*/
+
+  eta_p = ran_mvnorm(mu_star, sigma_star, dim);
 
 
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
-        loggamma_p(i, k) =  loggamma(i, k) - eta(k) + eta_p(k);
+        loggamma_p(i, k) =  calculate_gamma(eta_p, 0, k, i, 1);
+        //loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
   }
@@ -585,6 +592,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
         log_num = log_num - lgamma(exp(loggamma_p(i, k))) + exp(loggamma_p(i, k)) * log(JJ(i, k));
+        //log_num = log_num + R::dnorm4(eta_p(k), 0, 1.0, 1);
       }
     }
   }
@@ -598,6 +606,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
     // If accepted, update both eta and loggamma, and keep
     // track of acceptances
     eta_flag(jj) += 1;
+    //Rcpp::Rcout << "accepted! j: " << jj << ", f: " << eta_flag(jj) << std::endl;
     eta = eta_p;
 
     for(i = 0; i < nobs; i++){

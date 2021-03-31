@@ -161,7 +161,7 @@ gcd <- function(n_obs, concov = 2, K = 2, similarity = 1, simparm = 1,
 #'
 #' @export
 #'
-gcd_dm <- function(n_obs, concov = 2, K = 4, similarity = 1, simparm = 1,
+gcd_dm <- function(n_obs, concov = 2, K = 3, similarity = 1, simparm = 1,
                 alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
   myinfopart <- NULL
   #concov = 2
@@ -183,8 +183,9 @@ gcd_dm <- function(n_obs, concov = 2, K = 4, similarity = 1, simparm = 1,
 
   possmean <- matrix(0, myppmx$nclus, K)
   for(i in 1:myppmx$nclus){
-    possmean[i,] <- rmvnorm(1, seq(-2.3, 2.3, length.out = K), sigma = diag(1, K), method="svd")
+    possmean[i,] <- rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
   }
+  #cat("possmean", possmean, "\n")
   myinfopart$possmean <- possmean
   Y <- matrix(0, n, K)
   intercept <- matrix(0, n, K)
@@ -210,6 +211,92 @@ gcd_dm <- function(n_obs, concov = 2, K = 4, similarity = 1, simparm = 1,
   }
   return(myinfopart)
 }
+
+#' gendata dm
+#'
+#' @export
+#'
+gcd_dm_simpl <- function(n_obs, concov = 2, K = 10, similarity = 1, simparm = 1,
+                   alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
+  myinfopart <- NULL
+  #concov = 2
+  #n_obs = 100
+  n = n_obs
+  #d <- genera_dati(n=n, P=concov)
+
+  #X <- d$XX
+
+  #X$X1 <- as.factor(X$X1)
+  #X$X2 <- as.factor(X$X2)
+
+  #myinfopart$X <- X
+
+  #myppmx <- ran_ppmx(X=X, similarity, simparm, alpha, m0, s20,v, k0, v0)
+  #myinfopart$label <- myppmx$label
+  #myinfopart$nclus <- myppmx$nclus
+  #myinfopart$nj <- myppmx$nj
+
+  # Return a vector of weights drawn from a stick-breaking process
+  # with dispersion `alpha`.
+
+  # Recall that the kth weight is
+  #   \beta_k = (1 - \beta_1) * (1 - \beta_2) * ... * (1 - \beta_{k-1}) * beta_k
+  # where each $\\beta\_i$ is drawn from a Beta distribution
+  #   \beta_i ~ Beta(1, \alpha)
+
+  stick_breaking_process = function(num_weights, alpha) {
+    betas = rbeta(num_weights, 1, alpha)
+    remaining_stick_lengths = c(1, cumprod(1 - betas))[1:num_weights]
+    weights = remaining_stick_lengths * betas
+    weights
+  }
+
+  possmean <- matrix(0, 2, K)
+  #a <- stick_breaking_process(K, 1)
+  #for(i in 1:myppmx$nclus){
+  possmean[1,] <- stick_breaking_process(K, .1)*10#*sample(c(1, -1), K, replace = T)#c(5, rep(0, K-1))#rmvnorm(1, rep(5, K), sigma = diag(.1, K), method="svd")
+  possmean[2,] <- sort(stick_breaking_process(K, .8)*10)#*sample(c(1, -1), K, replace = T)#c(rep(0, K-1), -5)#rmvnorm(1, rep(-5, K), sigma = diag(.1, K), method="svd")
+  #}
+  #cat("possmean", possmean, "\n")
+  myinfopart$possmean <- possmean
+  Y <- matrix(0, n, K)
+  intercept <- matrix(0, n, K)
+  label <- c()
+
+  for(i in 1:n){
+    #intercept[i,] <- rmvnorm(1, possmean[myppmx$label[i], ], sigma = diag(.25, K), method = "svd")
+    if(i<(n/2)){
+      intercept[i,] <- rmvnorm(1, possmean[1, ], sigma = diag(1, K), method = "svd")
+      label[i] <- 1
+    } else {
+      intercept[i,] <- rmvnorm(1, possmean[2, ], sigma = diag(1, K), method = "svd")
+      label[i] <- 2
+    }
+  }
+  myinfopart$intercept <- intercept
+  myinfopart$label <- label
+
+  for(i in 1:n){
+    #cat("i", i, "\n")
+    thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
+    pi = thisrow/sum(thisrow)
+    #cat("thisrow", thisrow, "\n")
+    #pi = bayess::rdirichlet(n = 1, par = thisrow)
+    #cat("pi", pi, "\n")
+    Y[i, ] = rmultinom(1, 1, pi)
+    #cat("Y[i, ]", Y[i, ], "\n")
+  }
+
+  myinfopart$y <- Y
+
+  if(plot==T){
+    par(mfrow=c(1, 2))
+    plot(possmean)
+    plot(Y)
+  }
+  return(myinfopart)
+}
+
 
 #' postquant
 #'
