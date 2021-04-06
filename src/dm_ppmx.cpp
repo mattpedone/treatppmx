@@ -7,11 +7,11 @@
 
 // [[Rcpp::export]]
 Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, int ncat,
-                    arma::vec catvec, double alpha, int CC, int reuse, int consim,
-                    int similarity, int calibration, arma::mat y,
-                    arma::vec xcon, arma::vec xcat, arma::vec similparam,
-                    arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
-                    arma::vec hP0_V0, arma::vec mhtune){
+                   arma::vec catvec, double alpha, int CC, int reuse, int consim,
+                   int similarity, int calibration, arma::mat y,
+                   arma::vec xcon, arma::vec xcat, arma::vec similparam,
+                   arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
+                   arma::vec hP0_V0, arma::vec mhtune){
 
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -37,9 +37,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   arma::vec ypiu(nobs, arma::fill::ones);
   /*for(i = 0 ; i < nobs ; i++){
-    for(k = 0 ; k < dim ; k++){
-      ypiu(i) += y(i, k);
-    }
+   for(k = 0 ; k < dim ; k++){
+   ypiu(i) += y(i, k);
+   }
   }*/
 
   // initialize latent variable: JJ ~ gamma()
@@ -143,7 +143,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   arma::mat loggamma(nobs, dim, arma::fill::zeros);
   for(i = 0; i < nobs; i++){
-      clu_lg = curr_clu(i)-1;
+    clu_lg = curr_clu(i)-1;
     for(k = 0; k < dim; k++){
       loggamma(i, k) = calculate_gamma(eta_star_curr, clu_lg, k, i, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
     }
@@ -168,6 +168,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   ////////////////////////////////////////
 
   int njtmp;
+
+
   double lgconN, lgconY, lgcatN, lgcatY, tmp;
   double lgcont, lgcatt;
 
@@ -182,8 +184,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   double k0 = similparam(3);
   double nu0 = similparam(4);
 
-  arma::vec xcontmp(nobs);
+  //arma::vec xcontmp(nobs);
   arma::vec njc((nobs)*(ncat));
+  arma::vec njctmp(max_C);
 
   arma::vec gtilN(nobs + CC);
   gtilN.fill(0.0);
@@ -213,45 +216,45 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   /*arma::vec thetaj(dim, arma::fill::zeros);
 
-  arma::mat Sigma(dim, dim, arma::fill::zeros);
-  arma::mat SigmaInv(dim, dim, arma::fill::zeros);
+   arma::mat Sigma(dim, dim, arma::fill::zeros);
+   arma::mat SigmaInv(dim, dim, arma::fill::zeros);
 
-  arma::vec mu0(dim);
-  mu0 = hP0_m0;
+   arma::vec mu0(dim);
+   mu0 = hP0_m0;
 
-  arma::vec L0v(dim * dim);
-  L0v = hP0_L0;
-  arma::mat L0m(dim, dim, arma::fill::zeros);
-  arma::mat L0mInv(dim, dim, arma::fill::zeros);
+   arma::vec L0v(dim * dim);
+   L0v = hP0_L0;
+   arma::mat L0m(dim, dim, arma::fill::zeros);
+   arma::mat L0mInv(dim, dim, arma::fill::zeros);
 
-  double nuiw = hP0_nu0;
+   double nuiw = hP0_nu0;
 
-  arma::vec S0v(dim * dim);
-  S0v = hP0_V0;
-  arma::mat S0m(dim, dim, arma::fill::zeros);
+   arma::vec S0v(dim * dim);
+   S0v = hP0_V0;
+   arma::mat S0m(dim, dim, arma::fill::zeros);
 
-  arma::vec Sthetav(dim * dim, arma::fill::zeros);
-  arma::mat Sthetam(dim, dim, arma::fill::zeros);
+   arma::vec Sthetav(dim * dim, arma::fill::zeros);
+   arma::mat Sthetam(dim, dim, arma::fill::zeros);
 
-  arma::vec Lpv(dim * dim);
-  arma::mat Lpm(dim, dim, arma::fill::zeros);
-  arma::mat LpmInv(dim, dim, arma::fill::zeros);
+   arma::vec Lpv(dim * dim);
+   arma::mat Lpm(dim, dim, arma::fill::zeros);
+   arma::mat LpmInv(dim, dim, arma::fill::zeros);
 
-  arma::vec mup(dim, arma::fill::zeros);*/
+   arma::vec mup(dim, arma::fill::zeros);*/
 
   // Stuff to compute lpml (log pseudo marginal likelihood),
   // likelihood, and WAIC widely applicable information criterion (WAIC),
   // also known as Watanabe–Akaike information criterion
   /*double lpml_iter;
-  arma::vec CPOinv(nobs);
-  CPOinv.fill(0.0);*/
+   arma::vec CPOinv(nobs);
+   CPOinv.fill(0.0);*/
   arma::vec like_iter(nobs);
   like_iter.fill(0.0);
   /*double elppdWAIC;
-  arma::vec mnlike(nobs);
-  mnlike.fill(0.0);
-  arma::vec mnllike(nobs);
-  mnllike.fill(0.0);*/
+   arma::vec mnlike(nobs);
+   mnlike.fill(0.0);
+   arma::vec mnllike(nobs);
+   mnllike.fill(0.0);*/
 
   ////////////////////////////////////////
   // Stuff for storage and return
@@ -327,10 +330,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
       //SIMILARITY & CALIBRATION CURRENT CLUSTERS
       for(j = 0; j < nclu_curr; j++){
+        lgconY = 0.0;
+        lgconN = 0.0;
+        lgcatY = 0.0;
+        lgcatN = 0.0;
         if(PPMx == 1){
           // Continuous Covariates
-          lgconY = 0.0;
-          lgconN = 0.0;
           for(p = 0; p < (ncon); p++){
             njtmp = 0;
             sumx = 0.0;
@@ -368,9 +373,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
               }
             }
 
-
             // now add ith individual back;
-            xcontmp(njtmp) = xcon(i*(ncon)+p);
+            //xcontmp(njtmp) = xcon(i*(ncon)+p);
             sumx = sumx + xcon(i*(ncon)+p);
             sumx2 = sumx2 + xcon(i*(ncon)+p)*xcon(i*(ncon)+p);
             njtmp += 1;
@@ -397,45 +401,52 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
             }
           }//chiude ciclo su p covariate continue
           // Categorical Covariates
-          lgcatY = 0.0;
-          lgcatN = 0.0;
-          for(p = 0; p < (ncat); p++){
-            for(c = 0; c < catvec(p); c++){
-              njc(c) = 0;
-            }
-
-            njtmp = 0;
+          for(p = 0; p < ncat; p++){
             for(ii = 0; ii < nobs; ii++){
               if(ii != i){
                 if(curr_clu(ii) == (j + 1)){
-                  njc(xcat(ii*(ncat)+p)) = njc(xcat(ii*(ncat)+p)) + 1; // this needs to be a vector
-                  njtmp += 1;
+                  njc(((curr_clu(i)-1)*ncat+p)*max_C + xcat(i*ncat+p)) += 1;
                 }
               }
             }
 
+            for(c = 0; c < max_C; c++){
+              njctmp(c) = njc((j*ncat+p)*max_C+c);
+            }
+
+            /*njtmp = 0;
+            for(ii = 0; ii < nobs; ii++){
+              if(ii != i){
+                if(curr_clu(ii) == (j + 1)){
+                  //njc(xcat(ii*(ncat)+p)) += 1; // this needs to be a vector
+                  //njc(((curr_clu(ii) - 1) * ncat + p) * max_C + xcat(ii*(ncat)+p)) += 1;
+                  njtmp += 1;
+                }
+              }
+            }*/
+
             // Auxiliary - Dirichlet-Multinomial
             if(similarity == 1){
-              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
+              lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 0, 1);
               lgcatN = lgcatN + lgcatt;
             }
             // Double dipper - Dirichlet-Multinomial
             if(similarity==2){
-              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
+              lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 1, 1);
               lgcatN = lgcatN + lgcatt;
             }
 
-            njc(xcat(i*(ncat)+p)) += 1;
-            njtmp += 1;
+            njctmp(xcat(i*(ncat)+p)) += 1;
+            //njtmp += 1;
 
             // Auxiliary - Dirichlet-Multinomial
             if(similarity==1){
-              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
+              lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 0, 1);
               lgcatY = lgcatY + lgcatt;
             }
             // Double dipper - Dirichlet-Multinomial
             if(similarity==2){
-              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
+              lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 1, 1);
               lgcatY = lgcatY + lgcatt;
             }
           }//chiude ciclo su p covariate discrete
@@ -459,7 +470,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
               (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
             for(k = 0; k < dim; k++){
               wo = calculate_gamma(eta_star_curr, j, k, i, 0);
-
               weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
               if(y(i, k) != 1){
                 weight(j) -=  log(JJ(i, k));
@@ -518,18 +528,18 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           lgcatdraw = 0.0;
           for(p = 0; p < (ncat); p++){
             for(c = 0; c < catvec(p); c++){
-              njc(c) = 0;
+              njctmp(c) = 0;
             }
-            njc(xcat(i*(ncat)+p)) = 1;
+            njctmp(xcat(i*(ncat)+p)) = 1;
 
             // Auxiliary - Dirichlet-Multinomial
             if(similarity == 1){
-              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
+              lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 0, 1);
               lgcatdraw += lgcatt;
             }
             // Double dipper - Dirichlet-Multinomial
             if(similarity==2){
-              lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
+              lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 1, 1);
               lgcatdraw += lgcatt;
             }
           }//chiude ciclo su covariate discrete
@@ -619,7 +629,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
             log(sgN);
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_empty, jj, k, i, 0);
-            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);;
+            weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
             if(y(i, k) != 1){
               weight(j) -=  log(JJ(i, k));
             }
@@ -698,80 +708,80 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
     for(j = 0; j < nclu_curr; j++){
       l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
-                eta_star_curr.col(j), eta_flag, hP0_m0, hP0_L0, j);
+                             eta_star_curr.col(j), eta_flag, hP0_m0, hP0_L0, j);
       eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
       loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
       eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
     }
 
     /*////////////////////////////////////////////////
-    * update random variables:
-    * - independent gammas for DM sampling scheme JJ, TT
-    * - random gamma (trucchetto Raffaele) ss
-    ////////////////////////////////////////////////*/
+     * update random variables:
+     * - independent gammas for DM sampling scheme JJ, TT
+     * - random gamma (trucchetto Raffaele) ss
+     ////////////////////////////////////////////////*/
 
-    // update JJ and consequently TT
-    for(i = 0; i < nobs; i++){
-      TT(i) = 0.0;
-      for(k = 0; k < dim; k++){
-        if(y(i, k) != 1){
-          JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
-        } else {
-          JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
-        }
-        if(JJ(i, k) < pow(10.0, -100.0)){
-          JJ(i, k) = pow(10.0, -100.0);
-        }
-        TT(i) += JJ(i, k);
-      }
-    }
+     // update JJ and consequently TT
+     for(i = 0; i < nobs; i++){
+       TT(i) = 0.0;
+       for(k = 0; k < dim; k++){
+         if(y(i, k) != 1){
+           JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
+         } else {
+           JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
+         }
+         if(JJ(i, k) < pow(10.0, -100.0)){
+           JJ(i, k) = pow(10.0, -100.0);
+         }
+         TT(i) += JJ(i, k);
+       }
+     }
 
-    // update latent variables ss
-    for(i = 0 ; i < nobs ; i++){
-      ss(i) = R::rgamma(ypiu(i), 1.0/TT(i));
-    }
+     // update latent variables ss
+     for(i = 0 ; i < nobs ; i++){
+       ss(i) = R::rgamma(ypiu(i), 1.0/TT(i));
+     }
 
-    //////////////////////
-    // Save MCMC iterates
-    //////////////////////
-    if((l > (burn-1)) & ((l + 1) % thin == 0)){
-      nclus(ll) = nclu_curr;
-      for(i = 0; i < nobs; i++){
-        Clui(ll*(nobs) + i) = curr_clu(i);
-        like(ll*(nobs) + i) = like_iter(i);
-        pigreco.slice(ll).row(i) = JJ.row(i)/TT(i);
-      }
-      ll += 1;
-      for(j = 0; j < nclu_curr; j++){
-        //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
-        //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
-        eta_out.insert_rows(lll, eta_star_curr.col(j).t());
-        lll += 1;
-      }
-    }
+     //////////////////////
+     // Save MCMC iterates
+     //////////////////////
+     if((l > (burn-1)) & ((l + 1) % thin == 0)){
+       nclus(ll) = nclu_curr;
+       for(i = 0; i < nobs; i++){
+         Clui(ll*(nobs) + i) = curr_clu(i);
+         like(ll*(nobs) + i) = like_iter(i);
+         pigreco.slice(ll).row(i) = JJ.row(i)/TT(i);
+       }
+       ll += 1;
+       for(j = 0; j < nclu_curr; j++){
+         //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
+         //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
+         eta_out.insert_rows(lll, eta_star_curr.col(j).t());
+         lll += 1;
+       }
+     }
 
   }//CLOSES MCMC iterations
   // calculate LPML
 
   /*like_iter(i) = dmvnorm(eta.col(i), mu_star_curr.col(curr_clu(i)-1),
-            sigma_star_curr.col(curr_clu(i)-1), dim, ldSig, 0);
+   sigma_star_curr.col(curr_clu(i)-1), dim, ldSig, 0);
 
-  if((l > (burn-1)) & (l % (thin) == 0)){
-    // These are needed for WAIC
-    //mnlike(i) = mnlike(i) + (like_iter(i))/(double) nout;
-    //mnllike(i) = mnllike(i) + log(like_iter(i))/(double) nout;
+   if((l > (burn-1)) & (l % (thin) == 0)){
+   // These are needed for WAIC
+   //mnlike(i) = mnlike(i) + (like_iter(i))/(double) nout;
+   //mnllike(i) = mnllike(i) + log(like_iter(i))/(double) nout;
 
-    CPOinv(i) += pow((double) nout, -1.0) * pow(like_iter(i), -1.0);
-  }
+   CPOinv(i) += pow((double) nout, -1.0) * pow(like_iter(i), -1.0);
+   }
 
-  lpml_iter=0.0;
+   lpml_iter=0.0;
 
-  for(i = 0; i < nobs; i++){
-    //lpml_iter += log(pow(CPOinv(i), -1.0));
-    lpml_iter += log(pow(CPOinv(i), -1.0));
-    //Rcpp::Rcout << "lpml_iter" << lpml_iter <<std::endl;
-  }
-  double lpml = lpml_iter;*/
+   for(i = 0; i < nobs; i++){
+   //lpml_iter += log(pow(CPOinv(i), -1.0));
+   lpml_iter += log(pow(CPOinv(i), -1.0));
+   //Rcpp::Rcout << "lpml_iter" << lpml_iter <<std::endl;
+   }
+   double lpml = lpml_iter;*/
 
 
   // Computing WAIC  (see Gelman article)
@@ -785,12 +795,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   //RETURN
   return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
-                            Rcpp::Named("eta") = eta_out,
-                            //Rcpp::Named("sigma") = sigma_out,
-                            Rcpp::Named("cl_lab") = Clui,
-                            Rcpp::Named("pi") = pigreco,
-                            //Rcpp::Named("like") = like,
-                            Rcpp::Named("nclus") = nclus);//,
-                            //Rcpp::Named("WAIC") = WAIC,
-                            //Rcpp::Named("lpml") = lpml);
+    Rcpp::Named("eta") = eta_out,
+    //Rcpp::Named("sigma") = sigma_out,
+    Rcpp::Named("cl_lab") = Clui,
+    Rcpp::Named("pi") = pigreco,
+    //Rcpp::Named("like") = like,
+    Rcpp::Named("nclus") = nclus);//,
+  //Rcpp::Named("WAIC") = WAIC,
+  //Rcpp::Named("lpml") = lpml);
 }

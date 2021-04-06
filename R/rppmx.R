@@ -59,11 +59,12 @@ ran_ppmx <- function(X=NULL, similarity = 1, simparm = 1, alpha=1, m0=0, s20=1,v
   nj <- Cout$nj
   out$label <- label
   out$nclus <- nclus
+  #cat("check", nclus, "\n")
   out$nj <- nj[1:nclus]
   return(out)
 }
 
-genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
+genera_dati <- function(n = 100, P = 2, Q = 2){
   discretize <- function(vec){
     vec[which(vec<0)] <- 0
     vec[which(vec>0)] <- 1
@@ -74,37 +75,47 @@ genera_dati <- function(n = 100, P = 2, Q = 2, dim =2){
   ##prima ci stanno le binarie
   XX <- matrix(0, n, (ncov))
 
-  Y <- matrix(0, n, dim)
-  beta1 <- matrix(1, ncov, dim)
-  beta2 <- matrix(-1.3, ncov, dim)
-  beta3 <- matrix(1.3, ncov, dim)
+  dim = 3
+  K = dim - 1 #numero di componenti di una mistura -1
+  tab <- matrix(0, dim, ncov)
+  tab[1, ] <- runif(ncov, -5, 5)
+
+  for(k in 1:K){
+    cond = FALSE
+    while(cond == FALSE){
+      vec <- runif(ncov, -10, 10)
+      cond <- all(dist(rbind(tab[c(1:k),], vec))/ncov>2)
+    }
+    tab[k+1,] <- vec
+  }
+  #cat("tab: ", "\n", tab, "\n")
+  #stick_breaking_process = function(num_weights, alpha) {
+  #  betas = rbeta(num_weights, 1, alpha)
+  #  remaining_stick_lengths = c(1, cumprod(1 - betas))[1:num_weights]
+  #  weights = remaining_stick_lengths * betas
+  #  weights
+  #}
+  #tab[1,] <- stick_breaking_process(ncov, .1)*10
+  #tab[2,] <- sort(stick_breaking_process(ncov, .1)*10)
+  #tab[3,] <- -tab[1,]
+
 
   pro <- c(0.2,0.5,0.3)
   clusterlabel <- c()
   for(i in 1:n){
     u <- runif(1)
     if(u<pro[1]){
-      #cat(i,"ciao1","\n")
-      #X e Z li devo costruire qui
-      if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, rnorm(Q, -2.1, .25)))}
-      if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, rnorm(P, -2.1, .25))}
-      #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
-      #clusterlabel[i] <- 1
+      if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, tab[1, c(1:Q)]))}
+      if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, tab[1, c((Q+1):ncov)])}
     }
     else{
       if(u<(pro[1]+pro[2])){
-        #cat(i,"ciao2","\n")
-        if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, rnorm(Q, 0.0, .25)))}
-        if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, rnorm(P, 0.0, .25))}
-        #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
-        #clusterlabel[i] <- 2
+        if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, tab[2, c(1:Q)]))}
+        if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, tab[2, c((Q+1):ncov)])}
       }
       else{
-        #cat(i,"ciao3","\n")
-        if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, rnorm(Q, 2.1, .25)))}
-        if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, rnorm(P, 2.1, .25))}
-        #Y[i,] <- mvtnorm::rmvnorm(1, mean=XX[i,]%*%beta1, sigma = diag(.1, nrow=dim))
-        #clusterlabel[i] <- 3
+        if(Q!=0){XX[i, c(1:Q)] <- discretize(rmvnorm(1, tab[3, c(1:Q)]))}
+        if(P!=0){XX[i, c((Q+1):ncov)] <- rmvnorm(1, tab[3, c((Q+1):ncov)])}
       }
     }
   }
@@ -161,7 +172,7 @@ gcd <- function(n_obs, concov = 2, K = 2, similarity = 1, simparm = 1,
 #'
 #' @export
 #'
-gcd_dm <- function(n_obs, concov = 2, K = 3, similarity = 1, simparm = 1,
+gcd_dm <- function(n_obs, concov = 2, K, similarity = 1, simparm = 1,
                 alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
   myinfopart <- NULL
   #concov = 2
@@ -183,7 +194,7 @@ gcd_dm <- function(n_obs, concov = 2, K = 3, similarity = 1, simparm = 1,
 
   possmean <- matrix(0, myppmx$nclus, K)
   for(i in 1:myppmx$nclus){
-    possmean[i,] <- rmvnorm(1, rep(0, K), sigma = diag(50, K), method="svd")
+    possmean[i,] <- rmvnorm(1, rep(0, K), sigma = diag(10, K), method="svd")
   }
   #cat("possmean", possmean, "\n")
   myinfopart$possmean <- possmean
@@ -214,7 +225,7 @@ gcd_dm <- function(n_obs, concov = 2, K = 3, similarity = 1, simparm = 1,
 
 #' gendata dm
 #'
-#' @export
+# @export
 #'
 gcd_dm_simpl <- function(n_obs, concov = 2, K = 10, similarity = 1, simparm = 1,
                    alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
