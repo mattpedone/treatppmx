@@ -38,8 +38,8 @@ double quform(arma::vec x, arma::vec A, int dim){
 
   int i, j;
   double sm = 0.0;
-  for (i = 1; i < dim; i++){
-    for (j = 0; j < i; j++){
+  for(i = 1; i < dim; i++){
+    for(j = 0; j < i; j++){
       sm += x(i)*x(j)*A(i * dim + j);
     }
   }
@@ -47,7 +47,7 @@ double quform(arma::vec x, arma::vec A, int dim){
   for(i = 0; i < dim; i++){
     sm += x(i)*x(i)*A(i * dim + i);
   }
-  return(sm);
+  return sm;
 }
 
 //inner product
@@ -154,13 +154,16 @@ double dinvgamma(double y, double alpha, double beta, int logout){
   //	Rprintf("alpha = %f\n", alpha);
   //	Rprintf("beta = %f\n", beta);
 
-  double ldens;
+  double ldens, out;
 
   ldens = alpha*log(beta) - lgamma(alpha) - (alpha + 1)*log(y) - (beta/y);
 
-  if(logout) return ldens;
-  return exp(ldens);
-
+  if(logout){
+    out = ldens;
+  } else{
+    out = exp(ldens);
+  }
+  return out;
 }
 
 // Normal-Inverse Gamma density
@@ -171,7 +174,7 @@ double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0
   //	Rprintf("alpha = %f\n", alpha);
   //	Rprintf("beta = %f\n", beta);
 
-  double ldens;
+  double ldens, out;
 
   //	ldens =  0.5*(log(k0) - log(2*M_PI*sig2)) + a0*log(b0) -
   //	         lgammafn(a0) - (a0 + 1)*log(sig2) -
@@ -179,9 +182,12 @@ double dN_IG(double mu, double sig2, double mu0, double k0, double a0, double b0
 
   ldens = R::dnorm(mu, mu0, sqrt(sig2/k0),logout) + dinvgamma(sig2, a0, b0, logout);
   //	Rprintf("ldens = %f\n", ldens);
-  if(logout){ return ldens;
-  }else{return exp(ldens);}
-
+  if(logout){
+    out = ldens;
+  }else{
+    out = exp(ldens);
+  }
+  return out;
 }
 
 /* Multivariate normal density
@@ -362,8 +368,7 @@ double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2, do
   if(DD==1) out = ld1 + ld3 - ld4;
   if(cal==1) out = ld5 - ld6;
   if(!logout) out = exp(out);
-  return(out);
-
+  return out;
 }
 
 /* normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
@@ -407,7 +412,7 @@ double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, do
   if(cal==1) out = ld5 - ld6;
   if(!logout) out = exp(out);
 
-  return(out);
+  return out;
 }
 
 /* Similarity function with for a categorical x  dirichlet-multinomial with out
@@ -443,7 +448,7 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
   if(sumc==0) out = log(1);
   if(!logout) out = exp(out);
 
-  return(out);
+  return out;
 }
 
 // [[Rcpp::export]]

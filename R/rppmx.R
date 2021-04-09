@@ -316,7 +316,7 @@ gcd_dm_simpl <- function(n_obs, concov = 2, K = 10, similarity = 1, simparm = 1,
 
 postquant <- function(y, output, data, lab, plot){#, minbinder = F){
   cls <- as.matrix(output$label)
-  psm <- comp.psm(cls)
+  psm <- mcclust::comp.psm(cls)
   #if(minbinder == T){
   #  mc <- minbinder.ext(psm)
   #} else {
