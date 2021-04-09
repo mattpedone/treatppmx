@@ -1,6 +1,11 @@
 rm(list=ls())
 
 #devtools::load_all()
+library(mvtnorm)
+library(mcclust)
+library(mclust)
+library(coda)
+library(mcclust.ext)
 Rcpp::sourceCpp(file = "src/dm_ppmx.cpp")
 Rcpp::sourceCpp(file = "src/utils.cpp")
 source(file = "R/dm_ppmx.R")
@@ -9,8 +14,8 @@ source(file = "R/rppmx.R")
 KK <- 1#numero di repliche
 res <- matrix(0, KK, 7)
 par(mfrow=c(1,1))
-K=4#dimensioni
-mydata <- gcd_dm(n_obs = 100, concov = 100, K, similarity = 1, simparm = 1,
+K = 4#dimensioni
+mydata <- gcd_dm(n_obs = 100, concov = 2, K, similarity = 1, simparm = 1,
               alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F)
 mydata$possmean
 cat("nclus: ", mydata$nclus, "\n")
@@ -27,7 +32,7 @@ X <- mydata$X
 #plot(X[,1], X[, 2])
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, ncol(Y))
-modelpriors$hP0_L0 <- diag(100, ncol(Y))
+modelpriors$hP0_L0 <- diag(1, ncol(Y))
 modelpriors$hP0_nu0 <- nrow(Y) + 20
 modelpriors$hP0_V0 <- diag(100, ncol(Y))
 
@@ -35,7 +40,7 @@ alpha_DP <- 1
 n_aux <- 5
 vec_par <- c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0)
 mhtune=c(0.5, 0.5)
-iterations <- 1000
+iterations <- 10000
 burnin <- 0
 thinning <- 1
 
