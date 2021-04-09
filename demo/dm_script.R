@@ -32,8 +32,8 @@ X <- mydata$X
 #plot(X[,1], X[, 2])
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, ncol(Y))
-modelpriors$hP0_L0 <- diag(1, ncol(Y))
-modelpriors$hP0_nu0 <- nrow(Y) + 20
+modelpriors$hP0_L0 <- diag(10, ncol(Y))
+modelpriors$hP0_nu0 <- nrow(Y) + 2
 modelpriors$hP0_V0 <- diag(100, ncol(Y))
 
 alpha_DP <- 1
@@ -41,8 +41,8 @@ n_aux <- 5
 vec_par <- c(0.0, 1.0, 0.1, 10.0, 2.0, 0.1, 1.0)
 mhtune=c(0.5, 0.5)
 iterations <- 10000
-burnin <- 0
-thinning <- 1
+burnin <- 1000
+thinning <- 10
 
 nout <- (iterations-burnin)/thinning
 
@@ -141,7 +141,7 @@ time_ppmx2_aux <- system.time(
                               PPMx = 1, similarity = 1, consim=1, calibration=2,
                               similparam = vec_par, modelpriors, mhtune,
                               iter=iterations,burn=burnin,thin=thinning))
-ppmx2_aux <- postquant_dm(y = Y, output = out_ppmx2_aux, data = mydata, plot = T)
+ppmx2_aux <- postquant_dm(y = Y, output = out_ppmx2_aux, data = mydata, plot = F)
 
 # PPMx Coarsened Double Dipper similarity w/o Reuse
 #time_ppmx2_dd_nr <- system.time(
@@ -184,3 +184,4 @@ postquant_dm(y = Y, output = out_ppmx2_aux, data = mydata, plot = T)
 postquant_dm(y = Y, output = out_ppmx2_dd, data = mydata, plot = T)
 
 tab
+

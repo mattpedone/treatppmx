@@ -26,6 +26,7 @@
 #'   0 - no calibration
 #'   1 - standardize similarity value for each covariate
 #'   2 - coarsening is applied so that each similarity is raised to the 1/p power
+#' @param update_hierarchy should hypeparameter for BNP intercept be updated? if 1 yes (default)
 #' @export
 # mancano come input tutti gli storage per l output che inizializzo in R e passo come input qui
 # poi in R li metto in una lista
@@ -34,7 +35,7 @@
 my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
                         similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
                         modelpriors,
-                        mhtune=c(0.5, 0.5),
+                        mhtune=c(0.5, 0.5), update_hierarchy = 1,
                         iter=1100,burn=100,thin=1){
 
   # X - data.frame whose columns are
@@ -114,7 +115,7 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
                   as.integer(calibration), as.matrix(y),
                   as.vector(xcon), as.vector(xcat), as.vector(similparam),
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
-                  as.vector(hP0_V0), as.vector(mhtune))
+                  as.vector(hP0_V0), as.integer(update_hierarchy), as.vector(mhtune))
 
   res <- NULL
   nclu <- out$nclus

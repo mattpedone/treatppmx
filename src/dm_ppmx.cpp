@@ -11,7 +11,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                    int similarity, int calibration, arma::mat y,
                    arma::vec xcon, arma::vec xcat, arma::vec similparam,
                    arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
-                   arma::vec hP0_V0, arma::vec mhtune){
+                   arma::vec hP0_V0, int upd_hier, arma::vec mhtune){
 
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -233,23 +233,84 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // (alg 8 Neal 2 step)
   ////////////////////////////////////////
 
+  arma::vec mu0(dim);
+  mu0 = hP0_m0;
+
+  arma::vec L0v(dim * dim);
+  L0v = hP0_L0;
+
+  double nuiw = hP0_nu0;
+
+  /*arma::vec Psi0v(dim * dim);
+  Psi0v = hP0_V0;*/
+
+  arma::vec emme0(dim, arma::fill::zeros); //prior mean for mu0
+  arma::vec sigma0(dim * dim, arma::fill::zeros); //prior variance for mu0
+
+  int idx = 0;
+  for(i = 0; i < dim; i++){
+    sigma0(idx) = 1;
+    idx += (dim + 1);
+  }
+
+  arma::mat sigma0_mat(dim, dim, arma::fill::zeros);
+
+  for(i = 0; i < dim; i++){
+    for(j = 0; j < dim; j++){
+      sigma0_mat(i, j) = sigma0(i*dim + j);
+    }
+  }
+
+  arma::vec Psi0(dim * dim, arma::fill::zeros); //matrix parameter for L0-IW
+
+  idx = 0;
+  for(i = 0; i < dim; i++){
+    Psi0(idx) = 1;
+    idx += (dim + 1);
+  }
+
+  arma::mat Psi0_mat(dim, dim, arma::fill::zeros);
+
+  for(i = 0; i < dim; i++){
+    for(j = 0; j < dim; j++){
+      Psi0_mat(i, j) = Psi0(i*dim + j);
+    }
+  }
+
+  //double nuiw = dim + 20; //scalar parameter for L0-IW
+
+  arma::mat Vwork(dim, dim, arma::fill::zeros); //working matrix for hyperparameters update
+  idx = 0;
+  for(i = 0; i < dim; i++){
+    Vwork(idx) = 1;
+    idx += (dim + 1);
+  }
+
+  arma::vec Vvecwork(dim*dim);
+  for(i = 0; i < dim; i++){
+    for(j = 0; j < dim; j++){
+      Vvecwork(i*dim + j) = Vwork(i, j);
+    }
+  }
+
+  arma::mat Swork(dim, dim, arma::fill::zeros); //work
+  arma::vec Rwork(dim, arma::fill::zeros); //work
+  arma::mat Bwork(dim, dim, arma::fill::zeros);
+  arma::vec Bvecwork(dim*dim, arma::fill::zeros);
+  arma::mat Awork(dim, dim, arma::fill::zeros);
+  arma::vec Avecwork(dim*dim, arma::fill::zeros);
+
   /*arma::vec thetaj(dim, arma::fill::zeros);
 
    arma::mat Sigma(dim, dim, arma::fill::zeros);
    arma::mat SigmaInv(dim, dim, arma::fill::zeros);
 
-   arma::vec mu0(dim);
-   mu0 = hP0_m0;
-
-   arma::vec L0v(dim * dim);
-   L0v = hP0_L0;
    arma::mat L0m(dim, dim, arma::fill::zeros);
    arma::mat L0mInv(dim, dim, arma::fill::zeros);
 
-   double nuiw = hP0_nu0;
 
-   arma::vec S0v(dim * dim);
-   S0v = hP0_V0;
+
+
    arma::mat S0m(dim, dim, arma::fill::zeros);
 
    arma::vec Sthetav(dim * dim, arma::fill::zeros);
@@ -806,10 +867,60 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
     for(j = 0; j < nclu_curr; j++){
       l_eta_out = eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr,
-                             eta_star_curr.col(j), eta_flag, hP0_m0, hP0_L0, j);
+                             eta_star_curr.col(j), eta_flag, mu0, L0v, j);
       eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
       loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
       eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
+    }
+
+    if(upd_hier == 1){
+      for(j = 0; j < (dim*dim); j++){
+        Swork(j) = 0.0;
+      }
+      //Rcpp::Rcout << "Swork0" << Swork << std::endl;
+
+      for(j = 0; j < nclu_curr; j++){
+        Swork += (eta_star_curr.col(j) - emme0) * (eta_star_curr.col(j) - emme0).t();
+      }
+      //Rcpp::Rcout << "Swork1" << Swork << std::endl;
+
+      Bwork = nuiw*Psi0_mat + Swork;
+      Bwork = arma::inv(Bwork);
+      for(i = 0; i < dim; i++){
+        for(j = 0; j < dim; j++){
+          Bvecwork(i*dim + j) = Bwork(i, j);
+        }
+      }
+
+      //Rcpp::Rcout << "Bwork1" << Bvecwork << std::endl;
+
+      L0v = ran_iwish(nclu_curr + nuiw, Bvecwork, dim);
+      //Rcpp::Rcout << "L0v" << L0v << std::endl;
+      Vwork = arma::inv(sigma0_mat) + nclu_curr*arma::inv(Psi0_mat);
+
+      for(j = 0; j < dim; j++){
+        Rwork(j) = 0;
+      }
+
+      for(j = 0; j < nclu_curr; j++){
+        Rwork += eta_star_curr.col(j);
+      }
+
+      Awork = Vwork*((arma::inv(sigma0_mat)*emme0)+ arma::inv(Psi0_mat)*Rwork);
+      //Rcpp::Rcout << "here" << std::endl;
+      /*for(i = 0; i < dim; i++){
+       for(j = 0; j < dim; j++){
+       Avecwork(i*dim + j) = Awork(i, j);
+       }
+      }*/
+
+      for(i = 0; i < dim; i++){
+        for(j = 0; j < dim; j++){
+          Vvecwork(i*dim + j) = Vwork(i, j);
+        }
+      }
+
+      mu0 = ran_mvnorm(Awork, Vvecwork, dim);
     }
 
     /*////////////////////////////////////////////////
