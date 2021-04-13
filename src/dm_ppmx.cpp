@@ -904,8 +904,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       //Rcpp::Rcout << "Bwork1" << Bvecwork << std::endl;
 
       L0v = ran_iwish(nclu_curr + nuiw, Bvecwork, dim);
-      //Rcpp::Rcout << "L0v" << L0v << std::endl;
+      //Rcpp::Rcout << "L0v" << L0v.t() << std::endl;
       Vwork = arma::inv(sigma0_mat) + nclu_curr*arma::inv(Psi0_mat);
+      Vwork = arma::inv(Vwork);
 
       for(j = 0; j < dim; j++){
         Rwork(j) = 0;
@@ -914,6 +915,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       for(j = 0; j < nclu_curr; j++){
         Rwork += eta_star_curr.col(j);
       }
+
+      //Rcpp::Rcout << "Rwork" << Rwork.t() << std::endl;
 
       Awork = Vwork*((arma::inv(sigma0_mat)*emme0)+ arma::inv(Psi0_mat)*Rwork);
       //Rcpp::Rcout << "here" << std::endl;
@@ -930,6 +933,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       }
 
       mu0 = ran_mvnorm(Awork, Vvecwork, dim);
+      //Rcpp::Rcout << "mu0" << mu0.t() << std::endl;
     }
 
     /*////////////////////////////////////////////////

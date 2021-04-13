@@ -6,8 +6,8 @@ library(mcclust)
 library(mclust)
 library(coda)
 library(mcclust.ext)
-Rcpp::sourceCpp(file = "src/dm_ppmx.cpp")
 Rcpp::sourceCpp(file = "src/utils.cpp")
+Rcpp::sourceCpp(file = "src/dm_ppmx.cpp")
 source(file = "R/dm_ppmx.R")
 source(file = "R/rppmx.R")
 
@@ -44,8 +44,8 @@ vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
 mhtune=c(0.5, 0.5)
 iterations <- 10000
-burnin <- 1000
-thinning <- 10
+burnin <- 0
+thinning <- 1
 
 nout <- (iterations-burnin)/thinning
 
@@ -81,6 +81,10 @@ time_ppmx0_aux <- system.time(
                               similparam = vec_par, modelpriors,  update_hierarchy = F,
                               iter=iterations,burn=burnin,thin=thinning))
 ppmx0_aux <- postquant_dm(y = Y, output = out_ppmx0_aux, data = mydata, plot = F)
+
+out_ppmx0_aux$acc_rate_eta
+apply(out_ppmx0_aux$eta, c(1,2), mean)
+mydata$possmean
 
 # PPMx No Calibration Double Dipper similarity w/o Reuse
 #time_ppmx0_dd_nr <- system.time(
