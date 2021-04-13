@@ -1012,9 +1012,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
    WAIC = -2*elppdWAIC;*/
 
   //RETURN
+  //Rcpp::Rcout << "eta_flag: " << eta_flag.t() << std::endl;
   return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
     Rcpp::Named("eta") = eta_out,
-    //Rcpp::Named("sigma") = sigma_out,
+    Rcpp::Named("eta_acc") = eta_flag,
     Rcpp::Named("cl_lab") = Clui,
     Rcpp::Named("pi") = pigreco,
     //Rcpp::Named("like") = like,

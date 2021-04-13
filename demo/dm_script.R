@@ -44,7 +44,7 @@ vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
 mhtune=c(0.5, 0.5)
 iterations <- 10000
-burnin <- 100
+burnin <- 1000
 thinning <- 10
 
 nout <- (iterations-burnin)/thinning
@@ -53,7 +53,7 @@ nout <- (iterations-burnin)/thinning
 #time_ppm_nr <- system.time(
 #  out_ppm_nr <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 0,
 #                           PPMx = 0, similarity = 1, consim=1, calibration=0,
-#                           similparam = vec_par, modelpriors,
+#                           similparam = vec_par, modelpriors, update_hierarchy = F,
 #                           iter=iterations,burn=burnin,thin=thinning))
 #ppm_nr <- postquant_dm(y = Y, output = out_ppm_nr, data = mydata, plot = T)
 
@@ -61,7 +61,7 @@ nout <- (iterations-burnin)/thinning
 time_ppm <- system.time(
   out_ppm <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                         PPMx = 0, similarity = 1, consim=1, calibration=0,
-                        similparam = vec_par, modelpriors,
+                        similparam = vec_par, modelpriors, update_hierarchy = F,
                         iter=iterations,burn=burnin,thin=thinning))
 ppm <- postquant_dm(y = Y, output = out_ppm, data = mydata, plot = F)
 
@@ -69,7 +69,7 @@ ppm <- postquant_dm(y = Y, output = out_ppm, data = mydata, plot = F)
 #time_ppmx0_aux_nr <- system.time(
 #  out_ppmx0_aux_nr <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 0,
 #                              PPMx = 1, similarity = 1, consim=1, calibration=0,
-#                              similparam = vec_par, modelpriors,
+#                              similparam = vec_par, modelpriors, update_hierarchy = F,
 #                              iter=iterations,burn=burnin,thin=thinning))
 #ppmx0_aux_nr <- postquant_dm(y = Y, output = out_ppmx0_aux_nr, data = mydata, plot = F)
 
@@ -78,7 +78,7 @@ ppm <- postquant_dm(y = Y, output = out_ppm, data = mydata, plot = F)
 time_ppmx0_aux <- system.time(
   out_ppmx0_aux <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                               PPMx = 1, similarity = 1, consim=1, calibration=0,
-                              similparam = vec_par, modelpriors,
+                              similparam = vec_par, modelpriors,  update_hierarchy = F,
                               iter=iterations,burn=burnin,thin=thinning))
 ppmx0_aux <- postquant_dm(y = Y, output = out_ppmx0_aux, data = mydata, plot = F)
 
@@ -86,7 +86,7 @@ ppmx0_aux <- postquant_dm(y = Y, output = out_ppmx0_aux, data = mydata, plot = F
 #time_ppmx0_dd_nr <- system.time(
 #  out_ppmx0_dd_nr <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 0,
 #                             PPMx = 1, similarity = 2, consim=1, calibration=0,
-#                             similparam = vec_par, modelpriors,
+#                             similparam = vec_par, modelpriors, update_hierarchy = F,
 #                             iter=iterations,burn=burnin,thin=thinning))
 #ppmx0_dd_nr <- postquant_dm(y = Y, output = out_ppmx0_dd_nr, data = mydata, plot = F)
 
@@ -94,7 +94,7 @@ ppmx0_aux <- postquant_dm(y = Y, output = out_ppmx0_aux, data = mydata, plot = F
 time_ppmx0_dd <- system.time(
   out_ppmx0_dd <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                              PPMx = 1, similarity = 2, consim=1, calibration=0,
-                             similparam = vec_par, modelpriors,
+                             similparam = vec_par, modelpriors, update_hierarchy = F,
                              iter=iterations,burn=burnin,thin=thinning))
 ppmx0_dd <- postquant_dm(y = Y, output = out_ppmx0_dd, data = mydata, plot = F)
 
@@ -110,7 +110,7 @@ ppmx0_dd <- postquant_dm(y = Y, output = out_ppmx0_dd, data = mydata, plot = F)
 time_ppmx1_aux <- system.time(
   out_ppmx1_aux <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                               PPMx = 1, similarity = 1, consim=1, calibration=1,
-                              similparam = vec_par, modelpriors,
+                              similparam = vec_par, modelpriors, update_hierarchy = F,
                               iter=iterations,burn=burnin,thin=thinning))
 ppmx1_aux <- postquant_dm(y = Y, output = out_ppmx1_aux, data = mydata, plot = F)
 
@@ -126,7 +126,7 @@ ppmx1_aux <- postquant_dm(y = Y, output = out_ppmx1_aux, data = mydata, plot = F
 time_ppmx1_dd <- system.time(
   out_ppmx1_dd <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                              PPMx = 1, similarity = 2, consim=1, calibration=1,
-                             similparam = vec_par, modelpriors,
+                             similparam = vec_par, modelpriors, update_hierarchy = F,
                              iter=iterations,burn=burnin,thin=thinning))
 ppmx1_dd <- postquant_dm(y = Y, output = out_ppmx1_dd, data = mydata, plot = F)
 
@@ -134,7 +134,7 @@ ppmx1_dd <- postquant_dm(y = Y, output = out_ppmx1_dd, data = mydata, plot = F)
 #time_ppmx2_aux_nr <- system.time(
 #  out_ppmx2_aux_nr <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 0,
 #                                 PPMx = 1, similarity = 1, consim=1, calibration=2,
-#                                 similparam = vec_par, modelpriors,
+#                                 similparam = vec_par, modelpriors, update_hierarchy = F,
 #                                 iter=iterations,burn=burnin,thin=thinning))
 #ppmx2_aux_nr <- postquant_dm(y = Y, output = out_ppmx2_aux_nr, data = mydata, plot = F)
 
@@ -143,7 +143,7 @@ ppmx1_dd <- postquant_dm(y = Y, output = out_ppmx1_dd, data = mydata, plot = F)
 time_ppmx2_aux <- system.time(
   out_ppmx2_aux <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                               PPMx = 1, similarity = 1, consim=1, calibration=2,
-                              similparam = vec_par, modelpriors,
+                              similparam = vec_par, modelpriors, update_hierarchy = F,
                               iter=iterations,burn=burnin,thin=thinning))
 ppmx2_aux <- postquant_dm(y = Y, output = out_ppmx2_aux, data = mydata, plot = F)
 
@@ -151,7 +151,7 @@ ppmx2_aux <- postquant_dm(y = Y, output = out_ppmx2_aux, data = mydata, plot = F
 #time_ppmx2_dd_nr <- system.time(
 #  out_ppmx2_dd_nr <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 0,
 #                             PPMx = 1, similarity = 2, consim=1, calibration=2,
-#                             similparam = vec_par, modelpriors,
+#                             similparam = vec_par, modelpriors, update_hierarchy = F,
 #                             iter=iterations,burn=burnin,thin=thinning))
 #ppmx2_dd_nr <- postquant_dm(y = Y, output = out_ppmx2_dd_nr, data = mydata, plot = F)
 
@@ -159,7 +159,7 @@ ppmx2_aux <- postquant_dm(y = Y, output = out_ppmx2_aux, data = mydata, plot = F
 time_ppmx2_dd <- system.time(
   out_ppmx2_dd <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
                              PPMx = 1, similarity = 2, consim=1, calibration=2,
-                             similparam = vec_par, modelpriors,
+                             similparam = vec_par, modelpriors, update_hierarchy = F,
                              iter=iterations,burn=burnin,thin=thinning))
 ppmx2_dd <- postquant_dm(y = Y, output = out_ppmx2_dd, data = mydata, plot = F)
 

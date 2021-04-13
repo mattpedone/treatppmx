@@ -156,8 +156,8 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   pi_out <- out$pi
 
   res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
-  #res$mu <- mu_ar
   res$eta <- eta_ar
+  res$acc_rate_eta <- sum(out$eta_acc)/sum(out$nclu)
   ypred <- array(0, dim = c(nrow(y), ncol(y), nout))
 
   for(l in 1:nout){
@@ -172,7 +172,7 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   #res$fitted <- matrix(out$ispred, nrow=nout, byrow=TRUE)
   #res$nclus <- out$nclus
   #res$WAIC <- out$WAIC
-  res$lpml <- out$lpml
+  #res$lpml <- out$lpml
 
   return(res)
 }
