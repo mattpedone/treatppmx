@@ -11,7 +11,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                    int similarity, int calibration, arma::mat y,
                    arma::vec xcon, arma::vec xcat, arma::vec similparam,
                    arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
-                   arma::vec hP0_V0, int upd_hier, arma::vec mhtune){
+                   arma::vec hP0_V0, int upd_hier){
 
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -83,8 +83,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       sum = 0.0, sum2 = 0.0;
       for(i = 0; i < nobs; i++){
         sum += xcon(i*(ncon) + p);
+        //Rcpp::Rcout << "idx" << i*(ncon) + p << std::endl;
         sum2 += xcon(i*(ncon) + p)*xcon(i*(ncon) + p);
       }
+      //Rcpp::Rcout << "sum" << sum << std::endl;
       xbar(p) = sum/((double) nobs);
       s2mle(p) = sum2/((double) nobs) - xbar(p)*xbar(p);
     }
@@ -195,13 +197,14 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   // Similarity function parameters
   // dirichlet denominator parameter
   arma::vec dirweights(max_C);
-  dirweights.fill(similparam(5));
-  //	double m0=0.0, s20=0.5, v=1.0, k0=1.0, nu0=1.0;
+  dirweights.fill(similparam(6));
+  //	double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
   double m0 = similparam(0);
   double s20 = similparam(1);
   double v = similparam(2);
   double k0 = similparam(3);
   double nu0 = similparam(4);
+  double n0 = similparam(5);
 
   //arma::vec xcontmp(nobs);
   //arma::vec njc((nobs)*(ncat));
@@ -527,13 +530,15 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           for(p = 0; p < (ncon); p++){
             sumxtmp = sumx(j * ncon + p);
             sumx2tmp = sumx2(j * ncon + p);
+            //Rcpp::Rcout << "check1: " << nj_curr(j) << std::endl;
+            //Rcpp::Rcout << "check2: " << xbar << std::endl;
             if(similarity==1){ // Auxilliary
               if(consim==1){//normal normal
                 lgcont = gsimconNN(m0, v, s20, sumxtmp, sumx2tmp, xbar(p), nj_curr(j), 0, 0, 1);
                 lgconN += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 0, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 0, 0, 1);
                 lgconN += lgcont;
               }
             }
@@ -543,7 +548,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconN += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 1, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 1, 0, 1);
                 lgconN += lgcont;
               }
             }
@@ -560,7 +565,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconY = lgconY + lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 0, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 0, 0, 1);
                 lgconY = lgconY + lgcont;
               }
             }
@@ -570,7 +575,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconY = lgconY + lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 1, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 1, 0, 1);
                 lgconY = lgconY + lgcont;
               }
             }
@@ -609,6 +614,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
           gtilY(j) = lgconY + lgcatY;
           gtilN(j) = lgconN + lgcatN;
+          /*Rcpp::Rcout << "lgconY j: " << lgconY << std::endl;
+          Rcpp::Rcout << "lgcatY j: " << lgcatY << std::endl;
+          Rcpp::Rcout << "lgconN j: " << lgconN << std::endl;
+          Rcpp::Rcout << "lgcatN j: " << lgcatN << std::endl;*/
         }// this closes PPMx
 
         //compute PLAIN cluster probabilities
@@ -659,7 +668,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgcondraw += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 0, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, n0, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 0, 0, 1);
                 lgcondraw += lgcont;
               }
             }
@@ -669,7 +678,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgcondraw += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 1, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, n0, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 1, 0, 1);
                 lgcondraw += lgcont;
               }
             }

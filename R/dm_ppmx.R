@@ -20,8 +20,9 @@
 #' @param xcon \eqn{nobs \times ncon} contiguous double vector that contains continuous covariate values
 #' @param xcat \eqn{nobs \times ncat} contiguous int vector that contains categorical covariate values
 #' @param similparam vector containing similarity functions paramaters
+# double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
 #' @param modelpriors vector containing prior values for model
-#' @param mhtune vector containing tuning parameters for MCMC updates
+# @param mhtune vector containing tuning parameters for MCMC updates
 #' @param calibration whether the similarity should be calibrated. Options are
 #'   0 - no calibration
 #'   1 - standardize similarity value for each covariate
@@ -33,9 +34,9 @@
 # se non funziona l output di myppmx deve essere una lista
 
 my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
-                        similparam=c(0.0, 1.0, 0.1, 1.0, 2.0, 0.1, 1.0),
+                        similparam,
                         modelpriors,
-                        mhtune=c(0.5, 0.5), update_hierarchy = 1,
+                        update_hierarchy = 1,
                         iter=1100,burn=100,thin=1){
 
   # X - data.frame whose columns are
@@ -73,6 +74,9 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   if(nxobs > 0){
     if(sum(!catvars) > 0){
       Xconstd <- apply(Xall[,!catvars, drop=FALSE], 2, scale)
+      #if(is.nan(Xconstd[,1])){
+        #Xconstd[,1] <- rep(1, nxobs)
+      #}
       xcon <- Xconstd[1:nobs,,drop=FALSE];
       ncon <- ncol(xcon)
       #if(nmissing > 0) Mcon <- Mall[1:nobs, !catvars, drop=FALSE]
@@ -102,6 +106,11 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
     xcat <- cbind(rep(0,1));
   }
 
+  #cat("ncon", ncon, "\n")
+  #cat("ncat", ncat, "\n")
+  #cat("xcon", xcon, "\n")
+  #cat("xcat", xcat, "\n")
+
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
@@ -113,9 +122,9 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
                   as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
                   as.integer(consim), as.integer(similarity),
                   as.integer(calibration), as.matrix(y),
-                  as.vector(xcon), as.vector(xcat), as.vector(similparam),
+                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(similparam),
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
-                  as.vector(hP0_V0), as.integer(update_hierarchy), as.vector(mhtune))
+                  as.vector(hP0_V0), as.integer(update_hierarchy))
 
   res <- NULL
   nclu <- out$nclus
