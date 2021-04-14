@@ -223,64 +223,54 @@ gcd_dm <- function(n_obs, concov = 2, K, similarity = 1, simparm = 1,
   return(myinfopart)
 }
 
-#' gendata dm
+#' Scenario 1
 #'
-# @export
+#' @export
 #'
-gcd_dm_simpl <- function(){
+scenario1 <- function(){
 
   dat <- NULL
-  n1 <- 40
-  n2 <- 60
-  #n3 <- 40
+  n1 <- 85
+  n2 <- 30
+  n3 <- 85
 
-  n <- n1 + n2
+  n <- n1 + n2 + n3
 
   x <- matrix(0, nrow = n, ncol = 4)
   label <- c()
 
   for(i in 1:n){
     if(i <= (n1)){
-      x[i,1] <- rnorm(1, 2, sqrt(.5))
-      x[i,2] <- rnorm(1, 2, sqrt(.5))
+      x[i,1] <- rnorm(1, -3, sqrt(.5))
+      x[i,2] <- rnorm(1, 3, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .1)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 1
     }
-    if(n1 < i){
-      x[i,1] <- rnorm(1, -2, sqrt(.5))
-      x[i,2] <- rnorm(1, -2, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .9)
+    if((n1 < i) & (i <= (n1+n2))){
+      x[i,1] <- rnorm(1, 0, sqrt(.5))
+      x[i,2] <- rnorm(1, 0, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .1)
       x[i,4] <- rbinom(1, 1, .9)
       label[i] <- 2
     }
+    if((i > (n1+n2))){
+      x[i,1] <- rnorm(1, 3, sqrt(.5))
+      x[i,2] <- rnorm(1, -3, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .1)
+      x[i,4] <- rbinom(1, 1, .1)
+      label[i] <- 3
+    }
   }
-  #cat("x:", x, "\n")
 
-  beta1 <- c(2, 1, 0, 0)
-  beta2 <- c(1, 2, 2, 1)
-
-
+  intercept <- x
   Y <- matrix(0, n, 4)
-  intercept <- matrix(0, n, 4)
-  for(i in 1:n){
-    if(i <= (n1)){
-      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta1%*%diag(4)), diag(sqrt(.5), 4))
-    }
-    if((n1 < i) & (i <= (n1+n2))){
-      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta2%*%diag(4)), diag(sqrt(.5), 4))
-    }
-  }
 
   for(i in 1:n){
-    #cat("i", i, "\n")
     thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
-    pi = thisrow/sum(thisrow)
-    #cat("thisrow", thisrow, "\n")
-    #pi = bayess::rdirichlet(n = 1, par = thisrow)
-    cat("pi", pi, "\n")
+    pi = bayess::rdirichlet(n = 1, par = thisrow)
+    #pi = thisrow/sum(thisrow)
     Y[i, ] = rmultinom(1, 1, pi)
-    #cat("Y[i, ]", Y[i, ], "\n")
   }
 
   x <- data.frame(x)
@@ -291,16 +281,119 @@ gcd_dm_simpl <- function(){
   dat$X <- x
   dat$label <- label
   dat$intercept <- intercept
-  dat$Y <- Y
+  dat$y <- Y
+  dat$nclus <- 3
   return(dat)
 }
 
+#' Scenario 1 in paper Avis modified
+#'
+#' @export
+#'
+scenario2 <- function(){
+
+  dat <- NULL
+  n1 <- 85
+  n2 <- 30
+  n3 <- 85
+
+  n <- n1 + n2 + n3
+
+  x <- matrix(0, nrow = n, ncol = 4)
+  label <- c()
+
+  for(i in 1:n){
+    if(i <= (n1)){
+      x[i,1] <- rnorm(1, -3, sqrt(.5))
+      x[i,2] <- rnorm(1, 3, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .1)
+      x[i,4] <- rbinom(1, 1, .1)
+      label[i] <- 1
+    }
+    if((n1 < i) & (i <= (n1+n2))){
+      x[i,1] <- rnorm(1, 0, sqrt(.5))
+      x[i,2] <- rnorm(1, 0, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .1)
+      x[i,4] <- rbinom(1, 1, .9)
+      label[i] <- 2
+    }
+    if((i > (n1+n2))){
+      x[i,1] <- rnorm(1, 3, sqrt(.5))
+      x[i,2] <- rnorm(1, -3, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .1)
+      x[i,4] <- rbinom(1, 1, .1)
+      label[i] <- 3
+    }
+  }
+
+  beta1 <- c(3, 2, 1, 0)
+  beta2 <- c(-2, -2, 1, 3)
+  beta3 <- c(3, -2, -1, -1)
+
+  intercept <- matrix(0, n, 4)
+
+  for(i in 1:n){
+    if(label[i] == 1){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta1%*%diag(4)), diag(sqrt(0.5), 4))
+    }
+    if(label[i] == 2){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta2%*%diag(4)), diag(sqrt(0.5), 4))
+    }
+    if(label[i] == 3){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta3%*%diag(4)), diag(sqrt(0.5), 4))
+    }
+  }
+
+  Y <- matrix(0, n, 4)
+
+  for(i in 1:n){
+    thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
+    pi = bayess::rdirichlet(n = 1, par = thisrow)
+    #pi = thisrow/sum(thisrow)
+    Y[i, ] = rmultinom(1, 1, pi)
+  }
+
+  x <- data.frame(x)
+
+  x$X3 <- as.factor(x$X3)
+  x$X4 <- as.factor(x$X4)
+
+  dat$X <- x
+  dat$label <- label
+  dat$intercept <- intercept
+  dat$y <- Y
+  dat$nclus <- 3
+  return(dat)
+}
+
+#' Scenario 2 Mueller et al. (2011), Bianchini et al. (2017)
+#'
+#' @export
+#'
+scenario3 <- function(){
+
+  data_all = read.table("data/dtasim.txt", header = T) # Tutti i dati
+  dim(data_all)
+  X_all = data_all[, 2:4]
+  Y_all = data_all[, 1]
+  ## prepare the data file:
+  N <- nrow(data_all)
+
+  ## now select a sub-sample of n=200 data points for the example
+  n <- 200                             # desired sample size
+  idx <- sample(1:N, n)
+  data <- data_all[idx,]
+
+  n = nrow(data)
+  y = as.vector(data[,1])
+  X  = as.matrix(data[, -1])
+
+}
 
 #' postquant
 #'
 #' @export
 #'
-
 postquant <- function(y, output, data, lab, plot){#, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- mcclust::comp.psm(cls)
@@ -332,11 +425,10 @@ postquant <- function(y, output, data, lab, plot){#, minbinder = F){
   return(mypostquant)
 }
 
-#' postquant
+#' postquant Multinomial Dirichlet
 #'
 #' @export
 #'
-
 postquant_dm <- function(y, output, data, plot, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
@@ -345,15 +437,10 @@ postquant_dm <- function(y, output, data, plot, minbinder = F){
   } else {
     mc <- minVI(psm)
   }
-  #yhat <- output$pred
-  #vec <- (c(y)-c(yhat))
-  #mmse <- mean((y-yhat)^2)
   ari <- adjustedRandIndex(mc$cl, data$label)
   ess <- effectiveSize(output$nclu)
-  mypostquant <- list("nclupost" = mean(output$nclu),# "MSE" = mmse,
-                      #"lpml" = output$lpml,
+  mypostquant <- list("nclupost" = mean(output$nclu),
                       "ARI" = ari,
-                      #"comp_time" = time[1],
                       "ESS" = ess, "lab" = mc$cl)
   if(plot == T){
     par(mfrow=c(1,2))

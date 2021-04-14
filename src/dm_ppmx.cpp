@@ -242,10 +242,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::vec L0v(dim * dim);
   L0v = hP0_L0;
 
-  double nuiw = hP0_nu0;
+  double nuiw = hP0_nu0; //scalar parameter for L0-IW
 
-  /*arma::vec Psi0v(dim * dim);
-  Psi0v = hP0_V0;*/
+  arma::vec Psi0(dim * dim); //matrix parameter for L0-IW
+  Psi0 = hP0_V0;
 
   arma::vec emme0(dim, arma::fill::zeros); //prior mean for mu0
   arma::vec sigma0(dim * dim, arma::fill::zeros); //prior variance for mu0
@@ -262,14 +262,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     for(j = 0; j < dim; j++){
       sigma0_mat(i, j) = sigma0(i*dim + j);
     }
-  }
-
-  arma::vec Psi0(dim * dim, arma::fill::zeros); //matrix parameter for L0-IW
-
-  idx = 0;
-  for(i = 0; i < dim; i++){
-    Psi0(idx) = 1;
-    idx += (dim + 1);
   }
 
   arma::mat Psi0_mat(dim, dim, arma::fill::zeros);
@@ -538,7 +530,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconN += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 0, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 0, 0, 1);
                 lgconN += lgcont;
               }
             }
@@ -548,7 +540,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconN += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 1, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j), 1, 0, 1);
                 lgconN += lgcont;
               }
             }
@@ -565,7 +557,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconY = lgconY + lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 0, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 0, 0, 1);
                 lgconY = lgconY + lgcont;
               }
             }
@@ -575,7 +567,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgconY = lgconY + lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, n0, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 1, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, xbar(p), s2mle(p), nj_curr(j) + 1, 1, 0, 1);
                 lgconY = lgconY + lgcont;
               }
             }
@@ -668,7 +660,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgcondraw += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, n0, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 0, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 0, 0, 1);
                 lgcondraw += lgcont;
               }
             }
@@ -678,7 +670,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                 lgcondraw += lgcont;
               }
               if(consim==2){//normal normal inverse gamma
-                lgcont = gsimconNNIG(m0, k0, nu0, n0, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 1, 0, 1);
+                lgcont = gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, xbar(p), s2mle(p), 1, 1, 0, 1);
                 lgcondraw += lgcont;
               }
             }
