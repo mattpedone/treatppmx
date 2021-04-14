@@ -14,24 +14,23 @@ source(file = "R/rppmx.R")
 KK <- 1#numero di repliche
 res <- matrix(0, KK, 7)
 par(mfrow=c(1,1))
-K = 4#dimensioni
-#mydata <- gcd_dm(n_obs = 100, concov = 2, K, similarity = 1, simparm = 1,
-#              alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F)
-#mydata$possmean
-#cat("nclus: ", mydata$nclus, "\n")
-#load("data/example1.RData")
 
 mydata <- scenario2()
 Y <- mydata$y
 
 for(j in 1:mydata$nclus){
-  cat(apply(matrix(Y[which(mydata$label == j),], ncol=K), 2, sum), "\n")
+  cat(apply(matrix(Y[which(mydata$label == j),], ncol=ncol(Y)), 2, sum), "\n")
 }
 
-heading <- c("nclu_post", "MSE", "lplm", "ARI", "ESS", "nclu_real", "nout")
-#righe <- c("Reuse", " ", "No ", " ", "DD Cal.", " ","DD Coa", " ", "PPM", " ")
 X <- mydata$X
-#plot(X[,1], X[, 2])
+
+set.seed(1)
+idx <- sample(1:dim(Y)[1], 150, replace=FALSE)
+Ytrain <- Y[idx,]
+Ytest <- Y[-idx,]
+Xtrain <- X[idx,,drop=FALSE]
+Xtest <- X[-idx,,drop=FALSE]
+
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, ncol(Y))
 modelpriors$hP0_L0 <- diag(1, ncol(Y))
@@ -42,16 +41,15 @@ alpha_DP <- 1
 n_aux <- 5
 vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-mhtune=c(0.5, 0.5)
-iterations <- 1020
-burnin <- 20
+iterations <- 10
+burnin <- 0
 thinning <- 1
 
-nout <- (iterations-burnin)/thinning
+nout <- (iterations-burnin)/thinning; nout
 
 # PPM
 time_ppm <- system.time(
-  out_ppm <- my_dm_ppmx(y = Y, X = X, alpha=alpha_DP, CC = n_aux, reuse = 1,
+  out_ppm <- my_dm_ppmx(y = Ytrain, X = Xtrain, Xpred = Xtest, alpha=alpha_DP, CC = n_aux, reuse = 1,
                         PPMx = 0, similarity = 1, consim=1, calibration=0,
                         similparam = vec_par, modelpriors, update_hierarchy = F,
                         iter=iterations,burn=burnin,thin=thinning))
@@ -156,6 +154,7 @@ ppmx2_dd_IG <- postquant_dm(y = Y, output = out_ppmx2_dd_IG, data = mydata, plot
 tab <- rbind(ppm, ppmx0_aux, ppmx0_aux_IG, ppmx0_dd, ppmx0_dd_IG, ppmx1_aux,
              ppmx1_aux_IG, ppmx1_dd, ppmx1_dd_IG, ppmx2_aux, ppmx2_aux_IG,
              ppmx2_dd, ppmx2_dd_IG)
+
 #time <- c(time_ppm[3], time_ppmx0_aux[3], time_ppmx0_dd[3], time_ppmx1_aux[3],
 #          time_ppmx1_dd[3], time_ppmx2_aux[3], time_ppmx2_dd[3])
 #tab <- cbind(tab[,-4], time)
@@ -178,3 +177,20 @@ postquant_dm(y = Y, output = out_ppmx2_dd_IG, data = mydata, plot = T)
 
 tab[, -4]
 
+
+prob <- runif(200)
+prob <- prob/sum(prob) # standardize the probabilities
+size <- 100
+n <- 10
+
+set.seed(10)
+sim_r <- rmultinom(1, size, prob)
+a <- dmultinom(sim_r, size, prob, FALSE)
+b <- dmultinom_rcpp(sim_r, size, prob, FALSE)
+
+all.equal(a, b)
+
+microbenchmark::microbenchmark(
+  rmultinom(1000, size, prob),
+  rmultinom_rcpp(1000, size, prob)
+)

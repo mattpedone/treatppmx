@@ -874,3 +874,78 @@ Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
                             Rcpp::Named("nj") = nj,
                             Rcpp::Named("nclus") = n_clus);
 }
+
+Rcpp::IntegerVector rmultinom_1(int size, Rcpp::NumericVector &probs, int N) {
+  Rcpp::IntegerVector outcome(N);
+  rmultinom(size, probs.begin(), N, outcome.begin());
+  return outcome;
+}
+
+// [[Rcpp::export]]
+arma::mat rmultinom_rcpp(int n, int size, arma::vec prob) {
+  Rcpp::NumericVector probs(prob.size());
+  probs = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(prob));
+  unsigned int N = probs.length();
+  arma::mat sim(N, n);
+  Rcpp::NumericVector work(N);
+  for (unsigned int i = 0; i < n; i++) {
+    work = rmultinom_1(size, probs, N);
+    sim.col(i) = Rcpp::as<arma::vec>(work);
+  }
+  return sim.t();
+}
+
+/*
+ * Benchmark the function
+ * adapted from https://gallery.rcpp.org/articles/recreating-rmultinom-and-rpois-with-rcpp/
+ prob <- runif(200)
+ prob <- prob/sum(prob) # standardize the probabilities
+ size <- 500
+ n <- 20
+
+ set.seed(10)
+ sim_r <- rmultinom(n, size, prob)
+ set.seed(10)
+ sim_rcpp <- rmultinom_rcpp(n, size, prob)
+ all.equal(sim_r, sim_rcpp)
+
+ microbenchmark::microbenchmark(
+ rmultinom(1000, size, prob),
+ rmultinom_rcpp(1000, size, prob)
+ )
+ */
+
+// [[Rcpp::export]]
+double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log){
+  int K = prob.size();
+  double s = arma::sum(prob);
+  prob = prob/s;
+  int N = 0;
+  arma::vec i0(K, arma::fill::zeros);
+  for(int i = 0; i < K; i++){
+    x(i) = floor(x(i)+.5);
+    N += x(i);
+    if(prob(i) == 0){
+      i0(i) = 1;
+    }
+  }
+
+  /*if (any(i0)) {
+    if (any(x[i0] != 0))
+      return(if (log) -Inf else 0)
+      if (all(i0))
+        return(if (log) 0 else 1)
+        x <- x[!i0]
+      prob <- prob[!i0]
+  }*/
+  double r;
+  r = lgamma(size + 1);
+  for(int i = 0; i < K; i++){
+    r += x(i) * log(prob(i)) - lgamma(x(i) + 1);
+  }
+  if (Log){
+    return r;
+    } else {
+      return exp(r);
+      }
+    }

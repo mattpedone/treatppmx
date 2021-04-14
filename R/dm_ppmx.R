@@ -1,5 +1,8 @@
 #' PPMx
 #'
+#' @param y response variable
+#' @param X covariates
+#' @param Xpred covariate for prediction
 #' @param iter MCMC number of iteration
 #' @param burn MCMC iteration discarded due to burnin
 #' @param thin thinning for MCMC
@@ -33,7 +36,7 @@
 # poi in R li metto in una lista
 # se non funziona l output di myppmx deve essere una lista
 
-my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
+my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
                         similparam,
                         modelpriors,
                         update_hierarchy = 1,
@@ -50,66 +53,81 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
 
 
   if(!is.data.frame(X) & !is.null(X)) X <- data.frame(X)
+  if(!is.data.frame(Xpred) & !is.null(Xpred)){
+    Xpred <- data.frame(Xpred);
+    colnames(Xpred) <- colnames(X)
+  }
+  cnames <- colnames(X)
 
   nout <- (iter-burn)/thin
-
   nobs <- dim(y)[1]
-  nxobs <- ifelse(is.null(X), 0, nrow(X))
 
-  Xall <- rbind(X)
-
-  # Function that relabels categorical variables to begin with 0
-  relab <- function(x) as.numeric(as.factor(as.character(x))) - 1
-
-  classes <- sapply(Xall, class)
-  catvars <- classes %in% c("factor","character")
-
-  if(PPMx == 0){
-    ncon = 0
-    ncat = 0
-    catvec = 0
-  }
-
-  # standardize continuous covariates
-  if(nxobs > 0){
-    if(sum(!catvars) > 0){
-      Xconstd <- apply(Xall[,!catvars, drop=FALSE], 2, scale)
-      #if(is.nan(Xconstd[,1])){
-        #Xconstd[,1] <- rep(1, nxobs)
-      #}
-      xcon <- Xconstd[1:nobs,,drop=FALSE];
-      ncon <- ncol(xcon)
-      #if(nmissing > 0) Mcon <- Mall[1:nobs, !catvars, drop=FALSE]
-    }else{
-      xcon <- cbind(rep(0,nobs));
-      ncon <- 0
-      #if(nmissing > 0) Mcon <- cbind(rep(0,nobs))
-    }
-
-
-    if(sum(catvars) > 0){
-      # Change the factors or characters into integers with category starting at 0.
-      Xcatall <- apply(Xall[, catvars,drop=FALSE], 2, relab)
-      #if(nmissing > 0) Mcat <- Mall[1:nobs, catvars, drop=FALSE]
-
-      xcat <- Xcatall[1:nobs,,drop=FALSE];
-      catvec <- apply(xcat,2,function(x)length(unique(x)))
-      ncat <- ncol(xcat)
-
-    }else{
-      xcat <- cbind(rep(0,nobs));
-      catvec <- 0
-      ncat <- 0
-    }
-  } else {
+  if(is.null(X) & is.null(Xpred)){
     xcon <- cbind(rep(0,1));
+    xconp <- cbind(rep(0,1));
     xcat <- cbind(rep(0,1));
+    xcatp <- cbind(rep(0,1));
+    ncon <- 0
+    ncat <- 0
+    npred <- 0
   }
 
-  #cat("ncon", ncon, "\n")
-  #cat("ncat", ncat, "\n")
-  #cat("xcon", xcon, "\n")
-  #cat("xcat", xcat, "\n")
+  if(!(is.null(X) & is.null(Xpred))){
+    nxobs <- ifelse(is.null(X), 0, nrow(X))
+    npred <- ifelse(is.null(Xpred), 0, nrow(Xpred))
+    Xall <- rbind(X, Xpred)
+    # Function that relabels categorical variables to begin with 0
+    relab <- function(x) as.numeric(as.factor(as.character(x))) - 1
+    classes <- sapply(Xall, class)
+    catvars <- classes %in% c("factor","character")
+
+    # standardize continuous covariates
+    if(nxobs > 0){
+      if(sum(!catvars) > 0){
+        Xconstd <- apply(Xall[,!catvars, drop=FALSE], 2, scale)
+        xcon <- Xconstd[1:nobs,,drop=FALSE];
+        ncon <- ncol(xcon)
+      }else{
+        xcon <- cbind(rep(0,nobs));
+        ncon <- 0
+      }
+
+      if(sum(catvars) > 0){
+        # Change the factors or characters into integers with category starting at 0.
+        Xcatall <- apply(Xall[, catvars,drop=FALSE], 2, relab)
+        xcat <- Xcatall[1:nobs,,drop=FALSE];
+        catvec <- apply(xcat,2,function(x)length(unique(x)))
+        ncat <- ncol(xcat)
+      }else{
+        xcat <- cbind(rep(0,nobs));
+        catvec <- 0
+        ncat <- 0
+      }
+    }
+
+    # Now consider the case when number of covariates for prediction are greater than zero
+    if(npred > 0){
+      if(sum(!catvars) > 0){
+        Xconstd <- apply(Xall[,!catvars, drop=FALSE], 2, scale)
+        xconp <- Xconstd[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
+        ncon <- ncol(xconp)
+      } else {
+        xconp <- cbind(rep(0,npred));
+        ncon <- 0
+      }
+
+      if(sum(catvars) > 0){
+        Xcatall <- apply(Xall[, catvars,drop=FALSE], 2, relab)
+        xcatp <- Xcatall[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
+        ncat <- ncol(xcatp)
+        catvec <- apply(Xcatall,2,function(x)length(unique(x)))
+      } else {
+        xcatp <- cbind(rep(0,npred));
+        ncat <- 0
+        catvec <- 0
+      }
+    }
+  }
 
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
@@ -118,11 +136,12 @@ my_dm_ppmx <- function(y, X=NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similari
   hP0_V0 <- as.vector(modelpriors$hP0_V0)
 
   out <- dm_ppmx(as.integer(iter), as.integer(burn), as.integer(thin),
-                  as.integer(nobs), as.integer(PPMx), as.integer(ncon), as.integer(ncat),
-                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
-                  as.integer(consim), as.integer(similarity),
-                  as.integer(calibration), as.matrix(y),
-                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(similparam),
+                 as.integer(nobs), as.integer(PPMx), as.integer(ncon), as.integer(ncat),
+                 as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
+                 as.integer(consim), as.integer(similarity),
+                 as.integer(calibration), as.matrix(y),
+                 as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
+                 as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
                   as.vector(hP0_V0), as.integer(update_hierarchy))
 
