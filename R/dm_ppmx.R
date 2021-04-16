@@ -145,22 +145,17 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, alpha=1, CC = 3, reuse = 1, PPMx
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
                   as.vector(hP0_V0), as.integer(update_hierarchy))
 
-  res <- NULL
+  ###PREPARE OUTPUT
+  res <- list()
+
+  #number of cluster
   nclu <- out$nclus
   res$nclu <- nclu
 
   nclu_cs <- cumsum(nclu)
-  #mu_out <- out$mu#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
-  #mu_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
-  #for(l in 1:nout){
-  #  for(i in 1:nclu[l]){
-  #    mu_ar[i, ,1] <- mu_out[i, ]
-  #    if(l > 1){
-  #      mu_ar[i, ,l] <- mu_out[i+nclu_cs[l-1], ]
-  #    }
-  #  }
-  #}
 
+
+  #intercept (and its acceptance rate)
   eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
   eta_ar <- array(0, dim = c(max(nclu), ncol(y), nout))
   for(l in 1:nout){
@@ -171,27 +166,39 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, alpha=1, CC = 3, reuse = 1, PPMx
       }
     }
   }
-
-  pi_out <- out$pi
-
-  res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
   res$eta <- eta_ar
   res$acc_rate_eta <- sum(out$eta_acc)/sum(out$nclu)
-  ypred <- array(0, dim = c(nrow(y), ncol(y), nout))
 
+  #pi (dirichlet parameter)
+  pi_out <- out$pi
+  res$pi_out <- pi_out
+  res$pipred <- out$pipred
+
+  #label (clustering)
+  res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
+
+  #in sample prediction & model fit
+  #yispred <- array(0, dim = c(nobs, ncol(y), nout))
+  res$isypred <- out$yispred
+  res$WAIC <- out$WAIC
+  res$lpml <- out$lpml
+
+  #posterior predictive
+  #ypred <- array(0, dim = c(npred, ncol(y), nout))
+  res$ypred <- out$ypred
+
+  #cluster classification prediction (unsupervised clustering)
+  clupred <- matrix(0, nout, npred)
+
+  ll = 0
   for(l in 1:nout){
-    for(i in 1:nrow(y)){
-      ypred[i,,l] <- rmultinom(1, 1, pi_out[i, ,l])
+    for(pp in 1:npred){
+      clupred[l, pp] <- out$clupred[ll*npred + pp]
+      ll = ll+1
     }
-    #caret::confusionMatrix(as.factor(ypred),as.factor(y))
   }
 
-  #ypred <- apply(ypred, c(1, 2), mean)
-  #res$pred <- t(apply(out$ispred, c(1, 2), mean))
-  #res$fitted <- matrix(out$ispred, nrow=nout, byrow=TRUE)
-  #res$nclus <- out$nclus
-  #res$WAIC <- out$WAIC
-  #res$lpml <- out$lpml
+  res$clupred <- clupred
 
   return(res)
 }

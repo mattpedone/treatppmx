@@ -294,11 +294,14 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::mat Awork(dim, dim, arma::fill::zeros);
   arma::vec Avecwork(dim*dim, arma::fill::zeros);
 
+  //Stuff needed for in-sample e out-of-sample prediction
+  arma::vec pii(dim);
+
   // Stuff to compute the posterior predictive
+  arma::mat pii_pred(npred, dim, arma::fill::zeros);
   arma::mat ispred(nobs, dim, arma::fill::zeros);
 
-
-  arma::vec ppred(npred, arma::fill::zeros);
+  arma::mat ppred(npred, dim, arma::fill::zeros);
   arma::vec rbpred(npred, arma::fill::zeros);
   arma::vec predclass(npred, arma::fill::zeros);
   arma::vec predclass_prob(npred*(nobs+1), arma::fill::zeros);
@@ -311,7 +314,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   CPOinv.fill(0.0);
   arma::vec like_iter(nobs);
   like_iter.fill(0.0);
-  double elppdWAIC;
+  double elppdWAIC, WAIC;
   arma::vec mnlike(nobs);
   mnlike.fill(0.0);
   arma::vec mnllike(nobs);
@@ -328,8 +331,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   //arma::mat sigma_out(1, dim*dim);
   arma::mat eta_out(1, dim);
   arma::vec Clui(nout * nobs, arma::fill::ones);
+  arma::vec predclass_out(nout * npred, arma::fill::zeros);
   arma::vec like(nout * nobs, arma::fill::ones);
   arma::cube pigreco(nobs, dim, nout, arma::fill::zeros);
+  arma::cube pigreco_pred(npred, dim, nout, arma::fill::zeros);
+  arma::cube ispred_out(nobs, dim, nout, arma::fill::ones);
+  arma::cube ppred_out(npred, dim, nout, arma::fill::zeros);
   ll = 0;
   lll = 0;
   ////////////////////////////////////////
@@ -945,7 +952,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       * in sample prediction to assess model fit
       ////////////////////////////////////////////////*/
 
-      arma::vec pii(dim);
       if((l > (burn-1)) & ((l + 1) % thin == 0)){
         for(i = 0; i < nobs; i++){
           for(k = 0; k < dim; k++){
@@ -959,10 +965,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           mnllike(i) += log(like_iter(i))/(double) nout;
 
           //CPO & lpml
-          CPOinv(i) += (1/(double) nout)*(1/like_iter[j]);
+          CPOinv(i) += (1/(double) nout)*(1/like_iter(i));
         }
       }
-
       /*////////////////////////////////////////////////
        * Posterior Predictive
        ////////////////////////////////////////////////*/
@@ -1183,7 +1188,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
              }
            }//chiude calibrazione 1
 
-
            //AVOID ZERO IN WEIGHTS
            maxwei = weight(0);
            for(j = 1; j < nclu_curr+ CC; j++){
@@ -1217,9 +1221,29 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
            /*
             * adjust cluster labels and cardinalities
-            * mi manca solo la sistemazione da qui in poi
-            * sulla repo sono arrivato alla riga 1496
             */
+
+           arma::vec eta_pred(dim);
+           arma::vec loggamma_pred(dim);
+
+           if((newci) <= (nclu_curr)){
+             eta_pred = eta_star_curr.col(newci - 1);
+           }else{
+             eta_pred = ran_mvnorm(mu0, L0v, dim);
+           }
+
+           //NEED TO UPDATE GAMMA TOO
+           for(k = 0; k < dim; k++){
+             loggamma_pred(k) = calculate_gamma(eta_pred, 0, k, ii, 1);
+             }
+
+           pii_pred.row(pp) = exp(loggamma_pred).t();
+
+           pii_pred.row(pp) = pii_pred.row(pp)/arma::sum(pii_pred.row(pp));
+
+           ppred.row(pp) = rmultinom_rcpp(1, 1, pii_pred.row(pp).t());
+           predclass(pp) = newci;
+           //predclass_prob(pp * nobs +j) = weight(j);
 
          }//this closes the loop on npred covariates
        }//this closes the if for the draws after burnin and thinned
@@ -1232,8 +1256,15 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
        for(i = 0; i < nobs; i++){
          Clui(ll*(nobs) + i) = curr_clu(i);
          like(ll*(nobs) + i) = like_iter(i);
+         ispred_out.slice(ll).row(i) = ispred.row(i);
          pigreco.slice(ll).row(i) = JJ.row(i)/TT(i);
        }
+       ppred_out.slice(ll) = ppred;
+       pigreco_pred.slice(ll) = pii_pred;
+       for(pp = 0; pp < npred; pp++){
+         predclass_out(ll*npred + pp) = predclass(pp);
+       }
+
        ll += 1;
        for(j = 0; j < nclu_curr; j++){
          //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
@@ -1244,37 +1275,23 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
      }
 
   }//CLOSES MCMC iterations
-  // calculate LPML
-
-  /*like_iter(i) = dmvnorm(eta.col(i), mu_star_curr.col(curr_clu(i)-1),
-   sigma_star_curr.col(curr_clu(i)-1), dim, ldSig, 0);
-
-   if((l > (burn-1)) & (l % (thin) == 0)){
-   // These are needed for WAIC
-   //mnlike(i) = mnlike(i) + (like_iter(i))/(double) nout;
-   //mnllike(i) = mnllike(i) + log(like_iter(i))/(double) nout;
-
-   CPOinv(i) += pow((double) nout, -1.0) * pow(like_iter(i), -1.0);
-   }
 
    lpml_iter=0.0;
 
    for(i = 0; i < nobs; i++){
-   //lpml_iter += log(pow(CPOinv(i), -1.0));
-   lpml_iter += log(pow(CPOinv(i), -1.0));
-   //Rcpp::Rcout << "lpml_iter" << lpml_iter <<std::endl;
+    lpml_iter += log(pow(CPOinv(i), -1.0));
    }
-   double lpml = lpml_iter;*/
+   double lpml = lpml_iter;
 
 
   // Computing WAIC  (see Gelman article)
 
-  /*elppdWAIC = 0.0;
-   for(i = 0; i < nobs; i++){
-   elppdWAIC += (2*mnllike(i) - log(mnlike(i)));
-   }
+  elppdWAIC = 0.0;
+  for(i = 0; i < nobs; i++){
+    elppdWAIC += (2*mnllike(i) - log(mnlike(i)));
+  }
 
-   WAIC = -2*elppdWAIC;*/
+   WAIC = -2*elppdWAIC;
 
   //RETURN
   //Rcpp::Rcout << "eta_flag: " << eta_flag.t() << std::endl;
@@ -1283,8 +1300,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     Rcpp::Named("eta_acc") = eta_flag,
     Rcpp::Named("cl_lab") = Clui,
     Rcpp::Named("pi") = pigreco,
+    Rcpp::Named("pipred") = pigreco_pred,
+    Rcpp::Named("yispred") = ispred_out,
+    Rcpp::Named("ypred") = ppred_out,
+    Rcpp::Named("clupred") = predclass_out,
     //Rcpp::Named("like") = like,
-    Rcpp::Named("nclus") = nclus);//,
-  //Rcpp::Named("WAIC") = WAIC,
-  //Rcpp::Named("lpml") = lpml);
+    Rcpp::Named("nclus") = nclus,
+    Rcpp::Named("WAIC") = WAIC,
+    Rcpp::Named("lpml") = lpml);
 }

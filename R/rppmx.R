@@ -293,9 +293,9 @@ scenario1 <- function(){
 scenario2 <- function(){
 
   dat <- NULL
-  n1 <- 85
-  n2 <- 30
-  n3 <- 85
+  n1 <- 80
+  n2 <- 40
+  n3 <- 80
 
   n <- n1 + n2 + n3
 
@@ -306,21 +306,21 @@ scenario2 <- function(){
     if(i <= (n1)){
       x[i,1] <- rnorm(1, -3, sqrt(.5))
       x[i,2] <- rnorm(1, 3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .1)
+      x[i,3] <- rbinom(1, 1, .25)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 1
     }
     if((n1 < i) & (i <= (n1+n2))){
       x[i,1] <- rnorm(1, 0, sqrt(.5))
       x[i,2] <- rnorm(1, 0, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .1)
+      x[i,3] <- rbinom(1, 1, .5)
       x[i,4] <- rbinom(1, 1, .9)
       label[i] <- 2
     }
     if((i > (n1+n2))){
       x[i,1] <- rnorm(1, 3, sqrt(.5))
       x[i,2] <- rnorm(1, -3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .1)
+      x[i,3] <- rbinom(1, 1, .25)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 3
     }
@@ -358,36 +358,24 @@ scenario2 <- function(){
   x$X3 <- as.factor(x$X3)
   x$X4 <- as.factor(x$X4)
 
+  #set.seed(1)
+  idx <- sample(1:dim(Y)[1], 150, replace=FALSE)
+  Ytrain <- Y[idx,]
+  Ytest <- Y[-idx,]
+  Xtrain <- x[idx,,drop=FALSE]
+  Xtest <- x[-idx,,drop=FALSE]
+
   dat$X <- x
-  dat$label <- label
+  dat$labeltrain <- label[idx]
+  dat$labeltest <- label[-idx]
   dat$intercept <- intercept
   dat$y <- Y
+  dat$Ytrain <- Ytrain
+  dat$Ytest <- Ytest
+  dat$Xtrain <- Xtrain
+  dat$Xtest <- Xtest
   dat$nclus <- 3
   return(dat)
-}
-
-#' Scenario 2 Mueller et al. (2011), Bianchini et al. (2017)
-#'
-#' @export
-#'
-scenario3 <- function(){
-
-  data_all = read.table("data/dtasim.txt", header = T) # Tutti i dati
-  dim(data_all)
-  X_all = data_all[, 2:4]
-  Y_all = data_all[, 1]
-  ## prepare the data file:
-  N <- nrow(data_all)
-
-  ## now select a sub-sample of n=200 data points for the example
-  n <- 200                             # desired sample size
-  idx <- sample(1:N, n)
-  data <- data_all[idx,]
-
-  n = nrow(data)
-  y = as.vector(data[,1])
-  X  = as.matrix(data[, -1])
-
 }
 
 #' postquant
@@ -429,7 +417,7 @@ postquant <- function(y, output, data, lab, plot){#, minbinder = F){
 #'
 #' @export
 #'
-postquant_dm <- function(y, output, data, plot, minbinder = F){
+postquant_dm <- function(y, yp, output, data, plot, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
   if(minbinder == T){
@@ -437,11 +425,22 @@ postquant_dm <- function(y, output, data, plot, minbinder = F){
   } else {
     mc <- minVI(psm)
   }
-  ari <- adjustedRandIndex(mc$cl, data$label)
+  ari <- adjustedRandIndex(mc$cl, data$labeltrain)
   ess <- effectiveSize(output$nclu)
+
+  #predictive AUC multiclass
+  probs <- apply(output$pipred, c(1, 2), mean)
+  colnames(probs) <- colnames(Ytest) <- c(1:4)
+
+  catvec <- c()
+  for(i in 1:nrow(Ytest)){
+    catvec <- c(catvec, which(yp[i,] == 1))
+  }
+
+  auc <- pROC::multiclass.roc(catvec, probs)$auc[1]
   mypostquant <- list("nclupost" = mean(output$nclu),
-                      "ARI" = ari,
-                      "ESS" = ess, "lab" = mc$cl)
+                      "ARI" = ari, "ESS" = ess, "lab" = mc$cl,
+                      "waic" = output$WAIC, "lpml" = output$lpml, "auc" = auc)
   if(plot == T){
     par(mfrow=c(1,2))
     plot(output$nclu, type="l")
@@ -449,3 +448,20 @@ postquant_dm <- function(y, output, data, plot, minbinder = F){
   }
   return(mypostquant)
 }
+
+plot_auc <- function(output_ppm, output_ppmx){
+  probs_ppm <- apply(output_ppm$pipred, c(1, 2), mean)
+  probs_ppmx <- apply(output_ppmx$pipred, c(1, 2), mean)
+
+  colnames(Ytest) <- c("a_true", "b_true", "c_true", "d_true")
+  colnames(probs_ppm) <- c("a_pred_ppm", "b_pred_ppm", "c_pred_ppm", "d_pred_ppm")
+  colnames(probs_ppmx) <- c("a_pred_ppmx", "b_pred_ppmx", "c_pred_ppmx", "d_pred_ppmx")
+  final_df <- data.frame(cbind(Ytest, probs_ppm, probs_ppmx))
+
+  roc_res <- multi_roc(final_df, force_diag = T)
+  plot_roc_df <- plot_roc_data(roc_res)
+
+  ggplot(plot_roc_df, aes(x = 1-Specificity, y=Sensitivity)) +
+    geom_path(aes(color = Group, linetype=Method), size=0.5)
+}
+
