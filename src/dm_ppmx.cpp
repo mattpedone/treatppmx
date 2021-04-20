@@ -736,18 +736,18 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           lgtilN(j) = gtilN(j) - maxgtilN;
           sgN = sgN + exp(lgtilN(j));
 
-          if(j < nclu_curr){// If x is included in an existing cluster in cannot be a singleton
+          if(j < nclu_curr){// se è in un cluster non è un signoletto
             lgtilY(j) = gtilY(j) - maxgtilY;
             sgY = sgY + exp(lgtilY(j));
           }
         }
-        // Calibrate the unnormalized cluster probabilities
+        // Calibrazione prob di cluster esistenti
         for(j = 0; j < nclu_curr; j++){
           lgtilNk = lgtilN(j) - log(sgN);
           lgtilYk = lgtilY(j) - log(sgY);
 
           weight(j) = log((double) nj_curr(j)) +  // Cohesion part
-            lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+            lgtilYk - lgtilNk; //cov cont and cat
           for(k = 0; k < dim; k++){
             wo = calculate_gamma(eta_star_curr, j, k, i, 0);
             weight(j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
