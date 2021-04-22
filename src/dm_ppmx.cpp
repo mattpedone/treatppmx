@@ -242,6 +242,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   arma::vec L0v(dim * dim);
   L0v = hP0_L0;
+  arma::mat L0_mat(dim, dim, arma::fill::zeros);
 
   double nuiw = hP0_nu0; //scalar parameter for L0-IW
 
@@ -889,8 +890,14 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       //Rcpp::Rcout << "Bwork1" << Bvecwork << std::endl;
 
       L0v = ran_iwish(nclu_curr + nuiw, Bvecwork, dim);
-      //Rcpp::Rcout << "L0v" << L0v.t() << std::endl;
-      Vwork = arma::inv(sigma0_mat) + nclu_curr*arma::inv(Psi0_mat);
+
+      for(i = 0; i < dim; i++){
+        for(j = 0; j < dim; j++){
+          L0_mat(i, j) = L0v(i*dim + j);
+        }
+      }
+
+      Vwork = arma::inv(sigma0_mat) + nclu_curr*arma::inv(L0_mat);
       Vwork = arma::inv(Vwork);
 
       for(j = 0; j < dim; j++){
@@ -903,7 +910,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
       //Rcpp::Rcout << "Rwork" << Rwork.t() << std::endl;
 
-      Awork = Vwork*((arma::inv(sigma0_mat)*emme0)+ arma::inv(Psi0_mat)*Rwork);
+      Awork = Vwork*((arma::inv(sigma0_mat)*emme0)+ arma::inv(L0_mat)*Rwork);
       //Rcpp::Rcout << "here" << std::endl;
       /*for(i = 0; i < dim; i++){
        for(j = 0; j < dim; j++){

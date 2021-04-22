@@ -369,6 +369,8 @@ scenario2 <- function(){
   dat$labeltrain <- label[idx]
   dat$labeltest <- label[-idx]
   dat$intercept <- intercept
+  dat$intercept_train <- intercept[idx,]
+  dat$intercept_test <- intercept[-idx,]
   dat$y <- Y
   dat$Ytrain <- Ytrain
   dat$Ytest <- Ytest

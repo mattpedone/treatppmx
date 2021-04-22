@@ -1,0 +1,12 @@
+---
+title: "risultato"
+author: "matt"
+date: "19/4/2021"
+output: html_document
+---
+
+```{r}
+load(file="tab.RData")
+tab
+```
+![AUCs](/home/matt/Dropbox/PHD/treatppmx/aucs.png)

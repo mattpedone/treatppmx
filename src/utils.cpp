@@ -576,7 +576,10 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
    * propose new value for eta
    * I sample it from updated priors (for now)
 */
-  eta_p = ran_mvnorm(mu_star, sigma_star, dim);
+  //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
+  for(k = 0; k < dim; k++){
+    eta_p(k) = eta(k) + R::runif(-.001, .001);
+  }
 
 
   for(i = 0; i < nobs; i++){
