@@ -304,8 +304,8 @@ scenario2 <- function(){
 
   for(i in 1:n){
     if(i <= (n1)){
-      x[i,1] <- rnorm(1, -2, sqrt(.5))
-      x[i,2] <- rnorm(1, 2, sqrt(.5))
+      x[i,1] <- rnorm(1, -3, sqrt(.5))
+      x[i,2] <- rnorm(1, 3, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .25)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 1
@@ -318,17 +318,16 @@ scenario2 <- function(){
       label[i] <- 2
     }
     if((i > (n1+n2))){
-      x[i,1] <- rnorm(1, 2, sqrt(.5))
-      x[i,2] <- rnorm(1, -2, sqrt(.5))
+      x[i,1] <- rnorm(1, 3, sqrt(.5))
+      x[i,2] <- rnorm(1, -3, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .25)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 3
     }
   }
-
-  beta1 <- c(2, 1.5, .5, 0)
+  beta1 <- c(3, 2, 1, 0)
   beta2 <- c(-2, -2, 1, 3)
-  beta3 <- c(2, -2, -1, -1)
+  beta3 <- c(3, -2, -1, -1)
 
   intercept <- matrix(0, n, 4)
 
