@@ -304,8 +304,8 @@ scenario2 <- function(){
 
   for(i in 1:n){
     if(i <= (n1)){
-      x[i,1] <- rnorm(1, -3, sqrt(.5))
-      x[i,2] <- rnorm(1, 3, sqrt(.5))
+      x[i,1] <- rnorm(1, -2, sqrt(.5))
+      x[i,2] <- rnorm(1, 2, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .25)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 1
@@ -318,17 +318,17 @@ scenario2 <- function(){
       label[i] <- 2
     }
     if((i > (n1+n2))){
-      x[i,1] <- rnorm(1, 3, sqrt(.5))
-      x[i,2] <- rnorm(1, -3, sqrt(.5))
+      x[i,1] <- rnorm(1, 2, sqrt(.5))
+      x[i,2] <- rnorm(1, -2, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .25)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 3
     }
   }
 
-  beta1 <- c(3, 2, 1, 0)
+  beta1 <- c(2, 1.5, .5, 0)
   beta2 <- c(-2, -2, 1, 3)
-  beta3 <- c(3, -2, -1, -1)
+  beta3 <- c(2, -2, -1, -1)
 
   intercept <- matrix(0, n, 4)
 
@@ -467,3 +467,24 @@ plot_auc <- function(output_ppm, output_ppmx){
     geom_path(aes(color = Group, linetype=Method), size=0.5)
 }
 
+####post processing sketch as described in Richardson & Greene (1997)
+#C_binder <- max(ppmx0_aux$lab)
+#median_C <- median(out_ppmx0_aux$nclu)
+#nc <- C_binder#median_C#
+#mvn_dim <- ncol(Ytrain)
+#eta_work <- matrix(0, nc, mvn_dim,)
+#eta_pp <- matrix(0, nc, mvn_dim)
+#noutC <- 0
+#for(l in 1:nout){
+#  if(out_ppmx0_aux$nclu[l]==nc){
+#    eta_work <- out_ppmx0_aux$eta[c(1:nc),,l]
+#    eta_pp = eta_pp + eta_work[order(eta_work[,1]),]
+#    noutC <- noutC + 1
+#  }
+#}
+#eta_pp <- eta_pp/noutC
+#eta_pp_exp <- matrix(0, nrow(Ytrain), ncol(Ytrain))
+#for(i in 1:nrow(Ytrain))
+#  eta_pp_exp[i,] <- eta_pp[out_ppmx0_aux$label[i]]
+#mydata$intercept_train
+#unique(mydata$intercept_train[mydata$labeltrain,])
