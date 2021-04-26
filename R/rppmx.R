@@ -299,7 +299,13 @@ scenario2 <- function(){
 
   n <- n1 + n2 + n3
 
+  Q = 10
+  z <- matrix(0, nrow = n, Q)
+  for(q in 1:ncol(z)){
+    z[,q] <- rnorm(nrow(z), 0, 1)
+  }
   x <- matrix(0, nrow = n, ncol = 4)
+
   label <- c()
 
   for(i in 1:n){
@@ -329,6 +335,27 @@ scenario2 <- function(){
   beta2 <- c(-2, -2, 1, 3)
   beta3 <- c(3, -2, -1, -1)
 
+  theta <- matrix(0, 4, Q)
+  st = 0
+  low_side = .5#beta_min
+  high_side = 1.5#beta_max
+  n_relevant_taxa = 2
+  n_relevant_x = 4
+  if (n_relevant_taxa != 1) {
+    # warning if the lengths don't match
+    coef = suppressWarnings(seq(low_side, high_side, len = n_relevant_taxa) *
+                              c(1,-1))
+  }
+  coef_g = rep(1.0, len = n_relevant_x)
+  for (ii in 1:n_relevant_x) {
+    # overlap species
+    theta[(st:(st + n_relevant_taxa - 1)) %% 4 + 1, 3 * ii - 2] = coef_g[ii] *#al posto di 4 dim
+      sample(coef)[((ii - 1):(ii + n_relevant_taxa - 2)) %% n_relevant_taxa + 1]
+    st = st + 1
+  }
+
+  theta <- t(theta)
+
   intercept <- matrix(0, n, 4)
 
   for(i in 1:n){
@@ -346,13 +373,14 @@ scenario2 <- function(){
   Y <- matrix(0, n, 4)
 
   for(i in 1:n){
-    thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
+    thisrow = as.vector(exp(intercept[i,]+ t(theta)%*% z[ii, ]))
     pi = bayess::rdirichlet(n = 1, par = thisrow)
     #pi = thisrow/sum(thisrow)
     Y[i, ] = rmultinom(1, 1, pi)
   }
 
   x <- data.frame(x)
+  z <- data.frame(z)
 
   x$X3 <- as.factor(x$X3)
   x$X4 <- as.factor(x$X4)
@@ -363,8 +391,9 @@ scenario2 <- function(){
   Ytest <- Y[-idx,]
   Xtrain <- x[idx,,drop=FALSE]
   Xtest <- x[-idx,,drop=FALSE]
+  Ztrain <- z[idx,,drop=FALSE]
+  Ztest <- z[-idx,,drop=FALSE]
 
-  dat$X <- x
   dat$labeltrain <- label[idx]
   dat$labeltest <- label[-idx]
   dat$intercept <- intercept
@@ -373,8 +402,14 @@ scenario2 <- function(){
   dat$y <- Y
   dat$Ytrain <- Ytrain
   dat$Ytest <- Ytest
+  dat$X <- x
   dat$Xtrain <- Xtrain
   dat$Xtest <- Xtest
+  dat$Z <- z
+  dat$Ztrain <- Ztrain
+  dat$Ztest <- Ztest
+
+  dat$theta <- theta
   dat$nclus <- 3
   return(dat)
 }

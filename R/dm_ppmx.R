@@ -36,11 +36,10 @@
 # poi in R li metto in una lista
 # se non funziona l output di myppmx deve essere una lista
 
-my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, alpha=1, CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
-                        similparam,
-                        modelpriors,
-                        update_hierarchy = 1,
-                        iter=1100,burn=100,thin=1){
+my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
+                       CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
+                       similparam, modelpriors, update_hierarchy = 1, iter=1100,
+                       burn=100,thin=1){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -139,7 +138,7 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, alpha=1, CC = 3, reuse = 1, PPMx
                  as.integer(nobs), as.integer(PPMx), as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity),
-                 as.integer(calibration), as.matrix(y),
+                 as.integer(calibration), as.matrix(y), as.matrix(z), as.matrix(zpred),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
@@ -169,6 +168,10 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, alpha=1, CC = 3, reuse = 1, PPMx
   res$eta <- eta_ar
   res$acc_rate_eta <- sum(out$eta_acc)/sum(out$nclu)
 
+  #prognostic covariates
+  beta <- apply(out$beta, 1, mean)
+  res$beta <- beta
+  res$acc_rate_beta <- out$beta_acc/sum(out$nclu)
   #pi (dirichlet parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out

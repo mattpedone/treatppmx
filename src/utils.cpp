@@ -452,21 +452,30 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
 }
 
 // [[Rcpp::export]]
-double calculate_gamma(arma::mat eta, int clu_lg, int k, int i,
-                       int Log){
+double calculate_gamma(arma::mat eta, arma::mat ZZ, arma::vec beta, int clu_lg,
+                       int k, int i, int Log){
   /* function that compute log linear predictor.
    * inputs:
    * - eta: mvn intercept (BNP)
+   * - ZZ: prognostic covariates
+   * - beta: prognostic coefficients
    * - clu_lg: cluster of loggamma we are currently working on
-   * - k, i: indices
+   * - k: index for category
+   * - i: index for subject
    * - Log if == 1 returns log gamma
    */
+
+  int q, h; //indices for prognostic covariates (real &"instrumental")
+  int Q = ZZ.n_cols;
 
   double lg = 0.0;
   double gamma_ik;
 
   lg = eta(k, clu_lg);
-
+  for(q = 0; q < Q; q++){
+    h = q + k * Q;
+    lg += beta(h) * ZZ(i, q);
+  }
   if(Log == 1){
     gamma_ik = lg;
   } else{
@@ -517,7 +526,7 @@ double log_mult(arma::mat y, arma::mat JJ){
  * $\boldsymbol{\eta}_{j}^{\star}$
  */
 // [[Rcpp::export]]
-Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
+Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat loggamma,
                       int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
                       arma::vec eta, arma::vec eta_flag,
                       arma::vec mu_star, arma::vec sigma_star, int jj){
@@ -585,7 +594,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
-        loggamma_p(i, k) =  calculate_gamma(eta_p, 0, k, i, 1);
+        loggamma_p(i, k) =  calculate_gamma(eta_p, ZZ, beta, 0, k, i, 1);
         //loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
@@ -627,6 +636,97 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   eta_up[1] = loggamma;
   eta_up[2] = eta_flag;
   return eta_up;
+}
+
+/*
+ * the following function updates the coefficients for prognostic covariates
+ * $\boldsymbol{\beta}_{q}$
+ */
+// [[Rcpp::export]]
+Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
+                      arma::vec beta_temp, arma::mat beta_flag,
+                      double mu_beta, double sigma_beta, int kk){
+
+  // this function loops through K so it is called for one category at a time
+
+  /*
+   * ZZ: matrix of independent prognostic covariates
+   * JJ: matrix of independent gamma variables
+   * loggamma: matrix of log-linear predictor
+   * beta_temp: vector of Q coefficient for kk-th category
+   * beta_flag: flag for beta MH acceptance
+   * mu_beta: prior mean
+   * sigma_beta:  prior variance
+   * kk: category we are working on
+   */
+  int Q = ZZ.n_cols;
+  int nobs = JJ.n_rows;
+
+  int i, q, qq;
+  /* indices for:
+   * i: individuals
+   * q: vovariates
+   */
+
+  double log_num, log_den, ln_acp, lnu, ld;
+  /*
+   * log_num: numerator for MH ratio
+   * log_den: denumerator for MH ratio
+   * ln_acp: MH ratio
+   * lnu: random value for MH acceptance
+   */
+
+  arma::vec beta_p(Q);
+
+  arma::vec loggamma_p(nobs);
+
+  log_den = 0.0;
+  for(q = 0; q < Q; q++){
+    for(i = 0; i < nobs; i++){
+      log_den = log_den - lgamma(exp(loggamma(i, kk))) + exp(loggamma(i, kk)) * log(JJ(i, kk));
+    }
+    //ld = logdet(sigma_star, dim);
+    //dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
+    log_den += R::dnorm4(beta_temp(q), mu_beta, sigma_beta, 1);
+
+    // propose new value for beta (RW)
+    for(qq = 0; qq < Q; qq++){
+      beta_p(qq) = beta_temp(qq) + R::runif(-.001, .001);
+    }
+
+    for(i = 0; i < nobs; i++){
+      loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p(q) * ZZ(i, q);
+    }
+
+    log_num = 0.0;
+    for(i = 0; i < nobs; i++){
+      log_num = log_num - lgamma(exp(loggamma_p(i))) + exp(loggamma_p(i)) * log(JJ(i, kk));
+    }
+
+    log_num += R::dnorm4(beta_p(q), mu_beta, sigma_beta, 1);
+
+    ln_acp = log_num - log_den;
+
+    lnu = log(R::runif(0.0, 1.0));
+  if(lnu < ln_acp){
+    // If accepted, update both eta and loggamma, and keep
+    // track of acceptances
+    beta_flag(q, kk) += 1;
+    //Rcpp::Rcout << "accepted! j: " << jj << ", f: " << eta_flag(jj) << std::endl;
+    beta_temp = beta_p;
+    for(i = 0; i < nobs; i++){
+      loggamma(i, kk) = loggamma_p(i);
+      }
+  }//closes if accepted
+  }
+
+  // Return output
+  Rcpp::List beta_up(3);
+  // eta, loggamma, acceptance,
+  beta_up[0] = beta_temp;
+  beta_up[1] = loggamma;
+  beta_up[2] = beta_flag;
+  return beta_up;
 }
 
 /*
