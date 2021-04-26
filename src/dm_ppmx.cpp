@@ -928,6 +928,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       //Rcpp::Rcout << "mu0" << mu0.t() << std::endl;
     }
 
+    /*
+     * QUI DEVO METTERE L'AGGIORNAMENTO DEI COEFFICIENTI PER LE COVARIATE PROGNOSTICHE
+     */
+
     /*////////////////////////////////////////////////
      * update random variables:
      * - independent gammas for DM sampling scheme JJ, TT
@@ -975,6 +979,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           CPOinv(i) += (1/(double) nout)*(1/like_iter(i));
         }
       }
+
       /*////////////////////////////////////////////////
        * Posterior Predictive
        ////////////////////////////////////////////////*/
