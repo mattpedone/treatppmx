@@ -128,6 +128,28 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
     }
   }
 
+  init = TRUE
+  if(init == TRUE){
+    cormat = matrix(0, ncol(y), ncol(z))
+    pmat = matrix(0, ncol(y), ncol(z))
+    yy = y/rowSums(y) # compositionalize
+    for(rr in 1:ncol(y)){
+      for(cc in 1:ncol(z)){
+        pmat[rr, cc] = stats::cor.test(z[, cc], yy[, rr], method = "spearman",
+                                       exact = F)$p.value
+        cormat[rr, cc] = stats::cor(z[, cc], yy[, rr], method = "spearman")
+      }
+    }
+    # defaults to 0.2 false discovery rate
+    pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
+                ncol(z))
+    betmat = cormat * pm
+    beta <- as.vector(t(betmat))
+    cat("init: ", beta, "\n")
+  } else {
+    beta <- rep(0, ncol(y)*ncol(z))
+  }
+
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
@@ -142,7 +164,7 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                   as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
-                  as.vector(hP0_V0), as.integer(update_hierarchy))
+                  as.vector(hP0_V0), as.integer(update_hierarchy), as.vector(t(beta)))
 
   ###PREPARE OUTPUT
   res <- list()
@@ -169,9 +191,17 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
   res$acc_rate_eta <- sum(out$eta_acc)/sum(out$nclu)
 
   #prognostic covariates
-  beta <- apply(out$beta, 1, mean)
+  beta <- matrix(0, ncol(Ztest), ncol(Ytest))
+  beta0 <- apply(out$beta, 1, mean)
+  for(k in 1:ncol(Y)){
+    for(q in 1:ncol(Ztest)){
+      h <- q + (k-1) * ncol(Ztest)
+      beta[q, k] <- beta0[h]
+    }
+  }
+
   res$beta <- beta
-  res$acc_rate_beta <- out$beta_acc/sum(out$nclu)
+  res$acc_rate_beta <- out$beta_acc#/sum(out$nclu)
   #pi (dirichlet parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out

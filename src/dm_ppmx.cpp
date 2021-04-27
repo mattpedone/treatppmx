@@ -12,7 +12,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                    arma::mat zpred, arma::vec xcon, arma::vec xcat,
                    arma::vec xconp, arma::vec xcatp, int npred,
                    arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
-                   arma::vec hP0_V0, int upd_hier){
+                   arma::vec hP0_V0, int upd_hier, arma::vec initbeta){
 
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -146,11 +146,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   arma::vec eta_flag(nobs, arma::fill::zeros);
 
-  arma::vec beta(Q * dim, arma::fill::zeros);
+  arma::vec beta = initbeta;
   arma::vec beta_temp(Q, arma::fill::zeros);
   arma::mat beta_flag(Q, dim, arma::fill::zeros);
   double mu_beta = 0.0;
-  double sigma_beta = 10.0;
+  double sigma_beta = 1.0;
 
   // the linear predictor matrix, is in the log scale
   // log-linear function on the prognostic marker n x K
@@ -160,7 +160,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   for(i = 0; i < nobs; i++){
     clu_lg = curr_clu(i)-1;
     for(k = 0; k < dim; k++){
-      loggamma(i, k) = calculate_gamma(eta_star_curr, z, beta, clu_lg, k, i, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
+      loggamma(i, k) = calculate_gamma(eta_star_curr, z, beta, clu_lg, k, i, 1);
     }
   }
 
@@ -512,7 +512,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
           if(ii != i){
             for(k = 0; k < dim; k++){
               loggamma(ii, k) = calculate_gamma(eta_star_curr.col(curr_clu(ii)-1),
-                       z, beta, 0, k, ii, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
+                       z, beta, 0, k, ii, 1);
             }
           }
         }
@@ -850,7 +850,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         for(ii = 0; ii < nobs; ii++){
           for(k = 0; k < dim; k++){
             loggamma(ii, k) = calculate_gamma(eta_star_curr.col(curr_clu(ii)-1),
-                     z, beta, 0, k, ii, 1);//calculate_gamma(XX, alpha, beta, jj, ii, Log);
+                     z, beta, 0, k, ii, 1);
           }
         }
         eta_empty.col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
@@ -876,6 +876,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
      Sigma = ran_iwish(nuiw + 1, Sthetam, dim);*/
 
     for(j = 0; j < nclu_curr; j++){
+      //Rcpp::Rcout << "lg_eu" << loggamma << std::endl;
       l_eta_out = eta_update(JJ, beta, z, loggamma, nclu_curr, curr_clu, nj_curr,
                              eta_star_curr.col(j), eta_flag, mu0, L0v, j);
       eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
@@ -946,6 +947,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     for(k = 0; k < dim; k++){
       for(q = 0; q < Q; q++){
         h = q + k * Q;
+        //h = k + q * dim;
         beta_temp(q) = beta(h);
       }
 
@@ -955,6 +957,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       beta_temp = Rcpp::as<arma::vec>(l_beta_out[0]);
       for(q = 0; q < Q; q++){
         h = q + k * Q;
+        //h = k + q * dim;
         beta(h) = beta_temp(q);
       }
       loggamma = Rcpp::as<arma::mat>(l_beta_out[1]);

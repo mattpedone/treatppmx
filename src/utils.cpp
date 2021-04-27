@@ -113,6 +113,13 @@ arma::vec cholesky(arma::vec A, int n) {
   return L;
 }
 
+// [[Rcpp::export]]
+double myround( double x )
+{
+  const double sd = 1000; //for accuracy to 3 decimal places
+  return int(x*sd + (x<0? -0.5 : 0.5))/sd;
+}
+
 /*
  * If the symmetric positive definite matrix A is represented by its Cholesky
  * decomposition A = LL' or A = U'U, then the determinant of this matrix can
@@ -467,12 +474,19 @@ double calculate_gamma(arma::mat eta, arma::mat ZZ, arma::vec beta, int clu_lg,
 
   int q, h; //indices for prognostic covariates (real &"instrumental")
   int Q = ZZ.n_cols;
+  //int dim = 4;
 
   double lg = 0.0;
   double gamma_ik;
 
-  lg = eta(k, clu_lg);
+  if(eta.n_cols == 1){
+    lg = eta(k);
+  } else {
+    lg = eta(k, clu_lg);
+  }
+
   for(q = 0; q < Q; q++){
+    //h = k + q * dim;
     h = q + k * Q;
     lg += beta(h) * ZZ(i, q);
   }
@@ -555,7 +569,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
   */
 
 
-  double log_num, log_den, ln_acp, lnu, ld;
+  double log_num, log_den, ln_acp, lnu, ld, provaA, provaB;
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -574,7 +588,6 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
         log_den = log_den - lgamma(exp(loggamma(i, k))) + exp(loggamma(i, k)) * log(JJ(i, k));
-        //log_den = log_den + R::dnorm4(eta(k), 0, 1.0, 1);
       }
     }
   }
@@ -587,15 +600,25 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 */
   //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
   for(k = 0; k < dim; k++){
-    eta_p(k) = eta(k) + R::runif(-.001, .001);
+    eta_p(k) = eta(k) + R::rnorm(0, .01);//R::runif(-1, 1);
   }
 
 
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
-        loggamma_p(i, k) =  calculate_gamma(eta_p, ZZ, beta, 0, k, i, 1);
-        //loggamma(i, k) - eta(k) + eta_p(k);
+
+        provaA =  calculate_gamma(eta_p, ZZ, beta, 0, k, i, 1);
+        provaB = loggamma(i, k) - eta(k) + eta_p(k);
+
+        if(myround(provaA) != myround(provaB)){
+          Rcpp::warning("Warning: Unexpected condition occurred");
+          Rcpp::Rcout << "provaA " << provaA + 1 << std::endl;
+          Rcpp::Rcout << "provaB " << provaB + 1 << std::endl;
+          Rcpp::Rcout << "siamo nel cluster " << jj + 1 << std::endl;
+          Rcpp::Rcout << "dim: " << k << std::endl;
+        }
+        loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
   }
@@ -610,6 +633,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
     }
   }
   log_num += dmvnorm(eta_p, mu_star, sigma_star, dim, ld, 1);
+  //Rcpp::Rcout << "log_num" << log_num << "eta_p: " << eta_p.t() << std::endl;
 
   ln_acp = log_num - log_den;
 
@@ -676,12 +700,13 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
    * lnu: random value for MH acceptance
    */
 
-  arma::vec beta_p(Q);
+  //arma::vec beta_p(Q);
+  double beta_p;
 
   arma::vec loggamma_p(nobs);
 
-  log_den = 0.0;
   for(q = 0; q < Q; q++){
+    log_den = 0.0;
     for(i = 0; i < nobs; i++){
       log_den = log_den - lgamma(exp(loggamma(i, kk))) + exp(loggamma(i, kk)) * log(JJ(i, kk));
     }
@@ -689,13 +714,18 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     //dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
     log_den += R::dnorm4(beta_temp(q), mu_beta, sigma_beta, 1);
 
+    //Rcpp::Rcout << "log_den" << log_den << "beta_temp: " << beta_temp(q) << std::endl;
+
     // propose new value for beta (RW)
-    for(qq = 0; qq < Q; qq++){
-      beta_p(qq) = beta_temp(qq) + R::runif(-.001, .001);
-    }
+    //for(qq = 0; qq < Q; qq++){
+      //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
+    //}
+    beta_p = beta_temp(q) + R::rnorm(0, .1);//R::runif(-1, 1);
 
     for(i = 0; i < nobs; i++){
-      loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p(q) * ZZ(i, q);
+
+
+      loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p * ZZ(i, q);
     }
 
     log_num = 0.0;
@@ -703,21 +733,26 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
       log_num = log_num - lgamma(exp(loggamma_p(i))) + exp(loggamma_p(i)) * log(JJ(i, kk));
     }
 
-    log_num += R::dnorm4(beta_p(q), mu_beta, sigma_beta, 1);
+    log_num += R::dnorm4(beta_p, mu_beta, sigma_beta, 1);
+
+    //Rcpp::Rcout << "log_num" << log_num << "beta_p: " << beta_p << std::endl;
 
     ln_acp = log_num - log_den;
 
     lnu = log(R::runif(0.0, 1.0));
-  if(lnu < ln_acp){
-    // If accepted, update both eta and loggamma, and keep
-    // track of acceptances
-    beta_flag(q, kk) += 1;
-    //Rcpp::Rcout << "accepted! j: " << jj << ", f: " << eta_flag(jj) << std::endl;
-    beta_temp = beta_p;
-    for(i = 0; i < nobs; i++){
-      loggamma(i, kk) = loggamma_p(i);
-      }
-  }//closes if accepted
+
+    //Rcpp::Rcout << "diff: " << log_num-log_den << std::endl;
+
+    if(lnu < ln_acp){
+      // If accepted, update both eta and loggamma, and keep
+      // track of acceptances
+      beta_flag(q, kk) += 1;
+      //Rcpp::Rcout << "accepted! j: " << jj << ", f: " << eta_flag(jj) << std::endl;
+      beta_temp(q) = beta_p;
+      for(i = 0; i < nobs; i++){
+        loggamma(i, kk) = loggamma_p(i);
+        }
+    }//closes if accepted
   }
 
   // Return output
@@ -745,6 +780,13 @@ double dweight(arma::mat loggamma, arma::mat JJ, int i){
   return dw;
 }
 */
+
+/* [[Rcpp::export]]
+double myround( double x )
+{
+  const double sd = 1000; //for accuracy to 3 decimal places
+  return int(x*sd + (x<0? -0.5 : 0.5))/sd;
+}*/
 
 // [[Rcpp::export]]
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
