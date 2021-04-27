@@ -33,6 +33,13 @@
  *
  */
 
+// [[Rcpp::export]]
+double myround( double x )
+{
+  const double sd = 1000; //for accuracy to 3 decimal places
+  return int(x*sd + (x<0? -0.5 : 0.5))/sd;
+}
+
 //quadratic form
 double quform(arma::vec x, arma::vec A, int dim){
 
