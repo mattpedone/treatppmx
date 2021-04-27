@@ -546,7 +546,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   */
 
 
-  double log_num, log_den, ln_acp, lnu, ld;
+  double log_num, log_den, ln_acp, lnu, ld, provaA, provaB;
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -582,11 +582,30 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   }
 
 
-  for(i = 0; i < nobs; i++){
+  /*for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
         loggamma_p(i, k) =  calculate_gamma(eta_p, 0, k, i, 1);
         //loggamma(i, k) - eta(k) + eta_p(k);
+      }
+    }
+  }*/
+
+  for(i = 0; i < nobs; i++){
+    if(curr_clu(i) == (jj + 1)){
+      for(k = 0; k < dim; k++){
+
+        provaA =  calculate_gamma(eta_p, 0, k, i, 1);
+        provaB = loggamma(i, k) - eta(k) + eta_p(k);
+
+        if(myround(provaA) != myround(provaB)){
+          Rcpp::warning("Warning: Unexpected condition occurred");
+          Rcpp::Rcout << "provaA " << provaA + 1 << std::endl;
+          Rcpp::Rcout << "provaB " << provaB + 1 << std::endl;
+          Rcpp::Rcout << "siamo nel cluster " << jj + 1 << std::endl;
+          Rcpp::Rcout << "dim: " << k << std::endl;
+        }
+        loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
   }
