@@ -188,7 +188,7 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
     }
   }
   res$eta <- eta_ar
-  res$acc_rate_eta <- sum(out$eta_acc)/sum(out$nclu)
+  res$acc_rate_eta <- sum(out$eta_acc)#/sum(out$nclu)
 
   #prognostic covariates
   beta <- matrix(0, ncol(Ztest), ncol(Ytest))

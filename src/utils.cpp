@@ -569,7 +569,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
   */
 
 
-  double log_num, log_den, ln_acp, lnu, ld, provaA, provaB;
+  double log_num, log_den, ln_acp, lnu, ld, provaA, provaB, provaC;
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -582,17 +582,23 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 
   arma::mat loggamma_p(nobs, dim);
 
-
+  //
   log_den = 0.0;
   for(i = 0; i < nobs; i++){
     if(curr_clu(i) == (jj + 1)){
       for(k = 0; k < dim; k++){
+        //Rcpp::Rcout << "logJJ: " << log(JJ(i, k)) << std::endl;
         log_den = log_den - lgamma(exp(loggamma(i, k))) + exp(loggamma(i, k)) * log(JJ(i, k));
       }
     }
   }
+  //Rcpp::Rcout << "log_den0" << log_den << std::endl;
+  //Rcpp::Rcout << "mu_star" << mu_star << std::endl;
+
   ld = logdet(sigma_star, dim);
   log_den += dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
+
+  //Rcpp::Rcout << "log_den1" << log_den << std::endl;
 
   /*
    * propose new value for eta
@@ -600,24 +606,13 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 */
   //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
   for(k = 0; k < dim; k++){
-    eta_p(k) = eta(k) + R::rnorm(0, .01);//R::runif(-1, 1);
+    eta_p(k) = eta(k) + R::rnorm(0, .5);//R::runif(-1, 1);
   }
 
 
   for(i = 0; i < nobs; i++){
-    if(curr_clu(i) == (jj + 1)){
+    if(curr_clu(i)-1 == (jj)){
       for(k = 0; k < dim; k++){
-
-        provaA =  calculate_gamma(eta_p, ZZ, beta, 0, k, i, 1);
-        provaB = loggamma(i, k) - eta(k) + eta_p(k);
-
-        if(myround(provaA) != myround(provaB)){
-          Rcpp::warning("Warning: Unexpected condition occurred");
-          Rcpp::Rcout << "provaA " << provaA + 1 << std::endl;
-          Rcpp::Rcout << "provaB " << provaB + 1 << std::endl;
-          Rcpp::Rcout << "siamo nel cluster " << jj + 1 << std::endl;
-          Rcpp::Rcout << "dim: " << k << std::endl;
-        }
         loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
@@ -625,17 +620,20 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 
   log_num = 0.0;
   for(i = 0; i < nobs; i++){
-    if(curr_clu(i) == (jj + 1)){
+    if(curr_clu(i)-1 == (jj)){
       for(k = 0; k < dim; k++){
         log_num = log_num - lgamma(exp(loggamma_p(i, k))) + exp(loggamma_p(i, k)) * log(JJ(i, k));
         //log_num = log_num + R::dnorm4(eta_p(k), 0, 1.0, 1);
       }
     }
   }
+  //Rcpp::Rcout << "log_num0" << log_num << std::endl;
+
   log_num += dmvnorm(eta_p, mu_star, sigma_star, dim, ld, 1);
-  //Rcpp::Rcout << "log_num" << log_num << "eta_p: " << eta_p.t() << std::endl;
+  //Rcpp::Rcout << "log_num1" << log_num << std::endl;
 
   ln_acp = log_num - log_den;
+  //Rcpp::Rcout << "ln_acp" << ln_acp << "eta_p: " << eta_p.t() << std::endl;
 
   lnu = log(R::runif(0.0, 1.0));
 
@@ -643,11 +641,11 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
     // If accepted, update both eta and loggamma, and keep
     // track of acceptances
     eta_flag(jj) += 1;
-    //Rcpp::Rcout << "accepted! j: " << jj << ", f: " << eta_flag(jj) << std::endl;
+    //Rcpp::Rcout << "accepted!" << std::endl;
     eta = eta_p;
 
     for(i = 0; i < nobs; i++){
-      if(curr_clu(i) == (jj + 1)){
+      if(curr_clu(i)-1 == (jj)){
         loggamma.row(i) = loggamma_p.row(i);
       }
     }
@@ -720,7 +718,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     //for(qq = 0; qq < Q; qq++){
       //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
     //}
-    beta_p = beta_temp(q) + R::rnorm(0, .1);//R::runif(-1, 1);
+    beta_p = beta_temp(q) + R::rnorm(0, .5);//R::runif(-1, 1);
 
     for(i = 0; i < nobs; i++){
 

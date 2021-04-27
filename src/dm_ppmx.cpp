@@ -145,6 +145,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   ////////////////////////////////
 
   arma::vec eta_flag(nobs, arma::fill::zeros);
+  int sumtotclu = 0;
 
   arma::vec beta = initbeta;
   arma::vec beta_temp(Q, arma::fill::zeros);
@@ -164,6 +165,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     }
   }
 
+  double opz1, opz2;
   ////////////////////////////////////////////////////
   //// cluster specific suffiient statistics
   ////////////////////////////////////////////////////
@@ -395,8 +397,6 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         dval = R::runif(0.0, 1.0);
         dval *= CC;
         id_empty = floor(dval);//praticamente ho fatto un sample()
-
-
 
         //what follows is Page's relabelling
 
@@ -834,7 +834,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         curr_clu(i) = newci;
         nj_curr(newci - 1) += 1;
         //Rcpp::Rcout << "if 1" << curr_clu.t() << std::endl;
-
+        for(k = 0; k < dim; k++){
+          loggamma(i, k) = calculate_gamma(eta_star_curr,
+                   z, beta, curr_clu(i)-1, k, i, 1);
+        }
       }else{
         /*id_empty: it identifies which of the augmented has been chosen
          * 2b  page 345 Favaro and Teh, second column
@@ -847,12 +850,12 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
         eta_star_curr.col(nclu_curr-1) = eta_empty.col(id_empty);
 
         //NEED TO UPDATE GAMMA TOO
-        for(ii = 0; ii < nobs; ii++){
+        //for(ii = 0; ii < nobs; ii++){
           for(k = 0; k < dim; k++){
-            loggamma(ii, k) = calculate_gamma(eta_star_curr.col(curr_clu(ii)-1),
-                     z, beta, 0, k, ii, 1);
+            loggamma(i, k) = calculate_gamma(eta_star_curr,
+                     z, beta, curr_clu(i)-1, k, i, 1);
           }
-        }
+        //}
         eta_empty.col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
       }
 
@@ -883,6 +886,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
       eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
     }
+    sumtotclu += nclu_curr;
 
     if(upd_hier == 1){
       for(j = 0; j < (dim*dim); j++){
@@ -928,11 +932,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
       Awork = Vwork*((arma::inv(sigma0_mat)*emme0)+ arma::inv(L0_mat)*Rwork);
       //Rcpp::Rcout << "here" << std::endl;
-      /*for(i = 0; i < dim; i++){
-       for(j = 0; j < dim; j++){
-       Avecwork(i*dim + j) = Awork(i, j);
-       }
-      }*/
+      //for(i = 0; i < dim; i++){
+     // for(j = 0; j < dim; j++){
+     // Avecwork(i*dim + j) = Awork(i, j);
+     // }
+     //}
 
       for(i = 0; i < dim; i++){
         for(j = 0; j < dim; j++){
@@ -975,9 +979,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
        TT(i) = 0.0;
        for(k = 0; k < dim; k++){
          if(y(i, k) != 1){
-           JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
+           JJ(i, k) = R::rgamma(exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
+           //JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
          } else {
-           JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
+           JJ(i, k) = R::rgamma(exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
+           //JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
          }
          if(JJ(i, k) < pow(10.0, -100.0)){
            JJ(i, k) = pow(10.0, -100.0);
@@ -988,7 +994,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
      // update latent variables ss
      for(i = 0 ; i < nobs ; i++){
-       ss(i) = R::rgamma(ypiu(i), 1.0/TT(i));
+       ss(i) = R::rgamma(ypiu(i), TT(i));
      }
 
      /*////////////////////////////////////////////////
@@ -1340,7 +1346,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
     Rcpp::Named("eta") = eta_out,
     Rcpp::Named("beta") = beta_out,
-    Rcpp::Named("eta_acc") = eta_flag,
+    Rcpp::Named("eta_acc") = eta_flag/sumtotclu,
     Rcpp::Named("beta_acc") = beta_flag,
     Rcpp::Named("cl_lab") = Clui,
     Rcpp::Named("pi") = pigreco,
