@@ -606,7 +606,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 */
   //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
   for(k = 0; k < dim; k++){
-    eta_p(k) = eta(k) + R::rnorm(0, .1);//R::runif(-1, 1);
+    eta_p(k) = eta(k) + R::rnorm(0, .15);//R::runif(-1, 1);
   }
 
 
@@ -667,7 +667,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 // [[Rcpp::export]]
 Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
                       arma::vec beta_temp, arma::mat beta_flag,
-                      double mu_beta, double sigma_beta, int kk){
+                      double mu_beta, arma::vec sigma_beta, int kk){
 
   // this function loops through K so it is called for one category at a time
 
@@ -684,7 +684,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
   int Q = ZZ.n_cols;
   int nobs = JJ.n_rows;
 
-  int i, q, qq;
+  int i, q, qq, h;
   /* indices for:
    * i: individuals
    * q: vovariates
@@ -710,7 +710,8 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     }
     //ld = logdet(sigma_star, dim);
     //dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
-    log_den += R::dnorm4(beta_temp(q), mu_beta, sigma_beta, 1);
+    h = q + kk * Q;
+    log_den += R::dnorm4(beta_temp(q), mu_beta, sigma_beta(h), 1);
 
     //Rcpp::Rcout << "log_den" << log_den << "beta_temp: " << beta_temp(q) << std::endl;
 
@@ -718,11 +719,9 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     //for(qq = 0; qq < Q; qq++){
       //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
     //}
-    beta_p = beta_temp(q) + R::rnorm(0, .25);//R::runif(-1, 1);
+    beta_p = beta_temp(q) + R::rnorm(0, .15);//R::runif(-1, 1);
 
     for(i = 0; i < nobs; i++){
-
-
       loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p * ZZ(i, q);
     }
 
@@ -731,7 +730,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
       log_num = log_num - lgamma(exp(loggamma_p(i))) + exp(loggamma_p(i)) * log(JJ(i, kk));
     }
 
-    log_num += R::dnorm4(beta_p, mu_beta, sigma_beta, 1);
+    log_num += R::dnorm4(beta_p, mu_beta, sigma_beta(h), 1);
 
     //Rcpp::Rcout << "log_num" << log_num << "beta_p: " << beta_p << std::endl;
 
@@ -1092,3 +1091,46 @@ double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log){
       return exp(r);
       }
     }
+
+// [[Rcpp::export]]
+arma::vec up_lambda_hs(arma::vec beta, arma::vec lambda, double tau){
+  int len = beta.size();
+  int k;
+  double eta, upsi, tempps, ub, Fub, up;
+  for(k = 0; k < len; k++){
+    eta = pow(lambda(k), -2.0);
+    upsi = R::runif(0, pow((1 + eta), - 1.0));
+    tempps = pow(beta(k), 2.0)/(2*pow(tau, 2.0));
+    ub = (1-upsi)/upsi;
+    Fub = 1.0 - exp(-tempps * ub);
+    if(Fub < pow(10.0, -4)){
+      Fub = pow(10.0, -4);
+    }
+    up = R::runif(0, Fub);
+    eta = -log(1.0 - up)/tempps;
+    lambda(k) = pow(eta, -0.5);
+  }
+  return lambda;
+}
+
+// [[Rcpp::export]]
+double up_tau_hs(arma::vec beta, arma::vec lambda, double tau){
+  int len = beta.size();
+  double tempt, et, utau, ubt, Fubt, ut;
+  tempt = arma::sum(pow((beta/lambda), 2.0))/2;
+  et = pow(tau, -2.0);
+  utau = R::runif(0.0, pow((1.0 + et), -1.0));
+  ubt = (1.0 - utau)/utau;
+  Fubt = R::pgamma(ubt, (((double) len) + 1.0)/2, pow(tempt, -1.0), 1, 0);
+  Fubt = std::max(Fubt, pow(10.0, -4));
+  ut = R::runif(0.0, Fubt);
+  et = R::qgamma(ut, (((double) len) + 1.0)/2.0, pow(tempt, -1.0), 1, 0);
+  if(et < .0001){
+    et = .0001;
+  }
+  tau = pow(et, -0.5);
+  if(tau < .0001){
+    tau = .0001;
+  }
+  return tau;
+}

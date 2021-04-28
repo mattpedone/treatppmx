@@ -151,7 +151,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
   arma::vec beta_temp(Q, arma::fill::zeros);
   arma::mat beta_flag(Q, dim, arma::fill::zeros);
   double mu_beta = 0.0;
-  double sigma_beta = 1.0;
+  arma::vec sigma_beta(Q*dim, arma::fill::ones);
+  arma::vec lambda(Q*dim, arma::fill::ones);
+  double tau = 1.0;
 
   // the linear predictor matrix, is in the log scale
   // log-linear function on the prognostic marker n x K
@@ -967,6 +969,10 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       loggamma = Rcpp::as<arma::mat>(l_beta_out[1]);
       beta_flag = Rcpp::as<arma::mat>(l_beta_out[2]);
     }
+
+    lambda = up_lambda_hs(beta, lambda, tau);
+    tau = up_tau_hs(beta, lambda, tau);
+    sigma_beta = lambda * tau;
 
     /*////////////////////////////////////////////////
      * update random variables:

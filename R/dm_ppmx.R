@@ -144,10 +144,10 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
     pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
                 ncol(z))
     betmat = cormat * pm
-    beta <- as.vector(t(betmat))
+    beta <- as.vector(t(betmat)) + 0.0001
     cat("init: ", beta, "\n")
   } else {
-    beta <- rep(0, ncol(y)*ncol(z))
+    beta <- rep(0.0001, ncol(y)*ncol(z))
   }
 
   alpha <- alpha#similparam[7]
