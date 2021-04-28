@@ -12,7 +12,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                    arma::mat zpred, arma::vec xcon, arma::vec xcat,
                    arma::vec xconp, arma::vec xcatp, int npred,
                    arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
-                   arma::vec hP0_V0, int upd_hier, arma::vec initbeta){
+                   arma::vec hP0_V0, int upd_hier, arma::vec initbeta, int hsp){
 
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -970,9 +970,11 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       beta_flag = Rcpp::as<arma::mat>(l_beta_out[2]);
     }
 
-    lambda = up_lambda_hs(beta, lambda, tau);
-    tau = up_tau_hs(beta, lambda, tau);
-    sigma_beta = lambda * tau;
+    if(hsp == 1){
+      lambda = up_lambda_hs(beta, lambda, tau);
+      tau = up_tau_hs(beta, lambda, tau);
+      sigma_beta = lambda * tau;
+    }
 
     /*////////////////////////////////////////////////
      * update random variables:
