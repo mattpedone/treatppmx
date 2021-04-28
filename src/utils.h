@@ -15,10 +15,18 @@ double gsimconNNIG(double, double, double, double, double, double, double,
 double gsimcatDM(arma::vec, arma::vec, int, int, int);
 Rcpp::List ranppmx(int, int, int, double, int, int, arma::vec, arma::vec, arma::vec, double,
       double, double, double, double, arma::vec);
-double calculate_gamma(arma::mat, int, int, int, int);
-Rcpp::List eta_update(arma::mat, arma::mat, int, arma::vec, arma::vec, arma::vec, arma::vec,
+double calculate_gamma(arma::mat, arma::mat, arma::vec, int, int, int, int);
+Rcpp::List eta_update(arma::mat, arma::vec, arma::mat, arma::mat, int, arma::vec,
+                      arma::vec, arma::vec, arma::vec,
            arma::vec, arma::vec, int);
+Rcpp::List beta_update(arma::mat, arma::mat, arma::mat, arma::vec, arma::mat,
+                       double, arma::vec, int);
 double log_mult(arma::mat, arma::mat);
 arma::mat rmultinom_rcpp(int, int, arma::vec);
 double dmultinom_rcpp(arma::vec, int, arma::vec, int);
 double myround(double);
+<<<<<<< HEAD
+=======
+arma::vec up_lambda_hs(arma::vec, arma::vec, double);
+double up_tau_hs(arma::vec, arma::vec, double);
+>>>>>>> devcov
