@@ -135,16 +135,18 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
     yy = y/rowSums(y) # compositionalize
     for(rr in 1:ncol(y)){
       for(cc in 1:ncol(z)){
-        pmat[rr, cc] = stats::cor.test(z[, cc], yy[, rr], method = "spearman",
-                                       exact = F)$p.value
-        cormat[rr, cc] = stats::cor(z[, cc], yy[, rr], method = "spearman")
+        pmat[rr, cc] = suppressWarnings(stats::cor.test(z[, cc], yy[, rr], method = "spearman",
+                                       exact = F)$p.value)
+        cormat[rr, cc] = suppressWarnings(stats::cor(z[, cc], yy[, rr], method = "spearman"))
       }
     }
     # defaults to 0.2 false discovery rate
     pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
                 ncol(z))
     betmat = cormat * pm
-    beta <- as.vector(t(betmat)) + 0.0001
+    beta <- as.vector(t(betmat))
+    beta[is.na(beta)] <- 0.0
+    beta <- beta + 0.0001
     cat("init: ", beta, "\n")
   } else {
     beta <- rep(0.0001, ncol(y)*ncol(z))

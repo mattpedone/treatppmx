@@ -293,9 +293,9 @@ scenario1 <- function(){
 scenario2 <- function(){
 
   dat <- NULL
-  n1 <- 40
-  n2 <- 20#10
-  n3 <- 40
+  n1 <- 80
+  n2 <- 40#10
+  n3 <- 80
 
   n <- n1 + n2 + n3
 
