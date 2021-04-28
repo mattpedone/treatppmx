@@ -543,7 +543,7 @@ double log_mult(arma::mat y, arma::mat JJ){
 Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat loggamma,
                       int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
                       arma::vec eta, arma::vec eta_flag,
-                      arma::vec mu_star, arma::vec sigma_star, int jj){
+                      arma::vec mu_star, arma::vec sigma_star, int jj, double mhtune){
   /*
    * JJ: matrix of independent gamma variables
    * loggamma: matrix of log-linear predictor
@@ -606,7 +606,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
    */
   //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
   for(k = 0; k < dim; k++){
-    eta_p(k) = eta(k) + R::rnorm(0, .15);//R::runif(-1, 1);
+    eta_p(k) = eta(k) + R::rnorm(0, mhtune);//R::runif(-1, 1);
   }
 
 
@@ -667,7 +667,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 // [[Rcpp::export]]
 Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
                        arma::vec beta_temp, arma::mat beta_flag,
-                       double mu_beta, arma::vec sigma_beta, int kk){
+                       double mu_beta, arma::vec sigma_beta, int kk, double mhtune){
 
   // this function loops through K so it is called for one category at a time
 
@@ -719,7 +719,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     //for(qq = 0; qq < Q; qq++){
     //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
     //}
-    beta_p = beta_temp(q) + R::rnorm(0, .15);//R::runif(-1, 1);
+    beta_p = beta_temp(q) + R::rnorm(0, mhtune);//R::runif(-1, 1);
 
     for(i = 0; i < nobs; i++){
       loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p * ZZ(i, q);

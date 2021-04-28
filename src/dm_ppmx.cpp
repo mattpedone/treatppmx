@@ -12,7 +12,8 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
                    arma::mat zpred, arma::vec xcon, arma::vec xcat,
                    arma::vec xconp, arma::vec xcatp, int npred,
                    arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
-                   arma::vec hP0_V0, int upd_hier, arma::vec initbeta, int hsp){
+                   arma::vec hP0_V0, int upd_hier, arma::vec initbeta, int hsp,
+                   arma::vec mhtunepar){
 
   // l - MCMC index
   // ll - MCMC index for saving iterates
@@ -883,7 +884,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
     for(j = 0; j < nclu_curr; j++){
       //Rcpp::Rcout << "lg_eu" << loggamma << std::endl;
       l_eta_out = eta_update(JJ, beta, z, loggamma, nclu_curr, curr_clu, nj_curr,
-                             eta_star_curr.col(j), eta_flag, mu0, L0v, j);
+                             eta_star_curr.col(j), eta_flag, mu0, L0v, j, mhtunepar(0));
       eta_star_curr.col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
       loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
       eta_flag = Rcpp::as<arma::vec>(l_eta_out[2]);
@@ -958,7 +959,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
       }
 
       l_beta_out = beta_update(z, JJ, loggamma, beta_temp, beta_flag, mu_beta,
-                               sigma_beta, k);
+                               sigma_beta, k, mhtunepar(1));
 
       beta_temp = Rcpp::as<arma::vec>(l_beta_out[0]);
       for(q = 0; q < Q; q++){

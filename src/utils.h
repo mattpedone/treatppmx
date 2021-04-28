@@ -17,10 +17,10 @@ Rcpp::List ranppmx(int, int, int, double, int, int, arma::vec, arma::vec, arma::
       double, double, double, double, arma::vec);
 double calculate_gamma(arma::mat, arma::mat, arma::vec, int, int, int, int);
 Rcpp::List eta_update(arma::mat, arma::vec, arma::mat, arma::mat, int, arma::vec,
-                      arma::vec, arma::vec, arma::vec,
-           arma::vec, arma::vec, int);
+                      arma::vec, arma::vec, arma::vec, arma::vec, arma::vec, int,
+                      double);
 Rcpp::List beta_update(arma::mat, arma::mat, arma::mat, arma::vec, arma::mat,
-                       double, arma::vec, int);
+                       double, arma::vec, int, double);
 double log_mult(arma::mat, arma::mat);
 arma::mat rmultinom_rcpp(int, int, arma::vec);
 double dmultinom_rcpp(arma::vec, int, arma::vec, int);

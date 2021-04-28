@@ -39,7 +39,7 @@
 my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
                        CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
-                       burn=100,thin=1){
+                       burn=100,thin=1, mhtunepar = c(.15, .15)){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -165,7 +165,7 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                  as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
                  as.vector(hP0_V0), as.integer(update_hierarchy), as.vector(t(beta)),
-                 as.integer(hsp))
+                 as.integer(hsp), as.vector(mhtunepar))
 
   ###PREPARE OUTPUT
   res <- list()
