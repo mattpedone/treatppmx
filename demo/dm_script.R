@@ -76,8 +76,8 @@ ppmx0_aux <- postquant_dm(y = Ytrain, yp = Ytest, output = out_ppmx0_aux,
                           data = mydata, plot = F)
 
 mydata$theta
-round(matrix(out_ppm$beta, ncol(Ztest), ncol(Ytest)), 2)
-round(matrix(out_ppmx0_aux$beta, ncol(Ztest), ncol(Ytest)), 2)
+round(apply(out_ppm$beta, c(1,2), mean), 2)
+round(apply(out_ppmx0_aux$beta, c(1,2), mean), 2)
 apply(out_ppm$eta, c(1,2), mean)
 apply(out_ppmx0_aux$eta, c(1,2), mean)
 

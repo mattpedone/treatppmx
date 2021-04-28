@@ -194,12 +194,14 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
   res$acc_rate_eta <- sum(out$eta_acc)#/sum(out$nclu)
 
   #prognostic covariates
-  beta <- matrix(0, ncol(Ztest), ncol(Ytest))
-  beta0 <- apply(out$beta, 1, mean)
-  for(k in 1:ncol(Y)){
-    for(q in 1:ncol(Ztest)){
-      h <- q + (k-1) * ncol(Ztest)
-      beta[q, k] <- beta0[h]
+  beta <- array(0, dim = c(ncol(Ztest), ncol(Ytest), nout))
+  beta0 <- out$beta
+  for(iter in 1:nout){
+    for(k in 1:ncol(Y)){
+      for(q in 1:ncol(Ztest)){
+        h <- q + (k-1) * ncol(Ztest)
+        beta[q, k, iter] <- beta0[h, iter]
+      }
     }
   }
 
