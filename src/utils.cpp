@@ -33,13 +33,6 @@
  *
  */
 
-// [[Rcpp::export]]
-double myround( double x )
-{
-  const double sd = 1000; //for accuracy to 3 decimal places
-  return int(x*sd + (x<0? -0.5 : 0.5))/sd;
-}
-
 //quadratic form
 double quform(arma::vec x, arma::vec A, int dim){
 
@@ -109,14 +102,14 @@ arma::vec cholesky(arma::vec A, int n) {
       double s = 0;
       for(int k = 0; k < j; k++){
         s += L[i * n + k] * L[j * n + k];
-        }
+      }
       if(i == j){
         L[i * n + j] = sqrt(A[i * n + i] - s);
-        } else {
-          L[i * n + j] = (1.0 / L[j * n + j] * (A[i * n + j] - s));
-          }
-        }
+      } else {
+        L[i * n + j] = (1.0 / L[j * n + j] * (A[i * n + j] - s));
+      }
     }
+  }
   return L;
 }
 
@@ -158,7 +151,7 @@ double logdet(arma::vec A, int n) {
       logdet =log(de);
     }
   }
-    return logdet;
+  return logdet;
 }
 
 // Inverse Gamma density
@@ -218,18 +211,18 @@ double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld,
   int i, j, k;
   arma::mat work(dim, dim);
 
-    for(j = 0; j < dim; j++){
-      for(k = 0; k < dim; k++){
-        work(j, k) = Sig(j * dim + k);
-      }
+  for(j = 0; j < dim; j++){
+    for(k = 0; k < dim; k++){
+      work(j, k) = Sig(j * dim + k);
     }
-    work = arma::inv(work);
+  }
+  work = arma::inv(work);
 
-    for(j = 0; j < dim; j++){
-      for(k = 0; k < dim; k++){
-        Sig(j * dim + k) = work(j, k);
-      }
+  for(j = 0; j < dim; j++){
+    for(k = 0; k < dim; k++){
+      Sig(j * dim + k) = work(j, k);
     }
+  }
 
   arma::vec scr(dim);
 
@@ -347,8 +340,8 @@ arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
   for(j = 0; j < dim; j++){
     for(k = 0; k < dim; k++){
       out(j * dim + k) = outmat(j,  k);
-      }
     }
+  }
   return out;
 }
 
@@ -568,19 +561,15 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
   int nobs = JJ.n_rows;
 
   int i, k;//, ii;
- /*
-  * indices for:
-  * i: individuals
-  * k: categories
-  * ii: second index for individuals
-  */
+  /*
+   * indices for:
+   * i: individuals
+   * k: categories
+   * ii: second index for individuals
+   */
 
 
-<<<<<<< HEAD
-  double log_num, log_den, ln_acp, lnu, ld, provaA, provaB;
-=======
   double log_num, log_den, ln_acp, lnu, ld, provaA, provaB, provaC;
->>>>>>> devcov
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -614,40 +603,16 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
   /*
    * propose new value for eta
    * I sample it from updated priors (for now)
-*/
+   */
   //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
   for(k = 0; k < dim; k++){
     eta_p(k) = eta(k) + R::rnorm(0, .15);//R::runif(-1, 1);
   }
 
 
-<<<<<<< HEAD
-  /*for(i = 0; i < nobs; i++){
-    if(curr_clu(i) == (jj + 1)){
-=======
   for(i = 0; i < nobs; i++){
     if(curr_clu(i)-1 == (jj)){
->>>>>>> devcov
       for(k = 0; k < dim; k++){
-        loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
-      }
-    }
-  }*/
-
-  for(i = 0; i < nobs; i++){
-    if(curr_clu(i) == (jj + 1)){
-      for(k = 0; k < dim; k++){
-
-        provaA =  calculate_gamma(eta_p, 0, k, i, 1);
-        provaB = loggamma(i, k) - eta(k) + eta_p(k);
-
-        if(myround(provaA) != myround(provaB)){
-          Rcpp::warning("Warning: Unexpected condition occurred");
-          Rcpp::Rcout << "provaA " << provaA + 1 << std::endl;
-          Rcpp::Rcout << "provaB " << provaB + 1 << std::endl;
-          Rcpp::Rcout << "siamo nel cluster " << jj + 1 << std::endl;
-          Rcpp::Rcout << "dim: " << k << std::endl;
-        }
         loggamma_p(i, k) = loggamma(i, k) - eta(k) + eta_p(k);
       }
     }
@@ -701,8 +666,8 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
  */
 // [[Rcpp::export]]
 Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
-                      arma::vec beta_temp, arma::mat beta_flag,
-                      double mu_beta, arma::vec sigma_beta, int kk){
+                       arma::vec beta_temp, arma::mat beta_flag,
+                       double mu_beta, arma::vec sigma_beta, int kk){
 
   // this function loops through K so it is called for one category at a time
 
@@ -752,7 +717,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
 
     // propose new value for beta (RW)
     //for(qq = 0; qq < Q; qq++){
-      //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
+    //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
     //}
     beta_p = beta_temp(q) + R::rnorm(0, .15);//R::runif(-1, 1);
 
@@ -783,7 +748,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
       beta_temp(q) = beta_p;
       for(i = 0; i < nobs; i++){
         loggamma(i, kk) = loggamma_p(i);
-        }
+      }
     }//closes if accepted
   }
 
@@ -797,34 +762,34 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
 }
 
 /*
-//[[Rcpp::export]]
-double dweight(arma::mat loggamma, arma::mat JJ, int i){
+ //[[Rcpp::export]]
+ double dweight(arma::mat loggamma, arma::mat JJ, int i){
 
-  int ncat = loggamma.n_cols;
-  int k;
-  double dw = 0.0;
+ int ncat = loggamma.n_cols;
+ int k;
+ double dw = 0.0;
 
-  for(k = 0; k < ncat; k++){
-    dw = dw - arma::sum(lgamma(exp(loggamma(i, k)))) +
-      arma::sum(exp(loggamma(i, k))*log(JJ(i, k)));
-  }
+ for(k = 0; k < ncat; k++){
+ dw = dw - arma::sum(lgamma(exp(loggamma(i, k)))) +
+ arma::sum(exp(loggamma(i, k))*log(JJ(i, k)));
+ }
 
-  return dw;
-}
-*/
+ return dw;
+ }
+ */
 
 /* [[Rcpp::export]]
-double myround( double x )
-{
-  const double sd = 1000; //for accuracy to 3 decimal places
-  return int(x*sd + (x<0? -0.5 : 0.5))/sd;
-}*/
+ double myround( double x )
+ {
+ const double sd = 1000; //for accuracy to 3 decimal places
+ return int(x*sd + (x<0? -0.5 : 0.5))/sd;
+ }*/
 
 // [[Rcpp::export]]
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
-           int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec,
-           double m0, double k0, double v0, double s20, double v,
-           arma::vec dirweights){
+                   int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec,
+                   double m0, double k0, double v0, double s20, double v,
+                   arma::vec dirweights){
   /**************************************************************************************************
    * Function that generates draws from a product partition model prior
    *
@@ -1108,12 +1073,12 @@ double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log){
   }
 
   /*if (any(i0)) {
-    if (any(x[i0] != 0))
-      return(if (log) -Inf else 0)
-      if (all(i0))
-        return(if (log) 0 else 1)
-        x <- x[!i0]
-      prob <- prob[!i0]
+   if (any(x[i0] != 0))
+   return(if (log) -Inf else 0)
+   if (all(i0))
+   return(if (log) 0 else 1)
+   x <- x[!i0]
+   prob <- prob[!i0]
   }*/
   double r;
   r = lgamma(size + 1);
@@ -1122,10 +1087,10 @@ double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log){
   }
   if (Log){
     return r;
-    } else {
-      return exp(r);
-      }
-    }
+  } else {
+    return exp(r);
+  }
+}
 
 // [[Rcpp::export]]
 arma::vec up_lambda_hs(arma::vec beta, arma::vec lambda, double tau){
