@@ -978,13 +978,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
      for(i = 0; i < nobs; i++){
        TT(i) = 0.0;
        for(k = 0; k < dim; k++){
-         if(y(i, k) != 1){
-           JJ(i, k) = R::rgamma(exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
-           //JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k)), 1.0/(ss(i) + 1.0));
-         } else {
-           JJ(i, k) = R::rgamma(exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
-           //JJ(i, k) = R::rgamma(y(i, k)+exp(loggamma(i, k) + 1.0), 1.0/(ss(i) + 1.0));
-         }
+           JJ(i, k) = R::rgamma(y(i, k) + exp(loggamma(i, k)), pow(ss(i) + 1.0, - 1.0));
          if(JJ(i, k) < pow(10.0, -100.0)){
            JJ(i, k) = pow(10.0, -100.0);
          }
@@ -994,7 +988,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
      // update latent variables ss
      for(i = 0 ; i < nobs ; i++){
-       ss(i) = R::rgamma(ypiu(i), TT(i));
+       ss(i) = R::rgamma(ypiu(i), pow(TT(i), - 1.0));
      }
 
      /*////////////////////////////////////////////////

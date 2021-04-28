@@ -606,7 +606,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 */
   //eta_p = ran_mvnorm(mu_star, sigma_star, dim);
   for(k = 0; k < dim; k++){
-    eta_p(k) = eta(k) + R::rnorm(0, .5);//R::runif(-1, 1);
+    eta_p(k) = eta(k) + R::rnorm(0, .1);//R::runif(-1, 1);
   }
 
 
@@ -718,7 +718,7 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     //for(qq = 0; qq < Q; qq++){
       //beta_p(q) = beta_temp(q) + R::runif(-.01, .01);
     //}
-    beta_p = beta_temp(q) + R::rnorm(0, .5);//R::runif(-1, 1);
+    beta_p = beta_temp(q) + R::rnorm(0, .25);//R::runif(-1, 1);
 
     for(i = 0; i < nobs; i++){
 
