@@ -25,8 +25,5 @@ double log_mult(arma::mat, arma::mat);
 arma::mat rmultinom_rcpp(int, int, arma::vec);
 double dmultinom_rcpp(arma::vec, int, arma::vec, int);
 double myround(double);
-<<<<<<< HEAD
-=======
 arma::vec up_lambda_hs(arma::vec, arma::vec, double);
 double up_tau_hs(arma::vec, arma::vec, double);
->>>>>>> devcov
