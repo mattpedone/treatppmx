@@ -36,7 +36,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, i
 
   int nout = (iter - burn)/(thin); //number of saved iterations
 
-  Rcpp::Rcout << "nout =  " << nout << std::endl;
+  //Rcpp::Rcout << "nout =  " << nout << std::endl;
   //////////////////////////
   //// DM scheme stuff
   //////////////////////////

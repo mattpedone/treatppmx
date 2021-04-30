@@ -506,23 +506,21 @@ plot_auc <- function(output_ppm, output_ppmx){
 }
 
 ####post processing sketch as described in Richardson & Greene (1997)
-#C_binder <- max(ppmx0_aux$lab)
-#median_C <- median(out_ppmx0_aux$nclu)
-#nc <- C_binder#median_C#
-#mvn_dim <- ncol(Ytrain)
-#eta_work <- matrix(0, nc, mvn_dim,)
-#eta_pp <- matrix(0, nc, mvn_dim)
-#noutC <- 0
-#for(l in 1:nout){
-#  if(out_ppmx0_aux$nclu[l]==nc){
-#    eta_work <- out_ppmx0_aux$eta[c(1:nc),,l]
-#    eta_pp = eta_pp + eta_work[order(eta_work[,1]),]
-#    noutC <- noutC + 1
-#  }
-#}
-#eta_pp <- eta_pp/noutC
-#eta_pp_exp <- matrix(0, nrow(Ytrain), ncol(Ytrain))
-#for(i in 1:nrow(Ytrain))
-#  eta_pp_exp[i,] <- eta_pp[out_ppmx0_aux$label[i]]
-#mydata$intercept_train
-#unique(mydata$intercept_train[mydata$labeltrain,])
+pp_cs_rg <- function(output, post, nout, dim, refdim = 1){
+  C_binder <- max(post$lab)
+  median_C <- median(output$nclu)
+  nc <- C_binder#median_C#
+
+  eta_work <- matrix(0, nc, dim,)
+  eta_pp <- matrix(0, nc, dim)
+  noutC <- 0
+  for(l in 1:nout){
+    if(output$nclu[l]==nc){
+      eta_work <- output$eta[c(1:nc),,l]
+      eta_pp = eta_pp + eta_work[order(eta_work[,refdim]),]
+      noutC <- noutC + 1
+    }
+  }
+  eta_pp <- eta_pp/noutC
+  return(eta_pp)
+}

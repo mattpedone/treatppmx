@@ -147,7 +147,7 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
     beta <- as.vector(t(betmat))
     beta[is.na(beta)] <- 0.0
     beta <- beta + 0.0001
-    cat("init: ", beta, "\n")
+    #cat("init: ", beta, "\n")
   } else {
     beta <- rep(0.0001, ncol(y)*ncol(z))
   }
