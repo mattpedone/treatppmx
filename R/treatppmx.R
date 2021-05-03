@@ -19,6 +19,7 @@
 #' @importFrom stats acf
 #' @importFrom graphics par
 #' @importFrom mvtnorm rmvnorm
-#' @importFrom pROC multi_roc
-#' @importFrom pROC plot_roc_data
+#' @importFrom multiROC multi_roc
+#' @importFrom multiROC plot_roc_data
+#' @importFrom pROC multiclass.roc
 NULL

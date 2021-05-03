@@ -31,6 +31,7 @@
 #'   1 - standardize similarity value for each covariate
 #'   2 - coarsening is applied so that each similarity is raised to the 1/p power
 #' @param update_hierarchy should hypeparameter for BNP intercept be updated? if 1 yes (default)
+#' @param initpc: partial correlation initialization for prognostic covariates coefficient (default)
 #' @export
 # mancano come input tutti gli storage per l output che inizializzo in R e passo come input qui
 # poi in R li metto in una lista
@@ -39,7 +40,7 @@
 my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
                        CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
-                       burn=100,thin=1, mhtunepar = c(.15, .15)){
+                       burn=100,thin=1, mhtunepar = c(.15, .15), initpc = TRUE){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -128,7 +129,7 @@ my_dm_ppmx <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, alpha=1,
     }
   }
 
-  init = TRUE
+  init = initpc
   if(init == TRUE){
     cormat = matrix(0, ncol(y), ncol(z))
     pmat = matrix(0, ncol(y), ncol(z))

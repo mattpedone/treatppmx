@@ -24,7 +24,8 @@ my_dm_ppmx(
   iter = 1100,
   burn = 100,
   thin = 1,
-  mhtunepar = c(0.15, 0.15)
+  mhtunepar = c(0.15, 0.15),
+  initpc = TRUE
 )
 }
 \arguments{
@@ -78,6 +79,8 @@ my_dm_ppmx(
 \item{xcon}{\eqn{nobs \times ncon} contiguous double vector that contains continuous covariate values}
 
 \item{xcat}{\eqn{nobs \times ncat} contiguous int vector that contains categorical covariate values}
+
+\item{initpc:}{partial correlation initialization for prognostic covariates coefficient (default)}
 }
 \description{
 PPMx

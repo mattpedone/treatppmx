@@ -268,8 +268,8 @@ scenario1 <- function(){
 
   for(i in 1:n){
     thisrow = as.vector(exp(intercept[i,]))# %*% XX[ii, ]))
-    pi = bayess::rdirichlet(n = 1, par = thisrow)
-    #pi = thisrow/sum(thisrow)
+    #pi = bayess::rdirichlet(n = 1, par = thisrow)
+    pi = thisrow/sum(thisrow)
     Y[i, ] = rmultinom(1, 1, pi)
   }
 
@@ -477,7 +477,7 @@ postquant_dm <- function(y, yp, output, data, plot, minbinder = F){
     catvec <- c(catvec, which(yp[i,] == 1))
   }
 
-  auc <- pROC::multiclass.roc(catvec, probs)$auc[1]
+  auc <- multiclass.roc(catvec, probs)$auc[1]
   mypostquant <- list("nclupost" = mean(output$nclu),
                       "ARI" = ari, "ESS" = ess, "lab" = mc$cl,
                       "waic" = output$WAIC, "lpml" = output$lpml, "auc" = auc)
