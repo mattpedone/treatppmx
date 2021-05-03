@@ -458,7 +458,6 @@ double gsimcatDM(arma::vec nobsj, arma::vec dirweights, int C, int DD, int logou
   return out;
 }
 
-// [[Rcpp::export]]
 double calculate_gamma(arma::mat eta, arma::mat ZZ, arma::vec beta, int clu_lg,
                        int k, int i, int Log){
   /* function that compute log linear predictor.
@@ -539,7 +538,7 @@ double log_mult(arma::mat y, arma::mat JJ){
  * the following function updates the mvn intercept clusterwise
  * $\boldsymbol{\eta}_{j}^{\star}$
  */
-// [[Rcpp::export]]
+
 Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat loggamma,
                       int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
                       arma::vec eta, arma::vec eta_flag,
@@ -569,7 +568,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
    */
 
 
-  double log_num, log_den, ln_acp, lnu, ld, provaA, provaB, provaC;
+  double log_num, log_den, ln_acp, lnu, ld;
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -664,7 +663,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
  * the following function updates the coefficients for prognostic covariates
  * $\boldsymbol{\beta}_{q}$
  */
-// [[Rcpp::export]]
+
 Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
                        arma::vec beta_temp, arma::mat beta_flag,
                        double mu_beta, arma::vec sigma_beta, int kk, double mhtune){
@@ -684,13 +683,13 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
   int Q = ZZ.n_cols;
   int nobs = JJ.n_rows;
 
-  int i, q, qq, h;
+  int i, q, h;
   /* indices for:
    * i: individuals
    * q: vovariates
    */
 
-  double log_num, log_den, ln_acp, lnu, ld;
+  double log_num, log_den, ln_acp, lnu;
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -785,7 +784,6 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
  return int(x*sd + (x<0? -0.5 : 0.5))/sd;
  }*/
 
-// [[Rcpp::export]]
 Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha,
                    int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec,
                    double m0, double k0, double v0, double s20, double v,
@@ -1030,7 +1028,7 @@ arma::mat rmultinom_rcpp(int n, int size, arma::vec prob) {
   unsigned int N = probs.length();
   arma::mat sim(N, n);
   Rcpp::NumericVector work(N);
-  for (unsigned int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     work = rmultinom_1(size, probs, N);
     sim.col(i) = Rcpp::as<arma::vec>(work);
   }
@@ -1092,7 +1090,6 @@ double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log){
   }
 }
 
-// [[Rcpp::export]]
 arma::vec up_lambda_hs(arma::vec beta, arma::vec lambda, double tau){
   int len = beta.size();
   int k;
@@ -1113,7 +1110,6 @@ arma::vec up_lambda_hs(arma::vec beta, arma::vec lambda, double tau){
   return lambda;
 }
 
-// [[Rcpp::export]]
 double up_tau_hs(arma::vec beta, arma::vec lambda, double tau){
   int len = beta.size();
   double tempt, et, utau, ubt, Fubt, ut;
