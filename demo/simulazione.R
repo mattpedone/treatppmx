@@ -2,7 +2,7 @@ devtools::load_all()
 
 #set.seed(121)
 
-KK <- 15#numero di repliche
+KK <- 10#numero di repliche
 res <- matrix(0, KK, 8)
 outtab <- array(0, dim = c(13, 8, KK))
 ##list for aucs
@@ -40,7 +40,7 @@ alpha_DP <- 2
 n_aux <- 5
 vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 52000
+iterations <- 22000
 burnin <- 2000
 thinning <- 10
 
