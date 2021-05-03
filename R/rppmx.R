@@ -127,7 +127,7 @@ genera_dati <- function(n = 100, P = 2, Q = 2){
 
 #' gendata
 #'
-#' @export
+# @export
 #'
 gcd <- function(n_obs, concov = 2, K = 2, similarity = 1, simparm = 1,
                 alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
@@ -170,7 +170,7 @@ gcd <- function(n_obs, concov = 2, K = 2, similarity = 1, simparm = 1,
 
 #' gendata dm
 #'
-#' @export
+# @export
 #'
 gcd_dm <- function(n_obs, concov = 2, K, similarity = 1, simparm = 1,
                 alpha = 1, m0 = 0, s20 = 1, v = 2, k0 = 10, v0 = 1, plot = F){
@@ -225,7 +225,7 @@ gcd_dm <- function(n_obs, concov = 2, K, similarity = 1, simparm = 1,
 
 #' Scenario 1
 #'
-#' @export
+# @export
 #'
 scenario1 <- function(){
 
@@ -377,8 +377,8 @@ scenario2 <- function(){
 
   for(i in 1:n){
     thisrow = as.vector(exp(intercept[i,]+ t(theta)%*% z[i, ]))
-    pi = bayess::rdirichlet(n = 1, par = thisrow)
-    #pi = thisrow/sum(thisrow)
+    #pi = bayess::rdirichlet(n = 1, par = thisrow)
+    pi = thisrow/sum(thisrow)
     #cat("pi", i, ": ", pi, "\n")
     Y[i, ] = rmultinom(1, 1, pi)
   }
@@ -420,7 +420,7 @@ scenario2 <- function(){
 
 #' postquant
 #'
-#' @export
+# @export
 #'
 postquant <- function(y, output, data, lab, plot){#, minbinder = F){
   cls <- as.matrix(output$label)
@@ -489,6 +489,10 @@ postquant_dm <- function(y, yp, output, data, plot, minbinder = F){
   return(mypostquant)
 }
 
+#' Multiclass AUC
+#'
+#' @export
+#'
 plot_auc <- function(output_ppm, output_ppmx){
   probs_ppm <- apply(output_ppm$pipred, c(1, 2), mean)
   probs_ppmx <- apply(output_ppmx$pipred, c(1, 2), mean)
@@ -505,7 +509,10 @@ plot_auc <- function(output_ppm, output_ppmx){
     geom_path(aes(color = Group, linetype=Method), size=0.5)
 }
 
-####post processing sketch as described in Richardson & Greene (1997)
+#' post processing sketch as described in Richardson & Greene (1997)
+#'
+#' @export
+#'
 pp_cs_rg <- function(output, post, nout, dim, refdim = 1){
   C_binder <- max(post$lab)
   median_C <- median(output$nclu)
