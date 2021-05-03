@@ -19,5 +19,6 @@
 #' @importFrom stats acf
 #' @importFrom graphics par
 #' @importFrom mvtnorm rmvnorm
-#' @importFrom scatterplot3d scatterplot3d
+#' @importFrom pROC multi_roc
+#' @importFrom pROC plot_roc_data
 NULL
