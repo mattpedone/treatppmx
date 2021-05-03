@@ -3,7 +3,7 @@ testing1           testing function pt1
 testing2           testing function pt2
 fnchoff            library w/ function for chpt7 hoff book
 chpt7hoff          implementing chpt7 mvn example
-report_matteo.html     PPMx w/Reuse MVN model
 script_gm          script to evaluate PPMx for differente generating mechanisms
 mvn_script          principal script for mvn
 dm_script         current script for running analysis
+simulazione        simulazione "grande"

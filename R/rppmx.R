@@ -314,14 +314,14 @@ scenario2 <- function(){
       x[i,1] <- rnorm(1, -3, sqrt(.5))
       x[i,2] <- rnorm(1, 3, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .1)
-      x[i,4] <- rbinom(1, 1, .1)
+      x[i,4] <- rbinom(1, 1, .5)
       label[i] <- 1
     }
     if((n1 < i) & (i <= (n1+n2))){
       x[i,1] <- rnorm(1, 0, sqrt(.5))
       x[i,2] <- rnorm(1, 0, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .5)
-      x[i,4] <- rbinom(1, 1, .5)
+      x[i,4] <- rbinom(1, 1, .9)
       label[i] <- 2
     }
     if((i > (n1+n2))){
@@ -355,8 +355,8 @@ scenario2 <- function(){
   #  st = st + 1
   #}
 
-  theta[, 1] <- c(-2.0, 1.0, 1.5, 0)
-  theta[, 2] <- c(1.0, 2.0, 0, -1.0)
+  theta[, 1] <- c(2.0, 1.0, -1.5, 0)
+  theta[, 2] <- c(-1.0, 2.0, 0, -1.0)
   theta <- t(theta)
 
   intercept <- matrix(0, n, 4)
@@ -460,12 +460,13 @@ postquant <- function(y, output, data, lab, plot){#, minbinder = F){
 postquant_dm <- function(y, yp, output, data, plot, minbinder = F){
   cls <- as.matrix(output$label)
   psm <- comp.psm(cls)
-  if(minbinder == T){
-    mc <- minbinder.ext(psm)
-  } else {
-    mc <- minVI(psm)
-  }
-  ari <- adjustedRandIndex(mc$cl, data$labeltrain)
+  #if(minbinder == T){
+    mc_b <- minbinder.ext(psm)
+  #} else {
+    mc_vi <- minVI(psm)
+  #}
+  ari_b <- adjustedRandIndex(mc_b$cl, data$labeltrain)
+  ari_vi <- adjustedRandIndex(mc_vi$cl, data$labeltrain)
   ess <- effectiveSize(output$nclu)
 
   #predictive AUC multiclass
@@ -479,7 +480,7 @@ postquant_dm <- function(y, yp, output, data, plot, minbinder = F){
 
   auc <- multiclass.roc(catvec, probs)$auc[1]
   mypostquant <- list("nclupost" = mean(output$nclu),
-                      "ARI" = ari, "ESS" = ess, "lab" = mc$cl,
+                      "ARI_B" = ari_b, "ARI_VI" = ari_vi, "ESS" = ess, "labb" = mc_b$cl, "labvi" = mc_vi$cl,
                       "waic" = output$WAIC, "lpml" = output$lpml, "auc" = auc)
   if(plot == T){
     par(mfrow=c(1,2))
@@ -509,6 +510,22 @@ plot_auc <- function(output_ppm, output_ppmx){
     geom_path(aes(color = Group, linetype=Method), size=0.5)
 }
 
+#' Multiclass AUC noplot
+#'
+#' @export
+#'
+compute_auc <- function(output_ppm, output_ppmx){
+  probs_ppm <- apply(output_ppm$pipred, c(1, 2), mean)
+  probs_ppmx <- apply(output_ppmx$pipred, c(1, 2), mean)
+
+  colnames(Ytest) <- c("a_true", "b_true", "c_true", "d_true")
+  colnames(probs_ppm) <- c("a_pred_ppm", "b_pred_ppm", "c_pred_ppm", "d_pred_ppm")
+  colnames(probs_ppmx) <- c("a_pred_ppmx", "b_pred_ppmx", "c_pred_ppmx", "d_pred_ppmx")
+  final_df <- data.frame(cbind(Ytest, probs_ppm, probs_ppmx))
+
+  roc_res <- multi_roc(final_df, force_diag = T)
+}
+
 #' post processing sketch as described in Richardson & Greene (1997)
 #'
 #' @export
@@ -530,4 +547,129 @@ pp_cs_rg <- function(output, post, nout, dim, refdim = 1){
   }
   eta_pp <- eta_pp/noutC
   return(eta_pp)
+}
+
+#' avg AUC/ROC
+#' I am sure there is a better way
+#'
+#' @export
+#'
+avg_auc <- function(roc_res, KK){
+
+  roc_res_avg <- roc_res[[1]]
+  for(kk in 2:KK){
+    ##PPM
+    roc_res_avg$Specificity$ppm$a <- roc_res_avg$Specificity$ppm$a +
+      roc_res[[kk]]$Specificity$ppm$a
+    roc_res_avg$Specificity$ppm$b <- roc_res_avg$Specificity$ppm$b +
+      roc_res[[kk]]$Specificity$ppm$b
+    roc_res_avg$Specificity$ppm$c <- roc_res_avg$Specificity$ppm$c +
+      roc_res[[kk]]$Specificity$ppm$c
+    roc_res_avg$Specificity$ppm$d <- roc_res_avg$Specificity$ppm$d +
+      roc_res[[kk]]$Specificity$ppm$d
+
+    roc_res_avg$Sensitivity$ppm$a <- roc_res_avg$Sensitivity$ppm$a +
+      roc_res[[kk]]$Sensitivity$ppm$a
+    roc_res_avg$Sensitivity$ppm$b <- roc_res_avg$Sensitivity$ppm$b +
+      roc_res[[kk]]$Sensitivity$ppm$b
+    roc_res_avg$Sensitivity$ppm$c <- roc_res_avg$Sensitivity$ppm$c +
+      roc_res[[kk]]$Sensitivity$ppm$c
+    roc_res_avg$Sensitivity$ppm$d <- roc_res_avg$Sensitivity$ppm$d +
+      roc_res[[kk]]$Sensitivity$ppm$d
+
+    roc_res_avg$AUC$ppm$a <- roc_res_avg$AUC$ppm$a +
+      roc_res[[kk]]$AUC$ppm$a
+    roc_res_avg$AUC$ppm$b <- roc_res_avg$AUC$ppm$b +
+      roc_res[[kk]]$AUC$ppm$b
+    roc_res_avg$AUC$ppm$c <- roc_res_avg$AUC$ppm$c +
+      roc_res[[kk]]$AUC$ppm$c
+    roc_res_avg$AUC$ppm$d <- roc_res_avg$AUC$ppm$d +
+      roc_res[[kk]]$AUC$ppm$d
+
+    ##PPMx
+    roc_res_avg$Specificity$ppmx$a <- roc_res_avg$Specificity$ppmx$a +
+      roc_res[[kk]]$Specificity$ppmx$a
+    roc_res_avg$Specificity$ppmx$b <- roc_res_avg$Specificity$ppmx$b +
+      roc_res[[kk]]$Specificity$ppmx$b
+    roc_res_avg$Specificity$ppmx$c <- roc_res_avg$Specificity$ppmx$c +
+      roc_res[[kk]]$Specificity$ppmx$c
+    roc_res_avg$Specificity$ppmx$d <- roc_res_avg$Specificity$ppmx$d +
+      roc_res[[kk]]$Specificity$ppmx$d
+
+    roc_res_avg$Sensitivity$ppmx$a <- roc_res_avg$Sensitivity$ppmx$a +
+      roc_res[[kk]]$Sensitivity$ppmx$a
+    roc_res_avg$Sensitivity$ppmx$b <- roc_res_avg$Sensitivity$ppmx$b +
+      roc_res[[kk]]$Sensitivity$ppmx$b
+    roc_res_avg$Sensitivity$ppmx$c <- roc_res_avg$Sensitivity$ppmx$c +
+      roc_res[[kk]]$Sensitivity$ppmx$c
+    roc_res_avg$Sensitivity$ppmx$d <- roc_res_avg$Sensitivity$ppmx$d +
+      roc_res[[kk]]$Sensitivity$ppmx$d
+
+    roc_res_avg$AUC$ppmx$a <- roc_res_avg$AUC$ppmx$a +
+      roc_res[[kk]]$AUC$ppmx$a
+    roc_res_avg$AUC$ppmx$b <- roc_res_avg$AUC$ppmx$b +
+      roc_res[[kk]]$AUC$ppmx$b
+    roc_res_avg$AUC$ppmx$c <- roc_res_avg$AUC$ppmx$c +
+      roc_res[[kk]]$AUC$ppmx$c
+    roc_res_avg$AUC$ppmx$d <- roc_res_avg$AUC$ppmx$d +
+      roc_res[[kk]]$AUC$ppmx$d
+  }
+
+  roc_res_avg$Specificity$ppm$a <- roc_res_avg$Specificity$ppm$a/KK
+  roc_res_avg$Specificity$ppm$b <- roc_res_avg$Specificity$ppm$b/KK
+  roc_res_avg$Specificity$ppm$c <- roc_res_avg$Specificity$ppm$c/KK
+  roc_res_avg$Specificity$ppm$d <- roc_res_avg$Specificity$ppm$d/KK
+
+  roc_res_avg$Sensitivity$ppm$a <- roc_res_avg$Sensitivity$ppm$a/KK
+  roc_res_avg$Sensitivity$ppm$b <- roc_res_avg$Sensitivity$ppm$b/KK
+  roc_res_avg$Sensitivity$ppm$c <- roc_res_avg$Sensitivity$ppm$c/KK
+  roc_res_avg$Sensitivity$ppm$d <- roc_res_avg$Sensitivity$ppm$d/KK
+
+  roc_res_avg$AUC$ppm$a <- roc_res_avg$AUC$ppm$a/KK
+  roc_res_avg$AUC$ppm$b <- roc_res_avg$AUC$ppm$b/KK
+  roc_res_avg$AUC$ppm$c <- roc_res_avg$AUC$ppm$c/KK
+  roc_res_avg$AUC$ppm$d <- roc_res_avg$AUC$ppm$d/KK
+
+  roc_res_avg$Specificity$ppmx$a <- roc_res_avg$Specificity$ppmx$a/KK
+  roc_res_avg$Specificity$ppmx$b <- roc_res_avg$Specificity$ppmx$b/KK
+  roc_res_avg$Specificity$ppmx$c <- roc_res_avg$Specificity$ppmx$c/KK
+  roc_res_avg$Specificity$ppmx$d <- roc_res_avg$Specificity$ppmx$d/KK
+
+  roc_res_avg$Sensitivity$ppmx$a <- roc_res_avg$Sensitivity$ppmx$a/KK
+  roc_res_avg$Sensitivity$ppmx$b <- roc_res_avg$Sensitivity$ppmx$b/KK
+  roc_res_avg$Sensitivity$ppmx$c <- roc_res_avg$Sensitivity$ppmx$c/KK
+  roc_res_avg$Sensitivity$ppmx$d <- roc_res_avg$Sensitivity$ppmx$d/KK
+
+  roc_res_avg$AUC$ppmx$a <- roc_res_avg$AUC$ppmx$a/KK
+  roc_res_avg$AUC$ppmx$b <- roc_res_avg$AUC$ppmx$b/KK
+  roc_res_avg$AUC$ppmx$c <- roc_res_avg$AUC$ppmx$c/KK
+  roc_res_avg$AUC$ppmx$d <- roc_res_avg$AUC$ppmx$d/KK
+
+  roc_res_avg$Specificity$ppm <- within(roc_res_avg$Specificity$ppm, rm(macro, micro))
+  roc_res_avg$Specificity$ppmx <- within(roc_res_avg$Specificity$ppmx, rm(macro, micro))
+  roc_res_avg$Sensitivity$ppm <- within(roc_res_avg$Sensitivity$ppm, rm(macro, micro))
+  roc_res_avg$Sensitivity$ppmx <- within(roc_res_avg$Sensitivity$ppmx, rm(macro, micro))
+  roc_res_avg$AUC$ppm <- within(roc_res_avg$AUC$ppm, rm(macro, micro))
+  roc_res_avg$AUC$ppmx <- within(roc_res_avg$AUC$ppmx, rm(macro, micro))
+
+  return(roc_res_avg)
+}
+
+my_plot_multi_roc_data <- function (roc_res)
+{
+  n_method <- length(unique(roc_res$Methods))
+  n_group <- length(unique(roc_res$Groups))
+  roc_res_df <- data.frame(Specificity = numeric(0), Sensitivity = numeric(0),
+                           Group = character(0), AUC = numeric(0), Method = character(0))
+  for (i in 1:n_method) {
+    for (j in 1:n_group) {
+      temp_data_1 <- data.frame(Specificity = roc_res$Specificity[[i]][j],
+                                Sensitivity = roc_res$Sensitivity[[i]][j], Group = unique(roc_res$Groups)[j],
+                                AUC = roc_res$AUC[[i]][j], Method = unique(roc_res$Methods)[i])
+      colnames(temp_data_1) <- c("Specificity", "Sensitivity",
+                                 "Group", "AUC", "Method")
+      roc_res_df <- rbind(roc_res_df, temp_data_1)
+    }
+  }
+  return(roc_res_df)
 }

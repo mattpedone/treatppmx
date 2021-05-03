@@ -10,17 +10,17 @@ devtools::load_all()
 #library(multiROC)
 #require(ggplot2)
 
-Rcpp::sourceCpp(file = "src/utils.cpp")
-Rcpp::sourceCpp(file = "src/dm_ppmx.cpp")
-source(file = "R/dm_ppmx.R")
-source(file = "R/rppmx.R")
+#Rcpp::sourceCpp(file = "src/utils.cpp")
+#Rcpp::sourceCpp(file = "src/dm_ppmx.cpp")
+#source(file = "R/dm_ppmx.R")
+#source(file = "R/rppmx.R")
 set.seed(121)
 
 KK <- 1#numero di repliche
 res <- matrix(0, KK, 7)
 outtab <- array(0, dim = c(13, 7, KK))
 par(mfrow=c(1,1))
-for(kk in 1:KK){
+#for(kk in 1:KK){
   mydata <- scenario2()
   Y <- mydata$y
   X <- mydata$X
@@ -42,13 +42,13 @@ for(kk in 1:KK){
   modelpriors$hP0_nu0 <- ncol(Y) + 2
   modelpriors$hP0_V0 <- diag(1, ncol(Y))
 
-  alpha_DP <- 1
+  alpha_DP <- 2
   n_aux <- 5
   vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
   #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-  iterations <- 52000
-  burnin <- 2000
-  thinning <- 10
+  iterations <- 520
+  burnin <- 20
+  thinning <- 1
 
   uh = T
   nout <- (iterations-burnin)/thinning
@@ -56,12 +56,12 @@ for(kk in 1:KK){
   # PPM
   time_ppm <- system.time(
     out_ppm <- my_dm_ppmx(y = Ytrain, X = Xtrain, Xpred = Xtest,
-                          z = Ztrain, zpred = Ztest, alpha=alpha_DP,
+                          z = Ztrain, zpred = Ztest, alpha=2,
                           CC = n_aux, reuse = 1,
                           PPMx = 0, similarity = 1, consim=1, calibration=0,
-                          similparam = vec_par, modelpriors, update_hierarchy = uh,
+                          similparam = vec_par, modelpriors, update_hierarchy = F,
                           iter=iterations,burn=burnin,thin=thinning))
-  ppm <- postquant_dm(y = Ytrain, yp = Ytest, output = out_ppm,
+  ppm <- postquant_dm(y = Ytrain, yp = Ytest, output = out_ppm, minbinder = T,
                       data = mydata, plot = F)
 
   # PPMx No Calibration Auxiliary Similarity NN
@@ -75,13 +75,19 @@ for(kk in 1:KK){
   ppmx0_aux <- postquant_dm(y = Ytrain, yp = Ytest, output = out_ppmx0_aux,
                             data = mydata, plot = F)
 
-  #pp_cs_rg(out_ppmx0_aux, ppmx0_aux, nout, ncol(Ytrain))
+  probs_ppm <- apply(out_ppm$pipred, c(1, 2), mean)
+  probs_ppmx <- apply(out_ppmx0_aux$pipred, c(1, 2), mean)
 
-  #out_ppmx0_aux$acc_rate_eta
-  #unique(mydata$intercept_train[mydata$labeltrain,])
-  #mydata$theta
-  #round(apply(out_ppm$beta, c(1,2), mean), 2)
-  #round(apply(out_ppmx0_aux$beta, c(1,2), mean), 2)
+  colnames(Ytest) <- c("a_true", "b_true", "c_true", "d_true")
+  colnames(probs_ppm) <- c("a_pred_ppm", "b_pred_ppm", "c_pred_ppm", "d_pred_ppm")
+  colnames(probs_ppmx) <- c("a_pred_ppmx", "b_pred_ppmx", "c_pred_ppmx", "d_pred_ppmx")
+  final_df <- data.frame(cbind(Ytest, probs_ppm, probs_ppmx))
+
+  roc_res <- multi_roc(final_df, force_diag = T)
+  plot_roc_df <- plot_roc_data(roc_res)
+
+  ggplot(plot_roc_df, aes(x = 1-Specificity, y=Sensitivity)) +
+    geom_path(aes(color = Group, linetype=Method), size=0.5)
 
   out_ppmx0_aux$acc_rate_beta/iterations
 
@@ -215,14 +221,14 @@ for(kk in 1:KK){
             time_ppmx1_dd[3], time_ppmx1_dd_IG[3], time_ppmx2_aux[3], time_ppmx2_aux_IG[3],
             time_ppmx2_dd[3], time_ppmx2_dd_IG[3])
   tab <- cbind(tab[,-4], time)
-  #kk=1
+  kk=1
   outtab[,,kk] <- matrix(data.matrix(unlist(tab)), ncol=7)
-}
+#}
 #sum(unlist(tab[,7]))/60
 
-#bestauc <- which(tab[,6] == max(unlist(tab[,6])))
-#ppmxs <- rownames(tab)
-#plot_auc(out_ppm, eval(parse(text =paste0("out_", ppmxs[bestauc]))))
+bestauc <- which(tab[,6] == max(unlist(tab[,6])))
+ppmxs <- rownames(tab)
+plot_auc(out_ppm, eval(parse(text =paste0("out_", ppmxs[bestauc]))))
 
 
 mean_rep <- apply(outtab, c(1, 2), mean)
