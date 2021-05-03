@@ -313,7 +313,7 @@ scenario2 <- function(){
     if(i <= (n1)){
       x[i,1] <- rnorm(1, -3, sqrt(.5))
       x[i,2] <- rnorm(1, 3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .5)
+      x[i,3] <- rbinom(1, 1, .1)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 1
     }
@@ -321,13 +321,13 @@ scenario2 <- function(){
       x[i,1] <- rnorm(1, 0, sqrt(.5))
       x[i,2] <- rnorm(1, 0, sqrt(.5))
       x[i,3] <- rbinom(1, 1, .5)
-      x[i,4] <- rbinom(1, 1, .9)
+      x[i,4] <- rbinom(1, 1, .5)
       label[i] <- 2
     }
     if((i > (n1+n2))){
       x[i,1] <- rnorm(1, 3, sqrt(.5))
       x[i,2] <- rnorm(1, -3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .5)
+      x[i,3] <- rbinom(1, 1, .1)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 3
     }
