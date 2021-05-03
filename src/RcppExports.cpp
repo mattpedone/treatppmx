@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // dm_ppmx
-Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, int CC, int reuse, int consim, int similarity, int calibration, arma::mat y, arma::vec xcon, arma::vec xcat, arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_V0, arma::vec mhtune);
-RcppExport SEXP _treatppmx_dm_ppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP ySEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP similparamSEXP, SEXP hP0_m0SEXP, SEXP hP0_L0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_V0SEXP, SEXP mhtuneSEXP) {
+Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, int CC, int reuse, int consim, int similarity, int calibration, arma::mat y, arma::mat z, arma::mat zpred, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_V0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar);
+RcppExport SEXP _treatppmx_dm_ppmx(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP ySEXP, SEXP zSEXP, SEXP zpredSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP npredSEXP, SEXP similparamSEXP, SEXP hP0_m0SEXP, SEXP hP0_L0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_V0SEXP, SEXP upd_hierSEXP, SEXP initbetaSEXP, SEXP hspSEXP, SEXP mhtuneparSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,15 +27,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
     Rcpp::traits::input_parameter< int >::type calibration(calibrationSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type zpred(zpredSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type xcon(xconSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type xcat(xcatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xconp(xconpSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcatp(xcatpSEXP);
+    Rcpp::traits::input_parameter< int >::type npred(npredSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type similparam(similparamSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type hP0_m0(hP0_m0SEXP);
     Rcpp::traits::input_parameter< arma::vec >::type hP0_L0(hP0_L0SEXP);
     Rcpp::traits::input_parameter< double >::type hP0_nu0(hP0_nu0SEXP);
     Rcpp::traits::input_parameter< arma::vec >::type hP0_V0(hP0_V0SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type mhtune(mhtuneSEXP);
-    rcpp_result_gen = Rcpp::wrap(dm_ppmx(iter, burn, thin, nobs, PPMx, ncon, ncat, catvec, alpha, CC, reuse, consim, similarity, calibration, y, xcon, xcat, similparam, hP0_m0, hP0_L0, hP0_nu0, hP0_V0, mhtune));
+    Rcpp::traits::input_parameter< int >::type upd_hier(upd_hierSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type initbeta(initbetaSEXP);
+    Rcpp::traits::input_parameter< int >::type hsp(hspSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mhtunepar(mhtuneparSEXP);
+    rcpp_result_gen = Rcpp::wrap(dm_ppmx(iter, burn, thin, nobs, PPMx, ncon, ncat, catvec, alpha, CC, reuse, consim, similarity, calibration, y, z, zpred, xcon, xcat, xconp, xcatp, npred, similparam, hP0_m0, hP0_L0, hP0_nu0, hP0_V0, upd_hier, initbeta, hsp, mhtunepar));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -101,74 +109,52 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// calculate_gamma
-double calculate_gamma(arma::mat eta, int clu_lg, int k, int i, int Log);
-RcppExport SEXP _treatppmx_calculate_gamma(SEXP etaSEXP, SEXP clu_lgSEXP, SEXP kSEXP, SEXP iSEXP, SEXP LogSEXP) {
+// myround
+double myround(double x);
+RcppExport SEXP _treatppmx_myround(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< int >::type clu_lg(clu_lgSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(myround(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rmultinom_rcpp
+arma::mat rmultinom_rcpp(int n, int size, arma::vec prob);
+RcppExport SEXP _treatppmx_rmultinom_rcpp(SEXP nSEXP, SEXP sizeSEXP, SEXP probSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type prob(probSEXP);
+    rcpp_result_gen = Rcpp::wrap(rmultinom_rcpp(n, size, prob));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dmultinom_rcpp
+double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log);
+RcppExport SEXP _treatppmx_dmultinom_rcpp(SEXP xSEXP, SEXP sizeSEXP, SEXP probSEXP, SEXP LogSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type prob(probSEXP);
     Rcpp::traits::input_parameter< int >::type Log(LogSEXP);
-    rcpp_result_gen = Rcpp::wrap(calculate_gamma(eta, clu_lg, k, i, Log));
-    return rcpp_result_gen;
-END_RCPP
-}
-// eta_update
-Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma, int nclu_curr, arma::vec curr_clu, arma::vec nj_curr, arma::vec eta, arma::vec eta_flag, arma::vec mu_star, arma::vec sigma_star, int jj);
-RcppExport SEXP _treatppmx_eta_update(SEXP JJSEXP, SEXP loggammaSEXP, SEXP nclu_currSEXP, SEXP curr_cluSEXP, SEXP nj_currSEXP, SEXP etaSEXP, SEXP eta_flagSEXP, SEXP mu_starSEXP, SEXP sigma_starSEXP, SEXP jjSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type JJ(JJSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type loggamma(loggammaSEXP);
-    Rcpp::traits::input_parameter< int >::type nclu_curr(nclu_currSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type curr_clu(curr_cluSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type nj_curr(nj_currSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type eta_flag(eta_flagSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type mu_star(mu_starSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type sigma_star(sigma_starSEXP);
-    Rcpp::traits::input_parameter< int >::type jj(jjSEXP);
-    rcpp_result_gen = Rcpp::wrap(eta_update(JJ, loggamma, nclu_curr, curr_clu, nj_curr, eta, eta_flag, mu_star, sigma_star, jj));
-    return rcpp_result_gen;
-END_RCPP
-}
-// ranppmx
-Rcpp::List ranppmx(int nobs, int similarity, int similparam, double alpha, int ncon, int ncat, arma::vec xcon, arma::vec xcat, arma::vec Cvec, double m0, double k0, double v0, double s20, double v, arma::vec dirweights);
-RcppExport SEXP _treatppmx_ranppmx(SEXP nobsSEXP, SEXP similaritySEXP, SEXP similparamSEXP, SEXP alphaSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP CvecSEXP, SEXP m0SEXP, SEXP k0SEXP, SEXP v0SEXP, SEXP s20SEXP, SEXP vSEXP, SEXP dirweightsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
-    Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
-    Rcpp::traits::input_parameter< int >::type similparam(similparamSEXP);
-    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< int >::type ncon(nconSEXP);
-    Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type xcon(xconSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type xcat(xcatSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type Cvec(CvecSEXP);
-    Rcpp::traits::input_parameter< double >::type m0(m0SEXP);
-    Rcpp::traits::input_parameter< double >::type k0(k0SEXP);
-    Rcpp::traits::input_parameter< double >::type v0(v0SEXP);
-    Rcpp::traits::input_parameter< double >::type s20(s20SEXP);
-    Rcpp::traits::input_parameter< double >::type v(vSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dirweights(dirweightsSEXP);
-    rcpp_result_gen = Rcpp::wrap(ranppmx(nobs, similarity, similparam, alpha, ncon, ncat, xcon, xcat, Cvec, m0, k0, v0, s20, v, dirweights));
+    rcpp_result_gen = Rcpp::wrap(dmultinom_rcpp(x, size, prob, Log));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_treatppmx_dm_ppmx", (DL_FUNC) &_treatppmx_dm_ppmx, 23},
+    {"_treatppmx_dm_ppmx", (DL_FUNC) &_treatppmx_dm_ppmx, 31},
     {"_treatppmx_mvn_ppmx", (DL_FUNC) &_treatppmx_mvn_ppmx, 23},
     {"_treatppmx_myppmx", (DL_FUNC) &_treatppmx_myppmx, 19},
-    {"_treatppmx_calculate_gamma", (DL_FUNC) &_treatppmx_calculate_gamma, 5},
-    {"_treatppmx_eta_update", (DL_FUNC) &_treatppmx_eta_update, 10},
-    {"_treatppmx_ranppmx", (DL_FUNC) &_treatppmx_ranppmx, 15},
+    {"_treatppmx_myround", (DL_FUNC) &_treatppmx_myround, 1},
+    {"_treatppmx_rmultinom_rcpp", (DL_FUNC) &_treatppmx_rmultinom_rcpp, 3},
+    {"_treatppmx_dmultinom_rcpp", (DL_FUNC) &_treatppmx_dmultinom_rcpp, 4},
     {NULL, NULL, 0}
 };
 
