@@ -301,9 +301,9 @@ scenario2 <- function(){
 
   Q = 2
   z <- matrix(0, nrow = n, Q)
-  mz <- sample(seq(-2, 2, length.out = 100), Q)
+  #mz <- sample(seq(-2, 2, length.out = 100), Q)
   for(q in 1:Q){
-    z[,q] <- rnorm(nrow(z), mz[q], .5)#
+    z[,q] <- rnorm(nrow(z), 0, .5)#mz[q]
   }
   x <- matrix(0, nrow = n, ncol = 4)
 
@@ -313,8 +313,8 @@ scenario2 <- function(){
     if(i <= (n1)){
       x[i,1] <- rnorm(1, -3, sqrt(.5))
       x[i,2] <- rnorm(1, 3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .1)
-      x[i,4] <- rbinom(1, 1, .5)
+      x[i,3] <- rbinom(1, 1, .5)
+      x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 1
     }
     if((n1 < i) & (i <= (n1+n2))){
@@ -327,7 +327,7 @@ scenario2 <- function(){
     if((i > (n1+n2))){
       x[i,1] <- rnorm(1, 3, sqrt(.5))
       x[i,2] <- rnorm(1, -3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .1)
+      x[i,3] <- rbinom(1, 1, .5)
       x[i,4] <- rbinom(1, 1, .1)
       label[i] <- 3
     }
@@ -655,8 +655,7 @@ avg_auc <- function(roc_res, KK){
   return(roc_res_avg)
 }
 
-my_plot_multi_roc_data <- function (roc_res)
-{
+my_plot_multi_roc_data <- function (roc_res){
   n_method <- length(unique(roc_res$Methods))
   n_group <- length(unique(roc_res$Groups))
   roc_res_df <- data.frame(Specificity = numeric(0), Sensitivity = numeric(0),
