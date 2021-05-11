@@ -539,7 +539,7 @@ double log_mult(arma::mat y, arma::mat JJ){
  * $\boldsymbol{\eta}_{j}^{\star}$
  */
 
-Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat loggamma,
+Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
                       int nclu_curr, arma::vec curr_clu, arma::vec nj_curr,
                       arma::vec treatments, int t,
                       arma::vec eta, arma::vec eta_flag,
@@ -674,6 +674,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::vec beta, arma::mat ZZ, arma::mat logg
 
 Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
                        arma::vec beta_temp, arma::mat beta_flag,
+                       arma::vec treatments, int t,
                        double mu_beta, arma::vec sigma_beta, int kk, double mhtune){
 
   // this function loops through K so it is called for one category at a time
@@ -713,7 +714,9 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
   for(q = 0; q < Q; q++){
     log_den = 0.0;
     for(i = 0; i < nobs; i++){
-      log_den = log_den - lgamma(exp(loggamma(i, kk))) + exp(loggamma(i, kk)) * log(JJ(i, kk));
+      if(treatments(i) == t){
+        log_den = log_den - lgamma(exp(loggamma(i, kk))) + exp(loggamma(i, kk)) * log(JJ(i, kk));
+      }
     }
     //ld = logdet(sigma_star, dim);
     //dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
@@ -729,12 +732,16 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
     beta_p = beta_temp(q) + R::rnorm(0, mhtune);//R::runif(-1, 1);
 
     for(i = 0; i < nobs; i++){
-      loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p * ZZ(i, q);
+      if(treatments(i) == t){
+        loggamma_p(i) = loggamma(i, kk) - beta_temp(q) * ZZ(i, q) + beta_p * ZZ(i, q);
+      }
     }
 
     log_num = 0.0;
     for(i = 0; i < nobs; i++){
-      log_num = log_num - lgamma(exp(loggamma_p(i))) + exp(loggamma_p(i)) * log(JJ(i, kk));
+      if(treatments(i) == t){
+        log_num = log_num - lgamma(exp(loggamma_p(i))) + exp(loggamma_p(i)) * log(JJ(i, kk));
+      }
     }
 
     log_num += R::dnorm4(beta_p, mu_beta, sigma_beta(h), 1);
@@ -754,7 +761,9 @@ Rcpp::List beta_update(arma::mat ZZ, arma::mat JJ, arma::mat loggamma,
       //Rcpp::Rcout << "accepted! j: " << jj << ", f: " << eta_flag(jj) << std::endl;
       beta_temp(q) = beta_p;
       for(i = 0; i < nobs; i++){
-        loggamma(i, kk) = loggamma_p(i);
+        if(treatments(i) == t){
+          loggamma(i, kk) = loggamma_p(i);
+        }
       }
     }//closes if accepted
   }
