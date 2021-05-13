@@ -383,17 +383,19 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, arma::vec treatments,
   Rcpp::List l_eta_out(3);
   Rcpp::List l_beta_out(3);
 
-  arma::vec nclus(nout);
+  arma::mat nclus(nT, nout, arma::fill::ones);
   //arma::mat sigma_out(1, dim*dim);
-  arma::mat eta_out(1, dim);
+  arma::cube eta_out(1, dim, nT);
   arma::mat beta_out(Q * dim, nout, arma::fill::ones);
   arma::vec Clui(nout * nobs, arma::fill::ones);
-  arma::vec predclass_out(nout * npred, arma::fill::zeros);
+  arma::mat predclass_out(nout * npred, nT, arma::fill::zeros);
   arma::vec like(nout * nobs, arma::fill::ones);
   arma::cube pigreco(nobs, dim, nout, arma::fill::zeros);
-  arma::cube pigreco_pred(npred, dim, nout, arma::fill::zeros);
+  //arma::cube pigreco_pred(npred, dim, nout, arma::fill::zeros);
+  arma::field<arma::cube> pigreco_pred(nout, 1);
   arma::cube ispred_out(nobs, dim, nout, arma::fill::ones);
-  arma::cube ppred_out(npred, dim, nout, arma::fill::zeros);
+  //arma::cube ppred_out(npred, dim, nout, arma::fill::zeros);
+  arma::field<arma::cube> ppred_out(nout, 1);
   ll = 0;
   lll = 0;
   ////////////////////////////////////////
@@ -1344,26 +1346,36 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, arma::vec treatments,
      // Save MCMC iterates
      //////////////////////
      if((l > (burn-1)) & ((l + 1) % thin == 0)){
-       nclus(ll) = nclu_curr;
+
        for(i = 0; i < nobs; i++){
-         Clui(ll*(nobs) + i) = curr_clu(i);
          like(ll*(nobs) + i) = like_iter(i);
-         beta_out.col(ll) = beta;
          ispred_out.slice(ll).row(i) = ispred.row(i);
          pigreco.slice(ll).row(i) = JJ.row(i)/TT(i);
        }
-       ppred_out.slice(ll) = ppred;
-       pigreco_pred.slice(ll) = pii_pred;
+       for(tt = 0; tt < nT; tt++){
+         nclus(tt, ll) = nclu_curr(tt);
+         for(i = 0; i < num_treat(tt); i++){
+           Clui(tt, ll*(num_treat(tt)) + i) = curr_clu(tt, i);
+         }
+       }
+       beta_out.col(ll) = beta;
+       ppred_out(ll, 0) = ppred;
+       pigreco_pred(ll, 0) = pii_pred;
+
        for(pp = 0; pp < npred; pp++){
-         predclass_out(ll*npred + pp) = predclass(pp);
+         for(tt = 0; tt < nT; tt++){
+           predclass_out(ll*npred + pp, tt) = predclass(pp, tt);
+         }
        }
 
        ll += 1;
-       for(j = 0; j < nclu_curr; j++){
-         //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
-         //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
-         eta_out.insert_rows(lll, eta_star_curr.col(j).t());
-         lll += 1;
+       for(tt = 0; tt < nT; tt++){
+         for(j = 0; j < nclu_curr(tt); j++){
+           //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
+           //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
+           eta_out.slice(tt).insert_rows(lll, eta_star_curr.slice(tt).col(j).t());
+           lll += 1;
+         }
        }
      }
   }//CLOSES MCMC iterations
