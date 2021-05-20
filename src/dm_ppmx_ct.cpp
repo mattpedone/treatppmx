@@ -6,7 +6,7 @@
 #include "utils_ct.h"
 
 // [[Rcpp::export]]
-Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat,
+Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat,
                    arma::vec catvec, double alpha, int CC, int reuse, int consim,
                    int similarity, int calibration, arma::mat y, arma::mat z,
                    arma::mat zpred, arma::vec xcon, arma::vec xcat,
@@ -76,7 +76,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, arma::vec treatments,
   ////Multiple Treatments stuff
   //////////////////////////
 
-  int nT = treatments.max(); //numero di trattamenti
+  int nT = treatments.max() + 1; //numero di trattamenti +1 perché il vettore conta da 0
   arma::vec num_treat(nT, arma::fill::zeros);// numerosità x trattamento (table(tratments))
 
   //tt = 0;
@@ -1380,6 +1380,9 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, arma::vec treatments,
      }
   }//CLOSES MCMC iterations
 
+  for(tt = 0; tt < nT; tt++){
+    eta_flag.row(tt) = eta_flag.row(tt)/sumtotclu(tt);
+  }
   lpml_iter=0.0;
 
   for(i = 0; i < nobs; i++){
@@ -1402,7 +1405,7 @@ Rcpp::List dm_ppmx(int iter, int burn, int thin, int nobs, arma::vec treatments,
   return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
     Rcpp::Named("eta") = eta_out,
     Rcpp::Named("beta") = beta_out,
-    Rcpp::Named("eta_acc") = eta_flag/sumtotclu,
+    Rcpp::Named("eta_acc") = eta_flag,///sumtotclu,
     Rcpp::Named("beta_acc") = beta_flag,
     Rcpp::Named("cl_lab") = Clui,
     Rcpp::Named("pi") = pigreco,

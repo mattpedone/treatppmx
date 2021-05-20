@@ -383,6 +383,8 @@ scenario2 <- function(){
     Y[i, ] = rmultinom(1, 1, pi)
   }
 
+  #Y <- cbind(sample(1:3, nrow(Y), replace = T))
+
   x <- data.frame(x)
   z <- data.frame(z)
 
@@ -415,6 +417,140 @@ scenario2 <- function(){
 
   dat$theta <- theta
   dat$nclus <- 3
+  return(dat)
+}
+
+#' Scenario 1 in paper Avis modified
+#'
+#' @export
+#'
+scenario2_ct <- function(){
+
+  dat <- NULL
+  n1 <- 80
+  n2 <- 40#10
+  n3 <- 80
+
+  n <- n1 + n2 + n3
+
+  Q = 2
+  z <- matrix(0, nrow = n, Q)
+  #mz <- sample(seq(-2, 2, length.out = 100), Q)
+  for(q in 1:Q){
+    z[,q] <- rnorm(nrow(z), 0, .5)#mz[q]
+  }
+  x <- matrix(0, nrow = n, ncol = 4)
+
+  label <- c()
+
+  for(i in 1:n){
+    if(i <= (n1)){
+      x[i,1] <- rnorm(1, -3, sqrt(.5))
+      x[i,2] <- rnorm(1, 3, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .5)
+      x[i,4] <- rbinom(1, 1, .1)
+      label[i] <- 1
+    }
+    if((n1 < i) & (i <= (n1+n2))){
+      x[i,1] <- rnorm(1, 0, sqrt(.5))
+      x[i,2] <- rnorm(1, 0, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .5)
+      x[i,4] <- rbinom(1, 1, .9)
+      label[i] <- 2
+    }
+    if((i > (n1+n2))){
+      x[i,1] <- rnorm(1, 3, sqrt(.5))
+      x[i,2] <- rnorm(1, -3, sqrt(.5))
+      x[i,3] <- rbinom(1, 1, .5)
+      x[i,4] <- rbinom(1, 1, .1)
+      label[i] <- 3
+    }
+  }
+  beta1 <- c(3, 2, 1, 0)/2
+  beta2 <- c(-2, -2, 1, 3)/2
+  beta3 <- c(3, -2, -1, -1)/2
+
+  theta <- matrix(0, 4, Q)
+  #st = 0
+  #low_side = .5#beta_min
+  #high_side = 1.5#beta_max
+  #n_relevant_taxa = 3
+  #n_relevant_x = 2
+  #if (n_relevant_taxa != 1) {
+  #  # warning if the lengths don't match
+  #  coef = suppressWarnings(seq(low_side, high_side, len = n_relevant_taxa) *
+  #                            c(1,-1))
+  #}
+  #coef_g = rep(1.0, len = n_relevant_x)
+  #for (ii in 1:n_relevant_x) {
+  #  # overlap species
+  #  theta[(st:(st + n_relevant_taxa - 1)) %% 4 + 1, 3 * ii - 2] = coef_g[ii] *#al posto di 4 dim
+  #    sample(coef)[((ii - 1):(ii + n_relevant_taxa - 2)) %% n_relevant_taxa + 1]
+  #  st = st + 1
+  #}
+
+  theta[, 1] <- c(2.0, 1.0, -1.5, 0)
+  theta[, 2] <- c(-1.0, 2.0, 0, -1.0)
+  theta <- t(theta)
+
+  intercept <- matrix(0, n, 4)
+
+  for(i in 1:n){
+    if(label[i] == 1){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta1%*%diag(4)), diag(sqrt(0.5), 4))
+    }
+    if(label[i] == 2){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta2%*%diag(4)), diag(sqrt(0.5), 4))
+    }
+    if(label[i] == 3){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta3%*%diag(4)), diag(sqrt(0.5), 4))
+    }
+  }
+
+  Y <- matrix(0, n, 4)
+
+  for(i in 1:n){
+    thisrow = as.vector(exp(intercept[i,]+ t(theta)%*% z[i, ]))
+    #pi = bayess::rdirichlet(n = 1, par = thisrow)
+    pi = thisrow/sum(thisrow)
+    #cat("pi", i, ": ", pi, "\n")
+    Y[i, ] = rmultinom(1, 1, pi)
+  }
+
+  x <- data.frame(x)
+  z <- data.frame(z)
+
+  x$X3 <- as.factor(x$X3)
+  x$X4 <- as.factor(x$X4)
+
+  #set.seed(1)
+  idx <- sample(1:dim(Y)[1], (n*0.75), replace=FALSE)
+  Ytrain <- Y[idx,]
+  Ytest <- Y[-idx,]
+  asst <- sample(c("A", "B", "C", "D"), nrow(Ytrain), replace = T)
+  Xtrain <- x[idx,,drop=FALSE]
+  Xtest <- x[-idx,,drop=FALSE]
+  Ztrain <- z[idx,,drop=FALSE]
+  Ztest <- z[-idx,,drop=FALSE]
+
+  dat$labeltrain <- label[idx]
+  dat$labeltest <- label[-idx]
+  dat$intercept <- intercept
+  dat$intercept_train <- intercept[idx,]
+  dat$intercept_test <- intercept[-idx,]
+  dat$y <- Y
+  dat$Ytrain <- Ytrain
+  dat$Ytest <- Ytest
+  dat$X <- x
+  dat$Xtrain <- Xtrain
+  dat$Xtest <- Xtest
+  dat$Z <- z
+  dat$Ztrain <- Ztrain
+  dat$Ztest <- Ztest
+
+  dat$theta <- theta
+  dat$nclus <- 3
+  dat$treat <- asst
   return(dat)
 }
 
