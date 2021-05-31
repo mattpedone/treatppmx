@@ -427,89 +427,91 @@ scenario2 <- function(){
 scenario2_ct <- function(){
 
   dat <- NULL
-  n1 <- 80
-  n2 <- 40#10
-  n3 <- 80
+  n1 <- 120
+  n2 <- 80#10
+  #n3 <- 80
 
-  n <- n1 + n2 + n3
+  n <- n1 + n2# + n3
 
-  Q = 2
-  z <- matrix(0, nrow = n, Q)
+  Q = 3
+  z <- matrix(0, nrow = 2*n, Q)
   #mz <- sample(seq(-2, 2, length.out = 100), Q)
   for(q in 1:Q){
     z[,q] <- rnorm(nrow(z), 0, .5)#mz[q]
   }
-  x <- matrix(0, nrow = n, ncol = 4)
+  x <- matrix(0, nrow = 2*n, ncol = 2)
 
   label <- c()
 
   for(i in 1:n){
     if(i <= (n1)){
-      x[i,1] <- rnorm(1, -3, sqrt(.5))
-      x[i,2] <- rnorm(1, 3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .5)
-      x[i,4] <- rbinom(1, 1, .1)
+      x[i,1] <- rnorm(1, 3, sqrt(.5))
+      x[i,2] <- rbinom(1, 1, .1)
+      #x[i,2] <- rnorm(1, 1, sqrt(.5))
+      #x[i,3] <- rbinom(1, 1, .5)
       label[i] <- 1
-    }
-    if((n1 < i) & (i <= (n1+n2))){
-      x[i,1] <- rnorm(1, 0, sqrt(.5))
-      x[i,2] <- rnorm(1, 0, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .5)
-      x[i,4] <- rbinom(1, 1, .9)
+    } else {
+      x[i,1] <- rnorm(1, 1, sqrt(.5))
+      x[i,2] <- rbinom(1, 1, .99)
+      #x[i,2] <- rnorm(1, 5, sqrt(.5))
+      #x[i,3] <- rbinom(1, 1, .5)
       label[i] <- 2
     }
-    if((i > (n1+n2))){
+  }
+
+  for(i in (n+1):(n*2)){
+    if(i <= (n+n1)){
       x[i,1] <- rnorm(1, 3, sqrt(.5))
-      x[i,2] <- rnorm(1, -3, sqrt(.5))
-      x[i,3] <- rbinom(1, 1, .5)
-      x[i,4] <- rbinom(1, 1, .1)
-      label[i] <- 3
+      x[i,2] <- rbinom(1, 1, .1)
+      #x[i,2] <- rnorm(1, 1, sqrt(.5))
+      #x[i,3] <- rbinom(1, 1, .5)
+      label[i] <- 1
+    } else {
+      x[i,1] <- rnorm(1, 1, sqrt(.5))
+      x[i,2] <- rbinom(1, 1, .99)
+      #x[i,2] <- rnorm(1, 5, sqrt(.5))
+      #x[i,3] <- rbinom(1, 1, .5)
+      label[i] <- 2
     }
   }
-  beta1 <- c(3, 2, 1, 0)/2
-  beta2 <- c(-2, -2, 1, 3)/2
-  beta3 <- c(3, -2, -1, -1)/2
 
-  theta <- matrix(0, 4, Q)
-  #st = 0
-  #low_side = .5#beta_min
-  #high_side = 1.5#beta_max
-  #n_relevant_taxa = 3
-  #n_relevant_x = 2
-  #if (n_relevant_taxa != 1) {
-  #  # warning if the lengths don't match
-  #  coef = suppressWarnings(seq(low_side, high_side, len = n_relevant_taxa) *
-  #                            c(1,-1))
-  #}
-  #coef_g = rep(1.0, len = n_relevant_x)
-  #for (ii in 1:n_relevant_x) {
-  #  # overlap species
-  #  theta[(st:(st + n_relevant_taxa - 1)) %% 4 + 1, 3 * ii - 2] = coef_g[ii] *#al posto di 4 dim
-  #    sample(coef)[((ii - 1):(ii + n_relevant_taxa - 2)) %% n_relevant_taxa + 1]
-  #  st = st + 1
-  #}
+  beta1 <- c(2, 1)/2
+  beta2 <- c(2, 1)/2
 
-  theta[, 1] <- c(2.0, 1.0, -1.5, 0)
-  theta[, 2] <- c(-1.0, 2.0, 0, -1.0)
+  theta <- matrix(0, 2, Q)
+  theta[, 1] <- c(1.0, 0)
+  theta[, 2] <- c(0, -1.0)
   theta <- t(theta)
 
-  intercept <- matrix(0, n, 4)
+  intercept <- matrix(0, 2*n, 2)
 
-  for(i in 1:n){
+  for(i in 1:(n)){
     if(label[i] == 1){
-      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta1%*%diag(4)), diag(sqrt(0.5), 4))
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta1%*%diag(2)), diag(sqrt(0.5), 2))
     }
     if(label[i] == 2){
-      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta2%*%diag(4)), diag(sqrt(0.5), 4))
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta2%*%diag(2)), diag(sqrt(0.5), 2))
     }
-    if(label[i] == 3){
-      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta3%*%diag(4)), diag(sqrt(0.5), 4))
-    }
+    #if(label[i] == 3){
+    #  intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta3%*%diag(3)), diag(sqrt(0.5), 3))
+    #}
   }
 
-  Y <- matrix(0, n, 4)
+  for(i in (n+1):(2*n)){
+    if(label[i] == 1){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta1%*%diag(2)), diag(sqrt(0.5), 2))
+    }
+    if(label[i] == 2){
+      intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta2%*%diag(2)), diag(sqrt(0.5), 2))
+    }
+    #if(label[i] == 3){
+    #  intercept[i,] <- mvtnorm::rmvnorm(1, t(x[i,])*(beta23%*%diag(3)), diag(sqrt(0.5), 3))
+    #}
+  }
 
-  for(i in 1:n){
+  Y <- matrix(0, 2*n, 2)
+
+  for(i in 1:(2*n)){
     thisrow = as.vector(exp(intercept[i,]+ t(theta)%*% z[i, ]))
     #pi = bayess::rdirichlet(n = 1, par = thisrow)
     pi = thisrow/sum(thisrow)
@@ -520,14 +522,18 @@ scenario2_ct <- function(){
   x <- data.frame(x)
   z <- data.frame(z)
 
-  x$X3 <- as.factor(x$X3)
-  x$X4 <- as.factor(x$X4)
+  x$X2 <- as.factor(x$X2)
+  #x$X4 <- as.factor(x$X4)
 
   #set.seed(1)
-  idx <- sample(1:dim(Y)[1], (n*0.75), replace=FALSE)
+  idx <- sample(1:dim(Y)[1], ((2*n)*0.75), replace=FALSE)
   Ytrain <- Y[idx,]
   Ytest <- Y[-idx,]
-  asst <- sample(c("A", "B", "C", "D"), nrow(Ytrain), replace = T)
+  treatnames <- c("A", "B")
+  #asst <- sample(treatnames, nrow(Ytrain), replace = T)
+  asst <- c(rep("A", n), rep("B", n))
+  #prova <- asst[1:n]
+  #asst <- asst[idx]
   Xtrain <- x[idx,,drop=FALSE]
   Xtest <- x[-idx,,drop=FALSE]
   Ztrain <- z[idx,,drop=FALSE]
@@ -549,8 +555,12 @@ scenario2_ct <- function(){
   dat$Ztest <- Ztest
 
   dat$theta <- theta
-  dat$nclus <- 3
-  dat$treat <- asst
+  dat$nclus <- c(2, 2)
+
+  dat$treatnames <- treatnames
+  dat$ntreat <- 2
+  dat$treat <- asst[idx]
+  dat$treattest <- asst[-idx]
   return(dat)
 }
 
@@ -623,6 +633,69 @@ postquant_dm <- function(y, yp, output, data, plot, minbinder = F){
     plot(output$nclu, type="l")
     acf(output$nclu)
   }
+  return(mypostquant)
+}
+
+postquant_dm_ct <- function(y, yp, output, data, plot){
+  ari_b <- ari_vi <- ess <- c()
+  label <- output$label
+  orig_names <- names(label)
+  label <- label[order(names(label))]
+  truelabel <- output$asstreat
+  num_treat <- output$num_treat
+  ntreat <- data$ntreat
+  for(t in 1:ntreat){
+    currtreat <- as.character(data$treatnames[[t]])
+    mat <- label[[currtreat]]
+    mat <- mat[1:num_treat[[currtreat]],]
+    cls <- as.matrix(t(mat))
+    psm <- comp.psm(cls)
+    mc_b <- minbinder.ext(psm)
+    mc_vi <- minVI(psm)
+    ari_b[t] <- adjustedRandIndex(mc_b$cl, data$labeltrain[which(data$treat == currtreat)])
+    ari_vi[t] <- adjustedRandIndex(mc_vi$cl, data$labeltrain[which(data$treat == currtreat)])
+    ess[t] <- effectiveSize(output$nclu[t,])
+  }
+
+  #
+  A0 <- output$pipred
+  A0 <- array(unlist(A0), dim = c(dim(A0[[1]]), length(A0)))
+  A0 <- apply(A0, c(1, 2, 3), mean)
+  Al <- list()
+  for(t in 1:dim(A0)[3]){
+    Al[[t]] <- A0[,,t]
+  }
+  cat("og: ", orig_names, "\n")
+  names(Al) <- orig_names
+  Al <- Al[order(names(Al))]
+
+  tpred <- c()
+  for(i in 1:dim(A0)[1]){
+    myvec <- c(A0[i,,])
+    cat("myvec", myvec, "\n")
+    tpred[i] <- switch(which(myvec == max(myvec)), "A1", "A2", "B1", "B2")
+    cat("sel", tpred[i], "\n")
+  }
+
+  ##predictive AUC multiclass
+  #probs <- apply(output$pipred, c(1, 2), mean)
+  #colnames(probs) <- colnames(Ytest) <- c(1:4)
+
+  #catvec <- c()
+  #for(i in 1:nrow(Ytest)){
+  #  catvec <- c(catvec, which(yp[i,] == 1))
+  #}
+
+  #auc <- multiclass.roc(catvec, probs)$auc[1]
+  mypostquant <- list("nclupost" = apply(output$nclu, 1, mean),
+                      "ARI_B" = ari_b, "ARI_VI" = ari_vi, "ESS" = ess, "labb" = mc_b$cl, "labvi" = mc_vi$cl,
+                      "waic" = output$WAIC, "lpml" = output$lpml, "pipredm" = A0,
+                      "pipredl" = Al, "mypred" = tpred)#, "auc" = auc)
+  #if(plot == T){
+  #  par(mfrow=c(1,2))
+  #  plot(output$nclu, type="l")
+  #  acf(output$nclu)
+  #}
   return(mypostquant)
 }
 

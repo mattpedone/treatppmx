@@ -52,23 +52,24 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   # modelPriors = (mu0, s^2, a1, m)
   # simParms = (m0, s20, v2, k0, nu0, dir, alpha)
   # mh - tuning parameters for MCMC updates of sig2 and sig20
-
   treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
-  print(treatnames)
+  #print(treatnames)
   nT <- length(treatnames)#length(unique(treatnames[["Treatment"]]))
   repl <- seq(0, nT-1)
-  cat("repl", repl, "\n")
-  d <- asstreat
+  d <- as.vector(asstreat[[c("Treatment")]])
   #d <- lessR::Transform(Treatment=as.numeric(Treatment), data = d)
-  df <- lessR::Recode(data = asstreat, old_vars = Treatment, new_vars = "treatments",
-                     old = treatnames, new = repl, quiet = F)
-  #print(d)
+  #df <- lessR::Recode(data = d, old_vars = Treatment, new_vars = "treatments",
+         #            old = treatnames, new = repl, quiet = F)
+  treatments <- dplyr::recode(d, A = 0, B = 1)
+  #treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
+  #print(treatments)
+  #break;
 
-  treatments <- df %>%
-    select(treatments) %>%
-    data.matrix -1
+  #treatments <- df %>%
+  #  select(treatments) #%>%
+    #data.matrix -1
+  #print(treatments)
   out <- NULL
-
 
   if(!is.data.frame(X) & !is.null(X)) X <- data.frame(X)
   if(!is.data.frame(Xpred) & !is.null(Xpred)){
@@ -89,7 +90,8 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     ncat <- 0
     npred <- 0
   }
-
+  #print("the following is X")
+  #print(X)
   if(!(is.null(X) & is.null(Xpred))){
     nxobs <- ifelse(is.null(X), 0, nrow(X))
     npred <- ifelse(is.null(Xpred), 0, nrow(Xpred))
@@ -102,7 +104,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     # standardize continuous covariates
     if(nxobs > 0){
       if(sum(!catvars) > 0){
-        Xconstd <- apply(Xall[,!catvars, drop=FALSE], 2, scale)
+        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)
         xcon <- Xconstd[1:nobs,,drop=FALSE];
         ncon <- ncol(xcon)
       }else{
@@ -122,11 +124,10 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
         ncat <- 0
       }
     }
-
     # Now consider the case when number of covariates for prediction are greater than zero
     if(npred > 0){
       if(sum(!catvars) > 0){
-        Xconstd <- apply(Xall[,!catvars, drop=FALSE], 2, scale)
+        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)
         xconp <- Xconstd[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
         ncon <- ncol(xconp)
       } else {
@@ -146,6 +147,8 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
       }
     }
   }
+
+  #cat("xcon", xcon, "\n")
 
   init = initpc
   if(init == TRUE){
@@ -176,9 +179,10 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
   hP0_nu0 <- as.double(modelpriors$hP0_nu0)
   hP0_V0 <- as.vector(modelpriors$hP0_V0)
-
+  treatments <- c(as.vector(treatments))
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
-                 as.integer(nobs), as.vector(c(treatments)), as.integer(PPMx), as.integer(ncon), as.integer(ncat),
+                 as.integer(nobs), as.vector(treatments), as.integer(PPMx),
+                 as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity),
                  as.integer(calibration), as.matrix(y), as.matrix(z), as.matrix(zpred),
@@ -191,6 +195,19 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   ###PREPARE OUTPUT
   res <- list()
 
+  #label (clustering)
+  label <- list()
+  for(t in 1:nT){
+    label[[t]] <- out$cl_lab[t,,]
+  }
+
+  names(label) <- treatnames
+  res$label <- label
+  res$asstreat <- asstreat
+  num_treat <- out$num_treat
+  names(num_treat) <- treatnames
+  res$num_treat <- num_treat
+
   #number of cluster
   nclu <- out$nclus
   res$nclu <- nclu#(nT x nout matrix)
@@ -199,23 +216,29 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
 
 
   #intercept (and its acceptance rate)
-  eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
-  eta_ar <- array(0, dim = c(max(nclu), ncol(y), nout, nT))
-  for(t in 1:nT){
-    for(l in 1:nout){
-      for(i in 1:nclu[l]){
-        eta_ar[i, ,1, t] <- eta_out[i, ,t]
-        if(l > 1){
-          eta_ar[i, ,l, t] <- eta_out[i+nclu_cs[l-1], , t]
-        }
-      }
-    }
-  }
-  res$eta <- eta_ar
-  res$acc_rate_eta <- eta$acc#sum(out$eta_acc)#/sum(out$nclu)
+  #eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
+  #eta_ar <- array(0, dim = c(max(nclu), ncol(y), nout, nT))
+  #for(t in 1:nT){
+  #  for(l in 1:nout){
+  #    for(i in 1:nclu[l]){
+  #      eta_ar[i, ,1, t] <- eta_out[i, ,t]
+  #      if(l > 1){
+  #        eta_ar[i, ,l, t] <- eta_out[i+nclu_cs[l-1], , t]
+  #      }
+  #    }
+  #  }
+  #}
+  #res$eta <- eta_ar
+  #res$acc_rate_eta <- eta$acc#sum(out$eta_acc)#/sum(out$nclu)
 
   #prognostic covariates
-  beta <- array(0, dim = c(ncol(Ztest), ncol(Ytest), nout))
+  #print((Ytest))
+  if(nrow(Ztest)==1){
+    beta <- array(0, dim = c(ncol(Ztest), length(Ytest), nout))
+  } else{
+    beta <- array(0, dim = c(ncol(Ztest), ncol(Ytest), nout))
+  }
+
   beta0 <- out$beta
   for(iter in 1:nout){
     for(k in 1:ncol(Y)){
@@ -232,9 +255,6 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   pi_out <- out$pi
   res$pi_out <- pi_out
   res$pipred <- out$pipred
-
-  #label (clustering)
-  res$label <- matrix(out$cl_lab, nrow = nout, byrow=TRUE)
 
   #in sample prediction & model fit
   #yispred <- array(0, dim = c(nobs, ncol(y), nout))

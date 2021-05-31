@@ -6,9 +6,10 @@
 #include "utils_ct.h"
 
 // [[Rcpp::export]]
-Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat,
-                   arma::vec catvec, double alpha, int CC, int reuse, int consim,
-                   int similarity, int calibration, arma::mat y, arma::mat z,
+Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments,
+                      int PPMx, int ncon, int ncat, arma::vec catvec, double alpha,
+                      int CC, int reuse, int consim, int similarity, int calibration,
+                      arma::mat y, arma::mat z,
                    arma::mat zpred, arma::vec xcon, arma::vec xcat,
                    arma::vec xconp, arma::vec xcatp, int npred,
                    arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0,
@@ -30,7 +31,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // q - prognostico covariate index
   // h - prognostico covariate "instrumental" index
   // tt - treatments index
-  int l, ll, lll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt;
+  // it - observation in cluster tt index
+  int l, ll, lll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it;
   int dim = y.n_cols;
   int Q = z.n_cols;
 
@@ -75,8 +77,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //////////////////////////
   ////Multiple Treatments stuff
   //////////////////////////
-
   int nT = treatments.max() + 1; //numero di trattamenti +1 perché il vettore conta da 0
+
   arma::vec num_treat(nT, arma::fill::zeros);// numerosità x trattamento (table(tratments))
 
   //tt = 0;
@@ -110,9 +112,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             sum2(tt) += xcon(i*(ncon) + p)*xcon(i*(ncon) + p);
           }
         }
-        //Rcpp::Rcout << "sum" << sum << std::endl;
         xbar(tt, p) = sum(tt)/((double) num_treat(tt));
         s2mle(tt, p) = sum2(tt)/((double) num_treat(tt)) - xbar(tt, p)*xbar(tt, p);
+        sum(tt) = 0.0;
+        sum2(tt) = 0.0;
       }
     }
   }
@@ -142,6 +145,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
     }
   }
+
   arma::vec nclu_curr(nT, arma::fill::zeros);//numero di cluster in ciascun trattamento
   for(tt = 0; tt < nT; tt++){
     for(i = 0; i < num_treat(tt); i++){
@@ -162,6 +166,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     vp = pow(num_treat(tt) + CC, -1.0);
     weight.row(tt).fill(vp);
   }
+
   //controlla se weight è riempito bene
 
   ////////////////////////////////////////////////////
@@ -191,42 +196,44 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
   arma::mat loggamma(nobs, dim, arma::fill::zeros);
   for(tt = 0; tt < nT; tt++){
+    ii = 0;
     for(i = 0; i < nobs; i++){
       if(treatments(i) == tt){
-        clu_lg = curr_clu(tt, i)-1;
+      clu_lg = curr_clu(tt, ii)-1;
         for(k = 0; k < dim; k++){
           loggamma(i, k) = calculate_gamma(eta_star_curr.slice(tt), z, beta, clu_lg, k, i, 1);
         }
+        ii += 1;
       }
     }
   }
-
   double opz1, opz2;
   ////////////////////////////////////////////////////
   //// cluster specific suffiient statistics
   ////////////////////////////////////////////////////
 
-  arma::mat sumx(nT, nobs * ncon, arma::fill::zeros);
-  arma::mat sumx2(nT, nobs * ncon, arma::fill::zeros);
-  arma::mat njc(nT, nobs * ncat * max_C, arma::fill::zeros);
+  arma::mat sumx(nT, num_treat.max() * ncon, arma::fill::zeros);
+  arma::mat sumx2(nT, num_treat.max() * ncon, arma::fill::zeros);
+  arma::mat njc(nT, num_treat.max() * ncat * max_C, arma::fill::zeros);
   arma::vec njctmp(max_C, arma::fill::zeros);
   double auxreal, sumxtmp, sumx2tmp;
 
   arma::vec auxv(dim);
   int iaux, auxint;
-
   if(PPMx == 1){
     // Fill in cluster-specific sufficient statistics based on first partition
     for(tt = 0; tt < nT; tt++){
+      ii = 0;
       for(i = 0; i < nobs; i++){
         if(treatments(i) == tt){
           for(p = 0; p < ncon; p++){
-            sumx(tt, (curr_clu(i)-1)*ncon + p) += xcon(i * ncon + p);
-            sumx2(tt, (curr_clu(i)-1)*ncon + p) += xcon(i * ncon + p) * xcon(i * ncon + p);
+            sumx(tt, (curr_clu(tt, ii)-1)*ncon + p) += xcon(i * ncon + p);
+            sumx2(tt, (curr_clu(tt, ii)-1)*ncon + p) += xcon(i * ncon + p) * xcon(i * ncon + p);
           }
           for(p = 0; p < ncat; p++){
-            njc(tt, ((curr_clu(i)-1)*ncat + p) * max_C + xcat(i * ncat + p)) += 1;
+            njc(tt, ((curr_clu(tt, ii)-1)*ncat + p) * max_C + xcat(i * ncat + p)) += 1;
           }
+      ii += 1;
         }
       }
     }
@@ -262,7 +269,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //arma::vec xcontmp(nobs);
   //arma::vec njc((nobs)*(ncat));
   //arma::vec njctmp(max_C);
-
   arma::vec gtilN(num_treat.max() + CC);
   gtilN.fill(0.0);
   arma::vec gtilY(num_treat.max() + CC);
@@ -278,7 +284,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   ////////////////////////////////////////
   // Stuf needed for probabilities
   ////////////////////////////////////////
-
   double wo;
   double maxwei, denwei;
   double uu, cweight;
@@ -375,7 +380,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   mnlike.fill(0.0);
   arma::vec mnllike(nobs);
   mnllike.fill(0.0);
-
   ////////////////////////////////////////
   // Stuff for storage and return
   ////////////////////////////////////////
@@ -387,7 +391,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //arma::mat sigma_out(1, dim*dim);
   arma::cube eta_out(1, dim, nT);
   arma::mat beta_out(Q * dim, nout, arma::fill::ones);
-  arma::vec Clui(nout * nobs, arma::fill::ones);
+  arma::cube Clui(nT, num_treat.max(), nout, arma::fill::zeros);
   arma::mat predclass_out(nout * npred, nT, arma::fill::zeros);
   arma::vec like(nout * nobs, arma::fill::ones);
   arma::cube pigreco(nobs, dim, nout, arma::fill::zeros);
@@ -415,12 +419,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         }
       }
 
+      it = 0;
       for(i = 0; i < nobs; i++){
         if(treatments(i) == tt){
+          //it = 0;
           /////////////////////////////////////////
           // update the cluster labels with NEAL 8
           /////////////////////////////////////////
-          zi = curr_clu(tt, i)-1; //sottraggo 1 perché C conta da 0 ma conviene farlo ogni volta
+          zi = curr_clu(tt, it)-1; //sottraggo 1 perché C conta da 0 ma conviene farlo ogni volta
 
           if(nj_curr(tt, zi) > 1){// Case where the nj corresponding to zi is such that nj>1
             nj_curr(tt, zi) -= 1;
@@ -445,14 +451,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
             //what follows is Page's relabelling
 
-            iaux = curr_clu(tt, i);
+            iaux = curr_clu(tt, it);
             if(iaux < nclu_curr(tt)){
               for(ii = 0; ii < num_treat(tt); ii++){
                 if(curr_clu(tt, ii) == nclu_curr(tt)){
                   curr_clu(tt, ii) = iaux;
                 }
               }
-              curr_clu(tt, i) = nclu_curr(tt);
+              curr_clu(tt, it) = nclu_curr(tt);
 
               auxv = eta_star_curr.slice(tt).col(zi);
               eta_star_curr.slice(tt).col(zi) = eta_empty.slice(tt).col(id_empty);
@@ -553,15 +559,18 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              }
              }*/
 
+            //CONYROLLA BENE
+            iii = 0;
             for(ii = 0; ii < nobs; ii++){
               if(treatments(ii) == tt){
                 if(ii != i){
-                  clu_lg = curr_clu(tt, ii) -1;
+                  clu_lg = curr_clu(tt, iii) -1;
                   for(k = 0; k < dim; k++){
                     loggamma(ii, k) = calculate_gamma(eta_star_curr.slice(tt).col(clu_lg),
                              z, beta, 0, k, ii, 1);
                   }
                 }
+                iii += 1;
               }
             }
             //FINE PARTE PROBLEMATICA
@@ -693,7 +702,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 }
               }
             }
-          }//chiude la similarity & calibration for current clusters
+          } //chiude la similarity & calibration for current clusters
 
           //SIMILARITY & CALIBRATION EMPTY CLUSTERS
           if(reuse == 0){
@@ -867,7 +876,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           //newci = id_empty;
           for(j = 0; j < nclu_curr(tt) + CC; j++){
             cweight += pweight(tt, j);
-
             if (uu < cweight){
               newci = j + 1;
               break;
@@ -879,29 +887,27 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
            */
           if((newci) <= (nclu_curr(tt))){
             //Point 2a page 345 Favaro and Teh, second column
-            curr_clu(tt, i) = newci;
+            curr_clu(tt, it) = newci;
             nj_curr(tt, newci - 1) += 1;
             //Rcpp::Rcout << "if 1" << curr_clu.t() << std::endl;
             for(k = 0; k < dim; k++){
               loggamma(i, k) = calculate_gamma(eta_star_curr.slice(tt),
-                       z, beta, curr_clu(tt, i)-1, k, i, 1);
-            }
-          }else{
+                       z, beta, curr_clu(tt, it)-1, k, i, 1);
+              }
+            }else{
             /*id_empty: it identifies which of the augmented has been chosen
              * 2b  page 345 Favaro and Teh, second column
              */
             id_empty = newci - nclu_curr(tt) - 1;
             nclu_curr(tt) += 1;
-            curr_clu(tt, i) = nclu_curr(tt);
+            curr_clu(tt, it) = nclu_curr(tt);
             nj_curr(tt, nclu_curr(tt)-1) = 1;
-
             eta_star_curr.slice(tt).col(nclu_curr(tt)-1) = eta_empty.slice(tt).col(id_empty);
-
             //NEED TO UPDATE GAMMA TOO
             //for(ii = 0; ii < nobs; ii++){
             for(k = 0; k < dim; k++){
               loggamma(i, k) = calculate_gamma(eta_star_curr.slice(tt),
-                       z, beta, curr_clu(i)-1, k, i, 1);
+                       z, beta, curr_clu(tt, it)-1, k, i, 1);
             }
             //}
             eta_empty.slice(tt).col(id_empty) = ran_mvnorm(hP0_m0, hP0_L0, dim);
@@ -910,34 +916,59 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           if(PPMx == 1){
             // need to now add the xcon to the cluster to which it was assigned;
             for(p = 0; p < ncon; p++){
-              sumx(tt, (curr_clu(tt, i)-1)*ncon + p) += xcon(i * ncon + p);
-              sumx2(tt, (curr_clu(tt, i)-1)*ncon + p) += xcon(i * ncon + p) * xcon(i * ncon + p);
+              sumx(tt, (curr_clu(tt, it)-1)*ncon + p) += xcon(i * ncon + p);
+              sumx2(tt, (curr_clu(tt, it)-1)*ncon + p) += xcon(i * ncon + p) * xcon(i * ncon + p);
             }
             for(p = 0; p < ncat; p++){
-              njc(tt, ((curr_clu(tt, i)-1)*ncat + p) * max_C + xcat(i * ncat + p)) += 1;
+              njc(tt, ((curr_clu(tt, it)-1)*ncat + p) * max_C + xcat(i * ncat + p)) += 1;
             }
           }
+      it += 1;
         }
       }
-
+    }//this closes the loop on candidate therapies T
       //////////////////////////////////////////////////
       // update the cluster value with NEAL 8 (II step)
       //////////////////////////////////////////////////
       /*Sthetam = (eta_star_curr.col(j) - thetaj)*(eta_star_curr.col(j) - thetaj).t();
        Sthetam = arma::inv(S0m + Sthetam);
        Sigma = ran_iwish(nuiw + 1, Sthetam, dim);*/
-
+      for(tt = 0 ; tt < nT; tt++){
       for(j = 0; j < nclu_curr(tt); j++){
         //Rcpp::Rcout << "lg_eu" << loggamma << std::endl;
-        l_eta_out = eta_update(JJ, loggamma, nclu_curr(tt), curr_clu.row(tt).t(), nj_curr.row(tt).t(),
-                               treatments, tt, eta_star_curr.slice(tt).col(j), eta_flag.row(tt).t(),
+        l_eta_out = eta_update(JJ, loggamma, nclu_curr(tt), curr_clu.row(tt).t(),
+                               nj_curr.row(tt).t(),
+                               treatments, tt, eta_star_curr.slice(tt).col(j),
+                               eta_flag.row(tt).t(),
                                mu0, L0v, j, mhtunepar(0));
         eta_star_curr.slice(tt).col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
         loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
-        eta_flag.row(tt) = Rcpp::as<arma::vec>(l_eta_out[2]);
+        eta_flag.row(tt) = Rcpp::as<arma::vec>(l_eta_out[2]).t();
       }
+      //Rcpp::Rcout << "eta_star_curr" << eta_star_curr << std::endl;
       sumtotclu(tt) += nclu_curr(tt);
+      }//this closes the loop on candidate therapies T
+      // for the training set
+      /*////////////////////////////////////////////////
+       * update random variables:
+       * - independent gammas for DM sampling scheme JJ, TT
+       * - random gamma (trucchetto Raffaele) ss
+       ////////////////////////////////////////////////*/
+       // update JJ and consequently TT
+       for(i = 0; i < nobs; i++){
+         //if(treatments(i) == tt){
+           TT(i) = 0.0;
+           for(k = 0; k < dim; k++){
+             JJ(i, k) = R::rgamma(y(i, k) + exp(loggamma(i, k)), pow(ss(i) + 1.0, - 1.0));
+             if(JJ(i, k) < pow(10.0, -100.0)){
+               JJ(i, k) = pow(10.0, -100.0);
+             }
+             TT(i) += JJ(i, k);
+           }
+         //}
+       }
 
+tt=0;
       if(upd_hier == 1){
         for(j = 0; j < (dim*dim); j++){
           Swork(j) = 0.0;
@@ -946,7 +977,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         for(j = 0; j < nclu_curr(tt); j++){
           Swork += (eta_star_curr.slice(tt).col(j) - emme0) * (eta_star_curr.slice(tt).col(j) - emme0).t();
         }
-
         Bwork = nuiw*Psi0_mat + Swork;
         Bwork = arma::inv(Bwork);
         for(i = 0; i < dim; i++){
@@ -963,13 +993,12 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           }
         }
 
-        Vwork = arma::inv(sigma0_mat) + nclu_curr*arma::inv(L0_mat);
+        Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*arma::inv(L0_mat);
         Vwork = arma::inv(Vwork);
 
         for(j = 0; j < dim; j++){
           Rwork(j) = 0;
         }
-
         for(j = 0; j < nclu_curr(tt); j++){
           Rwork += eta_star_curr.slice(tt).col(j);
         }
@@ -1008,63 +1037,35 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         loggamma = Rcpp::as<arma::mat>(l_beta_out[1]);
         beta_flag = Rcpp::as<arma::mat>(l_beta_out[2]);
       }
-
       if(hsp == 1){
         lambda = up_lambda_hs(beta, lambda, tau);
         tau = up_tau_hs(beta, lambda, tau);
         sigma_beta = lambda * tau;
       }
 
-      /*////////////////////////////////////////////////
-       * update random variables:
-       * - independent gammas for DM sampling scheme JJ, TT
-       * - random gamma (trucchetto Raffaele) ss
-       ////////////////////////////////////////////////*/
-       // update JJ and consequently TT
-       for(i = 0; i < nobs; i++){
-         if(treatments(i) == tt){
-           TT(i) = 0.0;
-           for(k = 0; k < dim; k++){
-             JJ(i, k) = R::rgamma(y(i, k) + exp(loggamma(i, k)), pow(ss(i) + 1.0, - 1.0));
-             if(JJ(i, k) < pow(10.0, -100.0)){
-               JJ(i, k) = pow(10.0, -100.0);
-             }
-             TT(i) += JJ(i, k);
-           }
-         }
-       }
-
        // update latent variables ss
        for(i = 0 ; i < nobs ; i++){
-         if(treatments(i) == tt){
+         //if(treatments(i) == tt){
            ss(i) = R::rgamma(ypiu(i), pow(TT(i), - 1.0));
-         }
+         //}
        }
-
        /*////////////////////////////////////////////////
         * in sample prediction to assess model fit
         ////////////////////////////////////////////////*/
         if((l > (burn-1)) & ((l + 1) % thin == 0)){
-          if(treatments(i) == tt){
-            for(i = 0; i < nobs; i++){
-              for(k = 0; k < dim; k++){
-                pii(k) = JJ(i, k)/TT(i);
-              }
-              ispred.row(i) = rmultinom_rcpp(1, 1, pii);
-              like_iter(i) = dmultinom_rcpp(y.row(i).t(), 1, pii, 0);
-
-              //needed for WAIC
-              mnlike(i) += like_iter(i)/(double) nout;
-              mnllike(i) += log(like_iter(i))/(double) nout;
-
-              //CPO & lpml
-              CPOinv(i) += (1/(double) nout)*(1/like_iter(i));
+          for(i = 0; i < nobs; i++){
+            for(k = 0; k < dim; k++){
+              pii(k) = JJ(i, k)/TT(i);
             }
+            ispred.row(i) = rmultinom_rcpp(1, 1, pii);
+            like_iter(i) = dmultinom_rcpp(y.row(i).t(), 1, pii, 0);
+            //needed for WAIC
+            mnlike(i) += like_iter(i)/(double) nout;
+            mnllike(i) += log(like_iter(i))/(double) nout;
+            //CPO & lpml
+            CPOinv(i) += (1/(double) nout)*(1/like_iter(i));
           }
         }
-    }//this closes the loop on candidate therapies T
-     // for the training set
-
     /*////////////////////////////////////////////////
      * Posterior Predictive
      ////////////////////////////////////////////////*/
@@ -1323,6 +1324,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
            if((newci) <= (nclu_curr(tt))){
              eta_pred = eta_star_curr.slice(tt).col(newci - 1);
+             //eta_pred = ran_mvnorm(mu0, L0v, dim);
            }else{
              eta_pred = ran_mvnorm(mu0, L0v, dim);
            }
@@ -1331,17 +1333,20 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
            for(k = 0; k < dim; k++){
              loggamma_pred(k) = calculate_gamma(eta_pred, zpred, beta, 0, k, pp, 1);
            }
+             Rcpp::Rcout << "loggamma_pred (" << tt << "): " << exp(loggamma_pred) << std::endl;
 
-           pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t();
+           //pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t();
 
-           pii_pred.slice(tt).row(pp) = pii_pred.slice(tt).row(pp)/arma::sum(pii_pred.slice(tt).row(pp));
+           pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t()/arma::sum(exp(loggamma_pred));
+          Rcpp::Rcout << "pi_pred (" << tt << ", " << pp << "): " << pii_pred.slice(tt).row(pp) << std::endl;
 
            ppred.slice(tt).row(pp) = rmultinom_rcpp(1, 1, pii_pred.slice(tt).row(pp).t());
            predclass(pp, tt) = newci;
          }//this closesthe loop for each treatment
        }//this closes the loop on npred subjects
      }//this closes the if for the draws after burnin and thinned
-
+     //Rcpp::Rcout << "numerosità t 0 su " << nclu_curr(0) << " clusters:" << nj_curr.row(0) << std::endl;
+     //Rcpp::Rcout << "numerosità t 1 su " << nclu_curr(1) << " clusters:" << nj_curr.row(1) << std::endl;
      //////////////////////
      // Save MCMC iterates
      //////////////////////
@@ -1355,9 +1360,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
        for(tt = 0; tt < nT; tt++){
          nclus(tt, ll) = nclu_curr(tt);
          for(i = 0; i < num_treat(tt); i++){
-           Clui(tt, ll*(num_treat(tt)) + i) = curr_clu(tt, i);
+           Clui(tt, i, ll) = curr_clu(tt, i);
          }
        }
+
        beta_out.col(ll) = beta;
        ppred_out(ll, 0) = ppred;
        pigreco_pred(ll, 0) = pii_pred;
@@ -1369,14 +1375,19 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
        }
 
        ll += 1;
+
+       /*Rcpp::Rcout << "here " << std::endl;
        for(tt = 0; tt < nT; tt++){
          for(j = 0; j < nclu_curr(tt); j++){
            //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
            //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
-           eta_out.slice(tt).insert_rows(lll, eta_star_curr.slice(tt).col(j).t());
-           lll += 1;
+           arma::rowvec new_row = eta_star_curr.slice(tt).col(j).t();
+           arma::mat my_matrix = eta_out.slice(tt);
+           eta_out.slice(tt) = arma::join_vert(my_matrix, new_row);
+           //lll += 1;
          }
        }
+       Rcpp::Rcout << "but not here " << std::endl;*/
      }
   }//CLOSES MCMC iterations
 
@@ -1391,7 +1402,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   double lpml = lpml_iter;
 
 
-  // Computing WAIC  (see Gelman article)
+  // WAIC
 
   elppdWAIC = 0.0;
   for(i = 0; i < nobs; i++){
@@ -1407,14 +1418,15 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     Rcpp::Named("beta") = beta_out,
     Rcpp::Named("eta_acc") = eta_flag,///sumtotclu,
     Rcpp::Named("beta_acc") = beta_flag,
-    Rcpp::Named("cl_lab") = Clui,
+    Rcpp::Named("cl_lab") = Clui,//output sistemato
+    Rcpp::Named("num_treat") = num_treat,//output sistemato
     Rcpp::Named("pi") = pigreco,
     Rcpp::Named("pipred") = pigreco_pred,
     Rcpp::Named("yispred") = ispred_out,
     Rcpp::Named("ypred") = ppred_out,
     Rcpp::Named("clupred") = predclass_out,
     //Rcpp::Named("like") = like,
-    Rcpp::Named("nclus") = nclus,
+    Rcpp::Named("nclus") = nclus,//ouput sistemato
     Rcpp::Named("WAIC") = WAIC,
     Rcpp::Named("lpml") = lpml);
 }
