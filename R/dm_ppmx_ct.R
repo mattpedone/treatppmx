@@ -52,15 +52,19 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   # modelPriors = (mu0, s^2, a1, m)
   # simParms = (m0, s20, v2, k0, nu0, dir, alpha)
   # mh - tuning parameters for MCMC updates of sig2 and sig20
-  treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
-  #print(treatnames)
-  nT <- length(treatnames)#length(unique(treatnames[["Treatment"]]))
-  repl <- seq(0, nT-1)
-  d <- as.vector(asstreat[[c("Treatment")]])
-  #d <- lessR::Transform(Treatment=as.numeric(Treatment), data = d)
-  #df <- lessR::Recode(data = d, old_vars = Treatment, new_vars = "treatments",
-         #            old = treatnames, new = repl, quiet = F)
-  treatments <- dplyr::recode(d, A = 0, B = 1)
+
+  nT <- length(unique(asstreat))
+  print(nT)
+  #treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
+  ##print(treatnames)
+  #nT <- length(treatnames)#length(unique(treatnames[["Treatment"]]))
+  #repl <- seq(0, nT-1)
+  #d <- as.vector(asstreat[[c("Treatment")]])
+  treatments <- asstreat-1
+  ##d <- lessR::Transform(Treatment=as.numeric(Treatment), data = d)
+  ##df <- lessR::Recode(data = d, old_vars = Treatment, new_vars = "treatments",
+  #       #            old = treatnames, new = repl, quiet = F)
+  #treatments <- dplyr::recode(d, A = 0, B = 1)
   #treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
   #print(treatments)
   #break;
@@ -201,26 +205,27 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     label[[t]] <- out$cl_lab[t,,]
   }
 
-  names(label) <- treatnames
+  #names(label) <- treatnames
   res$label <- label
   res$asstreat <- asstreat
   num_treat <- out$num_treat
-  names(num_treat) <- treatnames
+  #names(num_treat) <- treatnames
   res$num_treat <- num_treat
 
   #number of cluster
   nclu <- out$nclus
   res$nclu <- nclu#(nT x nout matrix)
 
-  nclu_cs <- apply(nclu, 1, cumsum)#(nt vector)
+  nclu_cs <- apply(nclu, 1, cumsum)#(nt x nout matrix)
 
 
   #intercept (and its acceptance rate)
-  #eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
+  eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
+  #print(eta_out)
   #eta_ar <- array(0, dim = c(max(nclu), ncol(y), nout, nT))
   #for(t in 1:nT){
   #  for(l in 1:nout){
-  #    for(i in 1:nclu[l]){
+  #    for(i in 1:nclu[l, t]){
   #      eta_ar[i, ,1, t] <- eta_out[i, ,t]
   #      if(l > 1){
   #        eta_ar[i, ,l, t] <- eta_out[i+nclu_cs[l-1], , t]
@@ -228,7 +233,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   #    }
   #  }
   #}
-  #res$eta <- eta_ar
+  res$eta <- eta_out
   #res$acc_rate_eta <- eta$acc#sum(out$eta_acc)#/sum(out$nclu)
 
   #prognostic covariates
@@ -250,7 +255,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   }
 
   res$beta <- beta
-  res$acc_rate_beta <- out$beta_acc#/sum(out$nclu)
+  res$acc_rate_beta <- 0#mean(out$beta_acc/iter)#out$beta_acc#/sum(out$nclu)
   #pi (dirichlet parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out

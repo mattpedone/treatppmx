@@ -389,7 +389,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
   arma::mat nclus(nT, nout, arma::fill::ones);
   //arma::mat sigma_out(1, dim*dim);
-  arma::cube eta_out(1, dim, nT);
+  //arma::cube eta_out(nout, dim, nT);
+  arma::field<arma::mat> eta_out(nout, nT);
   arma::mat beta_out(Q * dim, nout, arma::fill::ones);
   arma::cube Clui(nT, num_treat.max(), nout, arma::fill::zeros);
   arma::mat predclass_out(nout * npred, nT, arma::fill::zeros);
@@ -421,7 +422,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
       it = 0;
       for(i = 0; i < nobs; i++){
+
         if(treatments(i) == tt){
+          /*Rcpp::Rcout << "i: " << i << std::endl;
+          Rcpp::Rcout << "treat: " << treatments(i) << std::endl;
+          Rcpp::Rcout << "tt:" << tt << ", it: " << it << std::endl;*/
           //it = 0;
           /////////////////////////////////////////
           // update the cluster labels with NEAL 8
@@ -968,7 +973,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
          //}
        }
 
-tt=0;
+//tt=0;
       if(upd_hier == 1){
         for(j = 0; j < (dim*dim); j++){
           Swork(j) = 0.0;
@@ -1333,12 +1338,12 @@ tt=0;
            for(k = 0; k < dim; k++){
              loggamma_pred(k) = calculate_gamma(eta_pred, zpred, beta, 0, k, pp, 1);
            }
-             Rcpp::Rcout << "loggamma_pred (" << tt << "): " << exp(loggamma_pred) << std::endl;
+             //Rcpp::Rcout << "eta_pred (" << tt << "): " << eta_pred << std::endl;
 
            //pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t();
 
            pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t()/arma::sum(exp(loggamma_pred));
-          Rcpp::Rcout << "pi_pred (" << tt << ", " << pp << "): " << pii_pred.slice(tt).row(pp) << std::endl;
+          //Rcpp::Rcout << "pi_pred (" << tt << ", " << pp << "): " << pii_pred.slice(tt).row(pp) << std::endl;
 
            ppred.slice(tt).row(pp) = rmultinom_rcpp(1, 1, pii_pred.slice(tt).row(pp).t());
            predclass(pp, tt) = newci;
@@ -1374,21 +1379,22 @@ tt=0;
          }
        }
 
-       ll += 1;
 
-       /*Rcpp::Rcout << "here " << std::endl;
+       arma::mat mymat(dim, num_treat.max(), arma::fill::zeros);
+       //Rcpp::Rcout << "here " << std::endl;
        for(tt = 0; tt < nT; tt++){
          for(j = 0; j < nclu_curr(tt); j++){
            //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
            //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
-           arma::rowvec new_row = eta_star_curr.slice(tt).col(j).t();
-           arma::mat my_matrix = eta_out.slice(tt);
-           eta_out.slice(tt) = arma::join_vert(my_matrix, new_row);
+           mymat.col(j) = eta_star_curr.slice(tt).col(j);
            //lll += 1;
          }
+           eta_out(ll, tt) = mymat;
        }
-       Rcpp::Rcout << "but not here " << std::endl;*/
+       ll += 1;
      }
+
+       //Rcpp::Rcout << "but not here " << ll << std::endl;
   }//CLOSES MCMC iterations
 
   for(tt = 0; tt < nT; tt++){
