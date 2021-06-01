@@ -16,6 +16,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    arma::vec hP0_V0, int upd_hier, arma::vec initbeta, int hsp,
                    arma::vec mhtunepar){
 
+  //Rcpp::Rcout << "ncon: " << ncon << std::endl;
+  //Rcpp::Rcout << "ncat: " << ncat << std::endl;
+
+  //Rcpp::Rcout << "xcon: " << xcon.t() << std::endl;
+  //Rcpp::Rcout << "xcat: " << xcat.t() << std::endl;
+  //Rcpp::Rcout << "xconp: " << xconp.t() << std::endl;
+  //Rcpp::Rcout << "xcatp: " << xcatp.t() << std::endl;
+
   // l - MCMC index
   // ll - MCMC index for saving iterates
   // i - individual index
@@ -38,17 +46,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
   int nout = (iter - burn)/(thin); //number of saved iterations
 
-  //Rcpp::Rcout << "nout =  " << nout << std::endl;
   //////////////////////////
   //// DM scheme stuff
   //////////////////////////
 
   arma::vec ypiu(nobs, arma::fill::ones);
-  /*for(i = 0 ; i < nobs ; i++){
-   for(k = 0 ; k < dim ; k++){
-   ypiu(i) += y(i, k);
-   }
-  }*/
 
   // initialize latent variable: JJ ~ gamma()
   arma::mat JJ(nobs, dim);
@@ -119,6 +121,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
     }
   }
+  //Rcpp::Rcout << "s2mle" << s2mle << std::endl;
 
   //////////////////////////
   ////Cluster-related stuff
@@ -207,7 +210,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
     }
   }
-  double opz1, opz2;
+
   ////////////////////////////////////////////////////
   //// cluster specific suffiient statistics
   ////////////////////////////////////////////////////
@@ -238,7 +241,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
     }
   }
-
+//Rcpp::Rcout << "curr_clu" << curr_clu << std::endl;
   ////////////////////////////////////////////////////
   //// reuse algorithm stuff
   ////////////////////////////////////////////////////
@@ -356,14 +359,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   arma::vec pii(dim);
 
   // Stuff to compute the posterior predictive
-  arma::mat eta_pred(nT, dim);
+  arma::vec eta_pred(dim);
   arma::vec loggamma_pred(dim);
 
   arma::cube pii_pred(npred, dim, nT, arma::fill::zeros);
   arma::mat ispred(nobs, dim, arma::fill::zeros);
 
   arma::cube ppred(npred, dim, nT, arma::fill::zeros);
-  arma::vec rbpred(npred, arma::fill::zeros);
+  //arma::vec rbpred(npred, arma::fill::zeros);
   arma::mat predclass(npred, nT, arma::fill::zeros);
   //arma::vec predclass_prob(npred*(nobs+1), arma::fill::zeros);
 
@@ -412,7 +415,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   for(l = 0; l < iter; l++){
     for(tt = 0 ; tt < nT; tt++){
       /* inizializzo latent variables per empty components da P0
-       * per il Reuse algorithm (vettori di lunghezza CC)
+       * per il Reuse algorithm (CC vettori di lunghezza dim)
        */
       if(reuse == 1){
         for(mm = 0; mm < CC; mm++){
@@ -431,7 +434,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           /////////////////////////////////////////
           // update the cluster labels with NEAL 8
           /////////////////////////////////////////
-          zi = curr_clu(tt, it)-1; //sottraggo 1 perché C conta da 0 ma conviene farlo ogni volta
+          zi = curr_clu(tt, it)-1; //sottraggo 1 perché C conta da 0
 
           if(nj_curr(tt, zi) > 1){// Case where the nj corresponding to zi is such that nj>1
             nj_curr(tt, zi) -= 1;
@@ -567,17 +570,19 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             //CONYROLLA BENE
             iii = 0;
             for(ii = 0; ii < nobs; ii++){
-              if(treatments(ii) == tt){
-                if(ii != i){
+              if(ii != i){
+                if(treatments(ii) == tt){
                   clu_lg = curr_clu(tt, iii) -1;
+                  //Rcpp::Rcout << "iii: " << iii << std::endl;
                   for(k = 0; k < dim; k++){
                     loggamma(ii, k) = calculate_gamma(eta_star_curr.slice(tt).col(clu_lg),
                              z, beta, 0, k, ii, 1);
                   }
+                  iii += 1;
                 }
-                iii += 1;
               }
             }
+            //Rcpp::Rcout << "loggamma (" << tt <<"): " << loggamma << std::endl;
             //FINE PARTE PROBLEMATICA
           }
 
@@ -780,7 +785,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               }
             }
             if(calibration == 2){
-              weight(j) = log(alpha) - log(CC) +
+              weight(tt, j) = log(alpha) - log(CC) +
                 (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
@@ -952,8 +957,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
       //Rcpp::Rcout << "eta_star_curr" << eta_star_curr << std::endl;
       sumtotclu(tt) += nclu_curr(tt);
-      }//this closes the loop on candidate therapies T
-      // for the training set
+      }//this closes the loop on tt
+
       /*////////////////////////////////////////////////
        * update random variables:
        * - independent gammas for DM sampling scheme JJ, TT
@@ -1049,10 +1054,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
 
        // update latent variables ss
-       for(i = 0 ; i < nobs ; i++){
-         //if(treatments(i) == tt){
-           ss(i) = R::rgamma(ypiu(i), pow(TT(i), - 1.0));
-         //}
+       for(i = 0; i < nobs ; i++){
+         ss(i) = R::rgamma(ypiu(i), pow(TT(i), - 1.0));
        }
        /*////////////////////////////////////////////////
         * in sample prediction to assess model fit
@@ -1071,11 +1074,12 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             CPOinv(i) += (1/(double) nout)*(1/like_iter(i));
           }
         }
+
     /*////////////////////////////////////////////////
      * Posterior Predictive
      ////////////////////////////////////////////////*/
      if((l > (burn-1)) & ((l + 1) % thin == 0)){
-       for(pp = 0; pp < npred; pp++){//loop for every subject in the test set
+          for(pp = 0; pp < npred; pp++){//loop for every subject in the test set
          for(tt = 0; tt < nT; tt++){
            for(j = 0; j < nclu_curr(tt); j++){
 
@@ -1171,7 +1175,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
                gtilY(j) = lgconY + lgcatY;
                gtilN(j) = lgconN + lgcatN;
-
              }//this closes the if on PPMx
 
              weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
@@ -1334,6 +1337,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              eta_pred = ran_mvnorm(mu0, L0v, dim);
            }
 
+           //Rcpp::Rcout<< "eta pred(" << tt << ", " << newci << "): " << eta_pred<< std::endl;
            //NEED TO UPDATE GAMMA TOO
            for(k = 0; k < dim; k++){
              loggamma_pred(k) = calculate_gamma(eta_pred, zpred, beta, 0, k, pp, 1);
@@ -1343,7 +1347,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
            //pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t();
 
            pii_pred.slice(tt).row(pp) = exp(loggamma_pred).t()/arma::sum(exp(loggamma_pred));
-          //Rcpp::Rcout << "pi_pred (" << tt << ", " << pp << "): " << pii_pred.slice(tt).row(pp) << std::endl;
+         //Rcpp::Rcout << "pi_pred (" << tt << ", " << pp << "): " << pii_pred.slice(tt).row(pp) << std::endl;
 
            ppred.slice(tt).row(pp) = rmultinom_rcpp(1, 1, pii_pred.slice(tt).row(pp).t());
            predclass(pp, tt) = newci;

@@ -586,10 +586,10 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   it = 0;
   for(i = 0; i < nobs; i++){
     if(treatments(i) == t){
-      if(curr_clu(it) == (jj + 1)){
+      if(curr_clu(it)-1 == (jj)){
         for(k = 0; k < dim; k++){
           //Rcpp::Rcout << "logJJ: " << log(JJ(i, k)) << std::endl;
-          log_den = log_den - lgamma(exp(loggamma(i, k))) + exp(loggamma(i, k)) * log(JJ(i, k));
+          log_den -= lgamma(exp(loggamma(i, k))) + exp(loggamma(i, k)) * log(JJ(i, k));
         }
       }
       it += 1;
@@ -621,13 +621,14 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
       it += 1;
     }
   }
+
   log_num = 0.0;
   it = 0;
   for(i = 0; i < nobs; i++){
     if(treatments(i) == t){
       if(curr_clu(it)-1 == (jj)){
         for(k = 0; k < dim; k++){
-          log_num = log_num - lgamma(exp(loggamma_p(i, k))) + exp(loggamma_p(i, k)) * log(JJ(i, k));
+          log_num -= lgamma(exp(loggamma_p(i, k))) + exp(loggamma_p(i, k)) * log(JJ(i, k));
           //log_num = log_num + R::dnorm4(eta_p(k), 0, 1.0, 1);
         }
       }

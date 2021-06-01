@@ -30,11 +30,13 @@ load(file = "data/SimuOutsce2.rda")
 
 #trtsgn <- sample(1:3, 152, replace = TRUE)
 correct_insample <- accuracy <- c()
-for(k in 1:10){
-X <- data.frame(t(mydata))#[, 1:4]
+#for(k in 1:10){
+k=1
+X <- data.frame(t(mydata))[, 1:10]
+#Z <- data.frame(t(mydata))[, 91:92]
 Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
 Y <- mytot[,,1]#mytot[,,sample(1:100, 1)]#
-idx <- sample(1:nrow(Y), 10, replace = F)#
+idx <- sample(1:nrow(Y), 5, replace = F)#
 wk <- c(0, .4, 1)
 treattest <- trtsgn[idx]#treat[idx]
 trt <- trtsgn[-idx]
@@ -52,12 +54,12 @@ modelpriors$hP0_L0 <- diag(1, ncol(Y))
 modelpriors$hP0_nu0 <- ncol(Y) + 2
 modelpriors$hP0_V0 <- diag(1, ncol(Y))
 
-alpha_DP <- 1
+alpha_DP <- 2
 n_aux <- 5
 vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 100000
-burnin <- 50000
+iterations <- 50000
+burnin <- 25000
 thinning <- 10
 
 uh = F
@@ -66,7 +68,7 @@ time_ppm <- system.time(
   out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
                         z = Z, zpred = Ztest, asstreat = trt, #treatment,
                         alpha=alpha_DP, CC = n_aux, reuse = 1,
-                        PPMx = 1, similarity = 1, consim=1, calibration=1,
+                        PPMx = 1, similarity = 2, consim=1, calibration=2,
                         similparam = vec_par, modelpriors, update_hierarchy = uh,
                         iter=iterations,burn=burnin,thin=thinning, hsp = F))
 
@@ -136,7 +138,7 @@ if(length(idx)==1){
   accuracy[k] <- sum(diag(table(treatpred, treattest)))/length(idx)
 
 }
-}
+#}
 
 #correct_insample
 accuracy
