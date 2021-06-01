@@ -74,8 +74,6 @@ sum(apply(round(apply(out_ppmx$isypred, c(1,2), mean))==Y, 1, sum)==3)/nobs
 #sum(apply(round(apply(out_ppmx$pi_out, c(1,2), mean))==Y, 1, sum)==3)/nobs
 
 label <- out_ppmx$label
-#orig_names <- names(label)
-#label <- label[order(names(label))]
 truelabel <- out_ppmx$asstreat
 #num_treat <- out_ppmx$num_treat
 #ntreat <- 2
@@ -108,7 +106,6 @@ if(length(idx)==1){
     scoreA <- sum(Al[[1]]*wk)
     scoreB <- sum(Al[[2]]*wk)
 
-    #print(scoreA);print(scoreB);
     if(scoreA > scoreB){
       treatpred[i] <- "1"
     } else {
