@@ -32,7 +32,7 @@ load(file = "data/SimuOutsce2.rda")
 correct_insample <- accuracy <- c()
 #for(k in 1:10){
 k=1
-X <- data.frame(t(mydata))[, 1:10]
+X <- data.frame(t(mydata))[, 1:50]
 #Z <- data.frame(t(mydata))[, 91:92]
 Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
 Y <- mytot[,,1]#mytot[,,sample(1:100, 1)]#
