@@ -43,7 +43,7 @@
 my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1,
                        CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
-                       burn=100,thin=1, mhtunepar = c(.15, .15), initpc = TRUE){
+                       burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 10){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -53,26 +53,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   # simParms = (m0, s20, v2, k0, nu0, dir, alpha)
   # mh - tuning parameters for MCMC updates of sig2 and sig20
 
-  nT <- length(unique(asstreat))
-  print(nT)
-  #treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
-  ##print(treatnames)
-  #nT <- length(treatnames)#length(unique(treatnames[["Treatment"]]))
-  #repl <- seq(0, nT-1)
-  #d <- as.vector(asstreat[[c("Treatment")]])
-  treatments <- asstreat-1
-  ##d <- lessR::Transform(Treatment=as.numeric(Treatment), data = d)
-  ##df <- lessR::Recode(data = d, old_vars = Treatment, new_vars = "treatments",
-  #       #            old = treatnames, new = repl, quiet = F)
-  #treatments <- dplyr::recode(d, A = 0, B = 1)
-  #treatnames <- as.vector(unique(asstreat[[c("Treatment")]]))
-  #print(treatments)
-  #break;
 
-  #treatments <- df %>%
-  #  select(treatments) #%>%
-    #data.matrix -1
-  #print(treatments)
   out <- NULL
 
   if(!is.data.frame(X) & !is.null(X)) X <- data.frame(X)
@@ -108,8 +89,9 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     # standardize continuous covariates
     if(nxobs > 0){
       if(sum(!catvars) > 0){
-        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)
+        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)#
         xcon <- Xconstd[1:nobs,,drop=FALSE];
+        #print(xcon)
         ncon <- ncol(xcon)
       }else{
         xcon <- cbind(rep(0,nobs));
@@ -131,8 +113,9 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     # Now consider the case when number of covariates for prediction are greater than zero
     if(npred > 0){
       if(sum(!catvars) > 0){
-        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)
+        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)#
         xconp <- Xconstd[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
+        #print(xconp)
         ncon <- ncol(xconp)
       } else {
         xconp <- cbind(rep(0,npred));
@@ -152,31 +135,43 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     }
   }
 
-  #cat("xcon", xcon, "\n")
-
-  init = initpc
-  if(init == TRUE){
-    cormat = matrix(0, ncol(y), ncol(z))
-    pmat = matrix(0, ncol(y), ncol(z))
-    yy = y/rowSums(y) # compositionalize
-    for(rr in 1:ncol(y)){
-      for(cc in 1:ncol(z)){
-        pmat[rr, cc] = suppressWarnings(stats::cor.test(z[, cc], yy[, rr], method = "spearman",
-                                       exact = F)$p.value)
-        cormat[rr, cc] = suppressWarnings(stats::cor(z[, cc], yy[, rr], method = "spearman"))
-      }
+  cormat = matrix(0, ncol(y), ncol(z))
+  pmat = matrix(0, ncol(y), ncol(z))
+  yy = y/rowSums(y) # compositionalize
+  for(rr in 1:ncol(y)){
+    for(cc in 1:ncol(z)){
+      pmat[rr, cc] = suppressWarnings(stats::cor.test(z[, cc], yy[, rr], method = "spearman",
+                                     exact = F)$p.value)
+      cormat[rr, cc] = suppressWarnings(stats::cor(z[, cc], yy[, rr], method = "spearman"))
     }
-    # defaults to 0.2 false discovery rate
-    pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
-                ncol(z))
-    betmat = cormat * pm
-    beta <- as.vector(t(betmat))
-    beta[is.na(beta)] <- 0.0
-    beta <- beta + 0.0001
-    #cat("init: ", beta, "\n")
-  } else {
-    beta <- rep(0.0001, ncol(y)*ncol(z))
   }
+  # defaults to 0.2 false discovery rate
+  pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
+              ncol(z))
+  betmat = cormat * pm
+  beta <- as.vector(t(betmat))
+  beta[is.na(beta)] <- 0.0
+  beta <- beta + 0.0001
+
+  A <- length(unique(asstreat))#nT int
+  treatments <- asstreat#treatments vec
+  n_a <- table(treatments)#num_treat vec 2
+  max_n_treat <- max(n_a)#num_treat.max
+
+  curr_cluster <- matrix(0, A, max_n_treat)
+  card_cluster <- matrix(0, A, max_n_treat)
+  nclu_curr <- rep(nclu_init, A)
+  for(a in 1:A){
+    work <- kmeans(X[treatments==(a),], nclu_init, iter.max = 10, nstart = 25)
+    for(i in 1:length(work$cluster)){
+      curr_cluster[a,i] <- work$cluster[i]
+    }
+    for(i in 1:nclu_init){
+      card_cluster[a,i] <- table(work$cluster)[i]
+    }
+  }
+
+  treatments <- treatments - 1
 
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
@@ -194,14 +189,15 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                  as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
                  as.vector(hP0_V0), as.integer(update_hierarchy), as.vector(t(beta)),
-                 as.integer(hsp), as.vector(mhtunepar))
+                 as.integer(hsp), as.vector(mhtunepar), as.integer(A), as.vector(n_a),
+                 as.matrix(curr_cluster), as.matrix(card_cluster), as.vector(nclu_curr))
 
   ###PREPARE OUTPUT
   res <- list()
 
   #label (clustering)
   label <- list()
-  for(t in 1:nT){
+  for(t in 1:A){
     label[[t]] <- out$cl_lab[t,,]
   }
 
@@ -255,7 +251,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   }
 
   res$beta <- beta
-  res$acc_rate_beta <- 0#mean(out$beta_acc/iter)#out$beta_acc#/sum(out$nclu)
+  res$acc_rate_beta <- out$beta_acc/iter#out$beta_acc#/sum(out$nclu)
   #pi (dirichlet parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out
