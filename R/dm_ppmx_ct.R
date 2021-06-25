@@ -43,7 +43,7 @@
 my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1,
                        CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
-                       burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 10){
+                       burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 5){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -264,8 +264,13 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   res$lpml <- out$lpml
 
   #posterior predictive
-  #ypred <- array(0, dim = c(npred, ncol(y), nout))
-  res$ypred <- out$ypred
+  ypred <- array(0, dim = c(npred, ncol(y), A, nout))
+  for(i in 1:nout){
+    for(a in 1:A){
+      ypred[,,a,i] <- out$ypred[i,1][[1]][,,a]
+    }
+  }
+  res$ypred <- ypred#out$ypred
 
   #cluster classification prediction (unsupervised clustering)
   clupred <- matrix(0, nout, npred)
