@@ -42,6 +42,7 @@
 
 my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1,
                        CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
+                       coardegree = 1,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
                        burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 5){
 
@@ -184,7 +185,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
                  as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity),
-                 as.integer(calibration), as.matrix(y), as.matrix(z), as.matrix(zpred),
+                 as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(z), as.matrix(zpred),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                  as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
