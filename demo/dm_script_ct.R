@@ -66,8 +66,8 @@ alpha_DP <- 10
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 100000
-burnin <- 50000
+iterations <- 50000
+burnin <- 1000#00
 thinning <- 10
 
 nout <- (iterations-burnin)/thinning
@@ -75,8 +75,8 @@ time_ppmx <- system.time(
   out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
                         z = Z, zpred = Ztest, asstreat = trt, #treatment,
                         alpha = alpha_DP, CC = n_aux, reuse = 1,
-                        PPMx = 1, similarity = 1, consim = 1, calibration = 2,
-                        coardegree = 2,
+                        PPMx = 1, similarity = 3, consim = 1,  gowtot = 1,
+                        alphagow = 1, calibration = 2, coardegree = 2,
                         similparam = vec_par, modelpriors, update_hierarchy = T,
                         iter = iterations, burn = burnin, thin = thinning, hsp = T))
 time_ppmx/60

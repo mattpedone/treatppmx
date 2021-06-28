@@ -21,6 +21,10 @@
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
+#'   3 - Gower dissimilarity
+#' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total. if gowtot ==0,
+#' then Average Gower dissimilarity is taken
+#' @param alphagow $\alpha$ parameter to compute gower dissimilarity
 #' @param consim integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG
 #' @param vector (dimension \eqn{nobs\times 1}) containing response vector
 #' @param xcon \eqn{nobs \times ncon} contiguous double vector that contains continuous covariate values
@@ -33,6 +37,10 @@
 #'   0 - no calibration
 #'   1 - standardize similarity value for each covariate
 #'   2 - coarsening is applied so that each similarity is raised to the 1/p power
+#' @param coardegree option to temper the coarsening
+#'   1 - $g(x^\star)^{1/p}$
+#'   2 - $g(x^\star)^{1/p^{1/2}}$
+#'   3 - $g(x^\star)^{1/p^{1/3}}$
 #' @param update_hierarchy should hypeparameter for BNP intercept be updated? if 1 yes (default)
 #' @param initpc: partial correlation initialization for prognostic covariates coefficient (default)
 #' @export
@@ -41,8 +49,8 @@
 # se non funziona l output di myppmx deve essere una lista
 
 my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1,
-                       CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1, calibration=0,
-                       coardegree = 1,
+                       CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1,
+                       gowtot = 1, alphagow = 1, calibration=0, coardegree = 1,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
                        burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 5){
 
@@ -76,8 +84,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     ncat <- 0
     npred <- 0
   }
-  #print("the following is X")
-  #print(X)
+
   if(!(is.null(X) & is.null(Xpred))){
     nxobs <- ifelse(is.null(X), 0, nrow(X))
     npred <- ifelse(is.null(Xpred), 0, nrow(Xpred))
@@ -136,6 +143,15 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     }
   }
 
+  if(similarity == 3){
+    dissim <- as.matrix(cluster::daisy(Xall, metric="gower"))
+    dissimtn <- dissim[1:nobs, 1:nobs]
+    dissimtt <- dissim[-c(1:nobs), 1:nobs]
+  }else{
+    dissimtn <- 0
+    dissimtt <- 0
+  }
+
   cormat = matrix(0, ncol(y), ncol(z))
   pmat = matrix(0, ncol(y), ncol(z))
   yy = y/rowSums(y) # compositionalize
@@ -184,7 +200,8 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
-                 as.integer(consim), as.integer(similarity),
+                 as.integer(consim), as.integer(similarity), as.integer(gowtot),
+                 as.integer(alphagow), as.vector(dissimtn), as.vector(dissimtt),
                  as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(z), as.matrix(zpred),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),

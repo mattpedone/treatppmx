@@ -8,8 +8,9 @@
 // [[Rcpp::export]]
 Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments,
                       int PPMx, int ncon, int ncat, arma::vec catvec, double alpha,
-                      int CC, int reuse, int consim, int similarity, int calibration,
-                      int coardegree,
+                      int CC, int reuse, int consim, int similarity,
+                      int gowtot, int alphagow, arma::vec dissimtn, arma::vec dissimtt,
+                      int calibration, int coardegree,
                       arma::mat y, arma::mat z, arma::mat zpred, arma::vec xcon,
                       arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred,
                       arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0,
@@ -224,6 +225,9 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   ////////////////////////////////////////
 
   int njtmp;
+
+  //needed for Gower dissimilarity
+  double npdN, npdY, npd;
 
   double lgconN, lgconY, lgcatN, lgcatY, tmp;
   double lgcont, lgcatt;
@@ -589,6 +593,47 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
               gtilY(j) = lgconY + lgcatY;
               gtilN(j) = lgconN + lgcatN;
+
+              // Gower dissimilarity
+              if(similarity == 3){
+                npd = 0.0;
+                lgconY = 0.0;
+                lgconN = 0.0;
+                int iiv = 0;
+                int iv = 0;
+                for(ii = 0; ii < nobs; ii++){
+                  if(treatments(ii) == tt){
+                    if((curr_clu(tt, iiv) == (j + 1)) & (ii != i)){
+                      lgconY += dissimtn(ii * nobs + i);
+                      iv = 0;
+                      for(iii = 0; iii < ii; iii++){
+                        if(treatments(iii) == tt){
+                          if((curr_clu(tt, iv) == (j + 1)) & (iii != i)){
+                            lgconN += dissimtn(ii*nobs+iii);
+                            lgconY += dissimtn(ii*nobs+iii);
+                            npd+= 1;
+                          }
+                          iv += 1;
+                        }
+                      }
+                    }
+                    iiv += 1;
+                  }
+
+                }
+                npdN = nj_curr(tt, j) * (nj_curr(tt, j) - 1)/2.0;
+                if(npdN == 0){
+                  npdN = 1.0;
+                }
+                npdY = (nj_curr(tt, j) + 1) * (nj_curr(tt, j))/2.0;
+                if(gowtot == 0){
+                  lgconN = -(alphagow)*lgconN/(npdN);
+                  lgconY = -(alphagow)*lgconY/(npdY);
+                } else {
+                  lgconN = -(alphagow)*lgconN;
+                  lgconY = -(alphagow)*lgconY;
+                }
+              }
             }// this closes PPMx
 
             //compute PLAIN cluster probabilities
@@ -1053,6 +1098,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  }
                }//this closes the loop on continuous covariates
 
+               if(similarity == 4){ // Dissimilarity
+                 lgcondraw = 0.0;
+               }
+
                for(p = 0; p < ncat; p++){
 
                  for(c = 0; c < max_C; c++){
@@ -1084,6 +1133,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    lgcatY = lgcatY + lgcatt;
                  }
                }//this closes the loop on categorical covariates
+
+               if(similarity == 4){ // Dissimilarity
+                 lgcatdraw = 0.0;
+               }
 
                gtilY(j) = lgconY + lgcatY;
                gtilN(j) = lgconN + lgcatN;
@@ -1154,6 +1207,46 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }//chiude ciclo su covariate discrete
                gtilY(j) = lgcondraw + lgcatdraw;
                gtilN(j) = lgcondraw + lgcatdraw;
+
+               // Gower dissimilarity
+               if(similarity == 3){
+                 npd = 0.0;
+                 lgconY = 0.0;
+                 lgconN = 0.0;
+                 int iiv = 0;
+                 int iv = 0;
+                 for(ii = 0; ii < nobs; ii++){
+                   if(treatments(ii) == tt){
+                     if(curr_clu(tt, iiv) == (j + 1)){
+                       lgconY += dissimtt(pp * nobs + ii);
+                       iv = 0;
+                       for(iii = 0; iii < ii; iii++){
+                         if(treatments(iii) == tt){
+                           if(curr_clu(tt, iv) == (j + 1)){
+                             lgconN += dissimtn(ii*nobs+iii);
+                             lgconY += dissimtn(ii*nobs+iii);
+                             npd+= 1;
+                           }
+                           iv += 1;
+                         }
+                       }
+                     }
+                     iiv += 1;
+                   }
+                 }
+                 npdN = nj_curr(tt, j) * (nj_curr(tt, j) - 1)/2.0;
+                 if(npdN == 0){
+                   npdN = 1.0;
+                 }
+                 npdY = (nj_curr(tt, j) + 1) * (nj_curr(tt, j))/2.0;
+                 if(gowtot == 0){
+                   lgconN = -(alphagow)*lgconN/(npdN);
+                   lgconY = -(alphagow)*lgconY/(npdY);
+                 } else {
+                   lgconN = -(alphagow)*lgconN;
+                   lgconY = -(alphagow)*lgconY;
+                 }
+               }
              }//closes PPMx
 
              weight(tt, j) = log(alpha) - log(CC) + //cohesion + auxiliary ptms
@@ -1174,6 +1267,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }
              }
            }//chiude loop su empty cluster
+
+           if(similarity == 3){
+             weight(tt, j) = log(alpha) - log(CC);
+           }
 
            if((calibration == 1) & (PPMx == 1)){
              maxgtilN = gtilN(0);
