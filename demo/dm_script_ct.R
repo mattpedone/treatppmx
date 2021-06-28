@@ -32,7 +32,7 @@ load("~/Dropbox/PHD/treatppmx/data/SimuOutsce2.rda")
 
 k=sample(1:100, 1)
 print(k)
-X <- data.frame(t(mydata))[, -c(11:92)]#data.frame(mydata)#
+X <- data.frame(t(mydata))[, -c(91:92)]#data.frame(mydata)#
 Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
 #Z <- apply(Z, 2, scale)
 Y <- mytot[,,k]
@@ -66,8 +66,8 @@ alpha_DP <- 10
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 50000
-burnin <- 25000
+iterations <- 100000
+burnin <- 50000
 thinning <- 10
 
 nout <- (iterations-burnin)/thinning
@@ -76,7 +76,7 @@ time_ppmx <- system.time(
                         z = Z, zpred = Ztest, asstreat = trt, #treatment,
                         alpha = alpha_DP, CC = n_aux, reuse = 1,
                         PPMx = 1, similarity = 1, consim = 1, calibration = 2,
-                        coardegree = 1,
+                        coardegree = 2,
                         similparam = vec_par, modelpriors, update_hierarchy = T,
                         iter = iterations, burn = burnin, thin = thinning, hsp = T))
 time_ppmx/60

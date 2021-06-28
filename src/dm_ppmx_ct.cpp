@@ -612,11 +612,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               }
               if(coardegree == 2){
                 weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                  (1/(pow(((double)ncon + (double)ncat), -2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                  (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               if(coardegree == 3){
                 weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                  (1/(pow(((double)ncon + (double)ncat), -3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                  (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
@@ -706,11 +706,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               }
               if(coardegree == 2){
                 weight(tt, j) = log(alpha) - log(CC) +
-                  (1/(pow(((double)ncon + (double)ncat), -2.0)))*(lgcondraw + lgcatdraw);
+                  (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
               }
               if(coardegree == 3){
                 weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                  (1/(pow(((double)ncon + (double)ncat), -3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                  (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
@@ -1100,11 +1100,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }
                if(coardegree == 2){
                  weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                   (1/(pow(((double)ncon + (double)ncat), -2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                   (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
                }
                if(coardegree == 3){
                  weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                   (1/(pow(((double)ncon + (double)ncat), -3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                   (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
                }
              }
            }//this closes the loop on existing clusters
@@ -1166,11 +1166,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }
                if(coardegree == 2){
                  weight(tt, j) = log(alpha) - log(CC) +
-                   (1/(pow(((double)ncon + (double)ncat), -2.0)))*(lgcondraw + lgcatdraw);
+                   (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
                }
                if(coardegree == 3){
                  weight(tt, j) = log(alpha) - log(CC) +
-                   (1/(pow(((double)ncon + (double)ncat), -3.0)))*(lgcondraw + lgcatdraw);
+                   (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcondraw + lgcatdraw);
                }
              }
            }//chiude loop su empty cluster
