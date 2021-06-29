@@ -201,7 +201,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
                  as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), as.integer(gowtot),
-                 as.integer(alphagow), as.vector(dissimtn), as.vector(dissimtt),
+                 as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
                  as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(z), as.matrix(zpred),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),

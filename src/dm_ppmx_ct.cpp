@@ -710,6 +710,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 }
               }//chiude ciclo su p covariate continue
 
+              if(similarity == 3){
+                lgcondraw = 0.0;
+              }
+
               // Categorical Covariates
 
               for(p = 0; p < (ncat); p++){
@@ -729,6 +733,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                   lgcatdraw += lgcatt;
                 }
               }//chiude ciclo su covariate discrete
+
+              if(similarity == 3){
+                lgcatdraw = 0.0;
+              }
+
               gtilY(j) = lgcondraw + lgcatdraw;
               gtilN(j) = lgcondraw + lgcatdraw;//ATTENZIONE
             }//closes PPMx
@@ -1098,10 +1107,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  }
                }//this closes the loop on continuous covariates
 
-               if(similarity == 4){ // Dissimilarity
-                 lgcondraw = 0.0;
-               }
-
                for(p = 0; p < ncat; p++){
 
                  for(c = 0; c < max_C; c++){
@@ -1134,12 +1139,48 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  }
                }//this closes the loop on categorical covariates
 
-               if(similarity == 4){ // Dissimilarity
-                 lgcatdraw = 0.0;
-               }
-
                gtilY(j) = lgconY + lgcatY;
                gtilN(j) = lgconN + lgcatN;
+
+               // Gower dissimilarity
+               if(similarity == 3){
+                 npd = 0.0;
+                 lgconY = 0.0;
+                 lgconN = 0.0;
+                 int iiv = 0;
+                 int iv = 0;
+                 for(ii = 0; ii < nobs; ii++){
+                   if(treatments(ii) == tt){
+                     if(curr_clu(tt, iiv) == (j + 1)){
+                       lgconY += dissimtt(pp * nobs + ii);
+                       iv = 0;
+                       for(iii = 0; iii < ii; iii++){
+                         if(treatments(iii) == tt){
+                           if(curr_clu(tt, iv) == (j + 1)){
+                             lgconN += dissimtn(ii*nobs+iii);
+                             lgconY += dissimtn(ii*nobs+iii);
+                             npd+= 1;
+                           }
+                           iv += 1;
+                         }
+                       }
+                     }
+                     iiv += 1;
+                   }
+                 }
+                 npdN = nj_curr(tt, j) * (nj_curr(tt, j) - 1)/2.0;
+                 if(npdN == 0){
+                   npdN = 1.0;
+                 }
+                 npdY = (nj_curr(tt, j) + 1) * (nj_curr(tt, j))/2.0;
+                 if(gowtot == 0){
+                   lgconN = -(alphagow)*lgconN/(npdN);
+                   lgconY = -(alphagow)*lgconY/(npdY);
+                 } else {
+                   lgconN = -(alphagow)*lgconN;
+                   lgconY = -(alphagow)*lgconY;
+                 }
+               }
              }//this closes the if on PPMx
 
              weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
@@ -1188,8 +1229,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    }
                  }
                }//chiude ciclo su p covariate continue
-               // Categorical Covariates
 
+               // Categorical Covariates
                for(p = 0; p < (ncat); p++){
                  for(c = 0; c < catvec(p); c++){
                    njctmp(c) = 0;
@@ -1207,51 +1248,18 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }//chiude ciclo su covariate discrete
                gtilY(j) = lgcondraw + lgcatdraw;
                gtilN(j) = lgcondraw + lgcatdraw;
-
-               // Gower dissimilarity
-               if(similarity == 3){
-                 npd = 0.0;
-                 lgconY = 0.0;
-                 lgconN = 0.0;
-                 int iiv = 0;
-                 int iv = 0;
-                 for(ii = 0; ii < nobs; ii++){
-                   if(treatments(ii) == tt){
-                     if(curr_clu(tt, iiv) == (j + 1)){
-                       lgconY += dissimtt(pp * nobs + ii);
-                       iv = 0;
-                       for(iii = 0; iii < ii; iii++){
-                         if(treatments(iii) == tt){
-                           if(curr_clu(tt, iv) == (j + 1)){
-                             lgconN += dissimtn(ii*nobs+iii);
-                             lgconY += dissimtn(ii*nobs+iii);
-                             npd+= 1;
-                           }
-                           iv += 1;
-                         }
-                       }
-                     }
-                     iiv += 1;
-                   }
-                 }
-                 npdN = nj_curr(tt, j) * (nj_curr(tt, j) - 1)/2.0;
-                 if(npdN == 0){
-                   npdN = 1.0;
-                 }
-                 npdY = (nj_curr(tt, j) + 1) * (nj_curr(tt, j))/2.0;
-                 if(gowtot == 0){
-                   lgconN = -(alphagow)*lgconN/(npdN);
-                   lgconY = -(alphagow)*lgconY/(npdY);
-                 } else {
-                   lgconN = -(alphagow)*lgconN;
-                   lgconY = -(alphagow)*lgconY;
-                 }
-               }
              }//closes PPMx
 
              weight(tt, j) = log(alpha) - log(CC) + //cohesion + auxiliary ptms
                lgcondraw + // Continuous covariate part
                lgcatdraw; // categorical covariate part
+
+             // Gower dissimilarity
+             if(similarity == 3){
+               weight(tt, j) = log(alpha) - log(CC);
+             }
+
+             // Coarsening
              if((calibration == 2) & (PPMx == 1)){
                if(coardegree == 1){
                  weight(tt, j) = log(alpha) - log(CC) +
@@ -1267,10 +1275,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }
              }
            }//chiude loop su empty cluster
-
-           if(similarity == 3){
-             weight(tt, j) = log(alpha) - log(CC);
-           }
 
            if((calibration == 1) & (PPMx == 1)){
              maxgtilN = gtilN(0);
