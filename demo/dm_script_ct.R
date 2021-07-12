@@ -6,11 +6,11 @@ library(mcclust)
 library(mclust)
 library(coda)
 library(mcclust.ext)
-library(pROC)
-library(multiROC)
+#library(pROC)
+#library(multiROC)
 require(ggplot2)
-library(dplyr)
-library(lessR)
+#library(dplyr)
+#library(lessR)
 library(reshape2)
 
 Rcpp::sourceCpp(file = "src/utils_ct.cpp")
@@ -32,12 +32,12 @@ load("~/Dropbox/PHD/treatppmx/data/SimuOutsce2.rda")
 
 k=sample(1:100, 1)
 print(k)
-X <- data.frame(t(mydata))[, -c(91:92)]#data.frame(mydata)#
+X <- data.frame(t(mydata))[, -c(41:92)]#data.frame(mydata)#
 Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
 #Z <- apply(Z, 2, scale)
 Y <- mytot[,,k]
-idx <- sort(sample(1:nrow(Y), 10, replace = F))#c(35:46)#c(1:10)##
-trtsgn[idx]
+idx <- sort(sample(1:nrow(Y), 52, replace = F))#c(35:46)#c(1:10)##
+#trtsgn[idx]
 wk <- c(0, 40, 100)
 df <- data.frame(myprob[[2]]%*%(wk)-myprob[[1]]%*%(wk))
 colnames(df) <- c("Utility")
@@ -62,12 +62,12 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- ncol(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-alpha_DP <- 10
+alpha_DP <- 1
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 100000
-burnin <- 75000
+iterations <- 10000
+burnin <- 5000
 thinning <- 10
 
 nout <- (iterations-burnin)/thinning
@@ -75,8 +75,8 @@ time_ppmx <- system.time(
   out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
                         z = Z, zpred = Ztest, asstreat = trt, #treatment,
                         alpha = alpha_DP, CC = n_aux, reuse = 1,
-                        PPMx = 1, similarity = 1, consim = 1,  gowtot = 1,
-                        alphagow = 5, calibration = 2, coardegree = 2,
+                        PPMx = 1, similarity = 2, consim = 1,  gowtot = 1,
+                        alphagow = 5, calibration = 0, coardegree = 2,
                         similparam = vec_par, modelpriors, update_hierarchy = T,
                         iter = iterations, burn = burnin, thin = thinning, hsp = T))
 time_ppmx/60
@@ -140,13 +140,14 @@ sum(apply(round(apply(out_ppmx$isypred[which(trt == 1),,], c(1,2), mean))==Y[whi
 sum(apply(round(apply(out_ppmx$isypred[which(trt == 2),,], c(1,2), mean))==Y[which(trt == 2),], 1, sum)==3)/sum((trt == 2))
 
 #posterior predictive probabilities ----
-A0 <- apply(out_ppmx$ypred, c(1,2,3), mean);A0
+A0 <- apply(out_ppmx$ypred, c(1,2,3), mean);#A0
 
 #treatmente prediction with utility function ----
 optrt <- as.numeric(myprob[[2]][idx,]%*%wk > myprob[[1]][idx,]%*%wk)+1
 predtrt <- as.numeric(A0[,,2]%*%wk > A0[,,1]%*%wk)+1
 print(optrt); print(predtrt)
 
+sum(optrt==predtrt)/length(predtrt)
 #calcola indici paper
 #fai script x confronto
 

@@ -11,7 +11,7 @@ library("gtools");
 gene.norm<-t(scale(t(read.table(file="data/Simu152pats.txt"))));
 
 ##################################################################################
-mypca<-prcomp(t(gene.norm[-c(91:92),]));
+mypca<-prcomp(t(gene.norm[-c(41:92),]));
 nsub<-length(mypca$x[,1]);
 ###################################################################################
 #### use the combination of the pca to generate the exponetial
