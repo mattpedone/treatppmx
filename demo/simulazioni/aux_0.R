@@ -27,7 +27,7 @@ load("data/SimuOutsce2.rda")
 #myx2 myx3 sono le due prognostiche trasformate
 #trtsgn sono i trattamenti assegnati casualmente (trial clinico)
 
-K <- 10 #repliche
+K <- 1 #repliche
 risultati <- array(0, dim = c(6, 7, K))
 
 vecadp <- c(1, 2, 10)
@@ -108,3 +108,12 @@ for(consim in 1:2){
 
 apply(risultati, c(1,2), mean)
 sqrt(apply(risultati, c(1,2), var))
+
+#apply(risultati, c(1,2), mean)
+#[,1] [,2]      [,3]      [,4] [,5]      [,6]    [,7]
+#[1,]    7    7 0.5306122 0.6470588 0.59 0.6923077 464.705
+#[2,]    7    7 0.4705882 0.6734694 0.57 0.6153846 489.590
+#[3,]    7    6 0.4821429 0.6590909 0.56 0.4038462 544.282
+#[4,]    4    4 0.6222222 0.6909091 0.66 0.1346154 559.996
+#[5,]    3    4 0.7000000 0.6000000 0.65 0.1538462 543.642
+#[6,]    4    4 0.7872340 0.7169811 0.75 0.1730769 569.557
