@@ -1,9 +1,8 @@
-myscript           simple example script on bear data from ppmSuite pckg
-testing1           testing function pt1
-testing2           testing function pt2
-fnchoff            library w/ function for chpt7 hoff book
-chpt7hoff          implementing chpt7 mvn example
-script_gm          script to evaluate PPMx for differente generating mechanisms
-mvn_script          principal script for mvn
-dm_script         current script for running analysis
-simulazione        simulazione "grande"
+dmct_script                 simple example script on simulated data
+simulations/aux_0           auxiliary no calibration simulation study
+simulations/aux_coars       auxiliary w/ coarsening simulation study
+simulations/aux_std         auxiliary w/ calibration simulation study
+simulations/dd_0            double dipper no calibration simulation study
+simulations/dd_coars        double dipper w/ coarsening simulation study
+simulations/dd_std          double dipper w/ calibration simulation study
+simulations/gow             gower dissimilarity simulation study
