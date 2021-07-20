@@ -354,7 +354,7 @@ double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2,
                  int n,  int DD, int logout){
 
   double mus, muss, s2s, s2ss;
-  double ld1, ld2, ld3, ld4, ld5, ld6;
+  double ld1, ld2, ld3, ld4;
   double out;
 
   s2s = 1/((n/v2) + (1/s20));
@@ -385,7 +385,7 @@ double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, do
                    int n, int DD, int logout){
 
   double a0, b0, m0s, m0ss, k0s, k0ss, a0s, a0ss, b0s, b0ss;
-  double ld1, ld2, ld3, ld4, ld5, ld6, out;
+  double ld1, ld2, ld3, ld4, out;
   double mu=10, v2=0.1;
   double xbar = sumx*(1/ (double) n);
 

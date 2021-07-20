@@ -35,7 +35,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // h - prognostico covariate "instrumental" index
   // tt - treatments index
   // it - observation in cluster tt index
-  int l, ll, lll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it;
+  int l, ll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it;
   int dim = y.n_cols;
   int Q = z.n_cols;
 
@@ -86,7 +86,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //// stuff for discrete covariates
   ////////////////////////////////
 
-  double max_C, dval;
+  double max_C;
   max_C = catvec.max(); //maximum number of categories for categorical covariates
 
   //////////////////////////
@@ -224,7 +224,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // Stuff needed for similarities
   ////////////////////////////////////////
 
-  int njtmp;
+  //int njtmp;
 
   //needed for Gower dissimilarity
   double npdN, npdY, npd;
@@ -378,7 +378,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //arma::cube ppred_out(npred, dim, nout, arma::fill::zeros);
   arma::field<arma::cube> ppred_out(nout, 1);
   ll = 0;
-  lll = 0;
 
   ////////////////////////////////////////
   //

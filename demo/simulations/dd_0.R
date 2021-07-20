@@ -1,21 +1,21 @@
-rm(list=ls())
-
-library(Rcpp)
-library(RcppArmadillo)
-library(mvtnorm)
-library(mcclust)
-library(mclust)
-library(coda)
-library(mcclust.ext)
-#require(ggplot2)
-#library(reshape2)
-
-Rcpp::sourceCpp(file = "src/utils_ct.cpp")
-Rcpp::sourceCpp(file = "src/dm_ppmx_ct.cpp")
-source(file = "R/rppmx.R")
-source(file = "R/dm_ppmx_ct.R")
-
-load("data/SimuOutsce2.rda")
+#rm(list=ls())
+#
+#library(Rcpp)
+#library(RcppArmadillo)
+#library(mvtnorm)
+#library(mcclust)
+#library(mclust)
+#library(coda)
+#library(mcclust.ext)
+##require(ggplot2)
+##library(reshape2)
+#
+#Rcpp::sourceCpp(file = "src/utils_ct.cpp")
+#Rcpp::sourceCpp(file = "src/dm_ppmx_ct.cpp")
+#source(file = "R/rppmx.R")
+#source(file = "R/dm_ppmx_ct.R")
+#
+#load("data/SimuOutsce2.rda")
 #data from Ma et al. Biom. J. (2017)
 #mydata contiene le covariate continue
 #myoutot contiene la risposta in ciascuna delle 100 repliche
@@ -27,6 +27,7 @@ load("data/SimuOutsce2.rda")
 #myx2 myx3 sono le due prognostiche trasformate
 #trtsgn sono i trattamenti assegnati casualmente (trial clinico)
 
+devtools::load_all()
 K <- 10 #repliche
 risultati <- array(0, dim = c(6, 7, K))
 
