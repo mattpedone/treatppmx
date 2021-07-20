@@ -28,11 +28,11 @@
 #trtsgn sono i trattamenti assegnati casualmente (trial clinico)
 
 devtools::load_all()
-K <- 1 #repliche
-risultati <- array(0, dim = c(30, 7, K))
+K <- 10 #repliche
+risultati <- array(0, dim = c(30, 9, K))
 
 vecadp <- c(1, 2, 10)
-vecagow <- c(1, 2, 5, 10, 20)
+vecagow <- c(0, 1, 5, 10, 20)
 idxsc <- 1
 
 for(totmean in 1:2){
@@ -73,26 +73,27 @@ for(totmean in 1:2){
                                     alphagow = alpha_gow, calibration = 2, coardegree = 1,
                                     similparam = vec_par, modelpriors, update_hierarchy = T,
                                     iter = iterations, burn = burnin, thin = thinning, hsp = T))
-        risultati[idxsc,7,k] <- as.double(time_ppmx[3])
+        risultati[idxsc,9,k] <- as.double(time_ppmx[3])
 
         # Posterior clustering ----
         num_treat <- table(trt)
+        risultati[idxsc,1,k] <- mean(apply(out_ppmx$label[[1]], 2, max))
         cls <- t(as.matrix(out_ppmx$label[[1]]))[,c(1:num_treat[1])]
         psm <- comp.psm(cls)
-        mc_vi <- minVI(psm); risultati[idxsc,1,k] <- max(mc_vi$cl)
+        mc_vi <- minVI(psm); risultati[idxsc,3,k] <- max(mc_vi$cl)
 
-
+        risultati[idxsc,2,k] <- mean(apply(out_ppmx$label[[2]], 2, max))
         cls2 <- t(as.matrix(out_ppmx$label[[2]]))[,c(1:num_treat[2])]
         psm2 <- comp.psm(cls2)
         mc_b2 <- minbinder.ext(psm2); max(mc_b2$cl)
-        mc_vi2 <- minVI(psm2); risultati[idxsc,2,k] <- max(mc_vi2$cl)
+        mc_vi2 <- minVI(psm2); risultati[idxsc,4,k] <- max(mc_vi2$cl)
 
         # In sample prediction (goodness-of-fit) ----
         # overall
-        risultati[idxsc,5,k] <- sum(apply(round(apply(out_ppmx$isypred, c(1,2), mean))==Y, 1, sum)==3)/nobs
+        risultati[idxsc,7,k] <- sum(apply(round(apply(out_ppmx$isypred, c(1,2), mean))==Y, 1, sum)==3)/nobs
         # by treatment
-        risultati[idxsc,3,k] <- sum(apply(round(apply(out_ppmx$isypred[which(trt == 1),,], c(1,2), mean))==Y[which(trt == 1),], 1, sum)==3)/sum((trt == 1))
-        risultati[idxsc,4,k] <- sum(apply(round(apply(out_ppmx$isypred[which(trt == 2),,], c(1,2), mean))==Y[which(trt == 2),], 1, sum)==3)/sum((trt == 2))
+        risultati[idxsc,5,k] <- sum(apply(round(apply(out_ppmx$isypred[which(trt == 1),,], c(1,2), mean))==Y[which(trt == 1),], 1, sum)==3)/sum((trt == 1))
+        risultati[idxsc,6,k] <- sum(apply(round(apply(out_ppmx$isypred[which(trt == 2),,], c(1,2), mean))==Y[which(trt == 2),], 1, sum)==3)/sum((trt == 2))
 
         #posterior predictive probabilities ----
         A0 <- apply(out_ppmx$ypred, c(1,2,3), mean);#A0
@@ -101,7 +102,7 @@ for(totmean in 1:2){
         optrt <- as.numeric(myprob[[2]][idx,]%*%wk > myprob[[1]][idx,]%*%wk)+1
         predtrt <- as.numeric(A0[,,2]%*%wk > A0[,,1]%*%wk)+1
 
-        risultati[idxsc,6,k] <- sum(optrt==predtrt)/length(predtrt)
+        risultati[idxsc,8,k] <- sum(optrt==predtrt)/length(predtrt)
       }
       idxsc <- idxsc+1
     }
