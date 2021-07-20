@@ -21,3 +21,15 @@ Output is generated following the same reference and the script is `/data/data-r
 
 * The input file is: `data/simu152pats.txt`
 * The 100 replicated dataset, along with all data, are stored in `data/SimuOutSce2.rda`
+
+## NGG
+
+* il parametro $\alpha$ della funzione R e Rcpp deve diventare un vettore di dimensioni 2. Contiene (seguendo la notazione di notex) alpha e sigma
+
+* devo aggiungere un argomento alla funzione che sarà cohesion = {1, 2}
+
+* riscrivo tutto come se usassi solo NGG (rifai conti + cfr appunti) (dovrei aver indicato dove modificare nel file rcpp)
+
+* se if(cohesion == 2) cioè se uso NGG allora sigma = 0. 
+
+

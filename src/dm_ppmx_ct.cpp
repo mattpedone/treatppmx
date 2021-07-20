@@ -635,6 +635,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               }
             }// this closes PPMx
 
+            //ast: qui ci metto l'if per coehesion (dentro ciclo sui cluster perchè dipende da j)
+            // cef1
             //compute PLAIN cluster probabilities
             weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
               lgcatY - lgcatN + // Categorical part only nonzero if PPMx=TRUE
@@ -679,6 +681,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
           }
 
+          //ast: qui ci metto if per cohesion (fuori tanto è costante nei cluster vuoti)
+          // cemf1
           for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
             jj = j - nclu_curr(tt);
             lgcondraw = 0.0;
@@ -762,7 +766,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                   (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
               }
               if(coardegree == 3){
-                weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
+                weight(tt, j) = log(alpha) - log(CC) + // cohesion part
                   (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               for(k = 0; k < dim; k++){
@@ -807,6 +811,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               lgtilNk = lgtilN(j) - log(sgN);
               lgtilYk = lgtilY(j) - log(sgY);
 
+              //ast: qui ci metto if per cohesion (dentro perché dipende da j)
+              // cef2
               weight(tt, j) = log((double) nj_curr(tt, j)) +  // Cohesion part
                 lgtilYk - lgtilNk; //cov cont and cat
               for(k = 0; k < dim; k++){
@@ -818,6 +824,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               }
             }
 
+            //ast: qui ci metto if per cohesion (fuori perché costante su cluster vuoti)
+            // cemf2
             // calibration for empty clusters
             for(j = nclu_curr(tt); j < nclu_curr(tt) + CC; j++){
               jj = j - nclu_curr(tt);
@@ -1181,7 +1189,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  }
                }
              }//this closes the if on PPMx
-
+             //ast: qui ci metto if per cohesion (dipende da j)
+             // cep1
              weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
                lgcatY - lgcatN + // Categorical part
                lgconY - lgconN;  // Continuous part
@@ -1202,6 +1211,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              }
            }//this closes the loop on existing clusters
 
+            //ast: qui ci metto if per cohesion (fuori costante su clu vuoti)
+            // cemp1
            //probabilità che la predittiva metta l'osservazione in un cluster tutto suo
            for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
              jj = j - nclu_curr(tt);
@@ -1305,17 +1316,19 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              for(j = 0; j < nclu_curr(tt); j++){
                lgtilNk = lgtilN(j) - log(sgN);
                lgtilYk = lgtilY(j) - log(sgY);
-
+              //ast: qui ci metto if per cohesion (dipende da j)
+              // cep2
                weight(tt, j) = log((double) nj_curr(tt, j)) +  // Cohesion part
                  lgtilYk - lgtilNk; //This takes into account both cont and cat vars
              }
 
+               //ast: qui ci metto if per cohesion (fuori costante su clu vuoti)
              // calibration for empty clusters
+             // cemp2
              for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
                jj = j - nclu_curr(tt);
                lgtilNk = lgtilN(j) - log(sgN);
                //lgtilYk = lgtilY(j) - log(sgY);
-
                weight(tt, j) = log(alpha) - log(CC) +  // Cohesion part
                  //lgtilYk -
                  lgtilNk;
