@@ -100,6 +100,20 @@ for(i in 1:max(mc_vi2$cl)){
   reord2 <- c(reord2, which(mc_vi2$cl == i))
 }
 
+# Similarity matrix ----
+
+melted_psm <- melt(psm)
+head(melted_psm)
+
+ggplot(data = melted_psm, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile()
+
+melted_psm2 <- melt(psm2)
+head(melted_psm2)
+
+ggplot(data = melted_psm2, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile()
+
 # Co-occurence plot ----
 data <- t(out_ppmx$label[[1]])
 data <- data[,reord]
