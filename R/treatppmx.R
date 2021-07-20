@@ -22,4 +22,7 @@
 #' @importFrom multiROC multi_roc
 #' @importFrom multiROC plot_roc_data
 #' @importFrom pROC multiclass.roc
+#' @importFrom stats cor.test
+#' @importFrom stats cor
+#' @importFrom cluster kmeans
 NULL
