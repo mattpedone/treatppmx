@@ -1,8 +1,8 @@
-dmct_script                 simple example script on simulated data
-simulations/aux_0           auxiliary no calibration simulation study
-simulations/aux_coars       auxiliary w/ coarsening simulation study
-simulations/aux_std         auxiliary w/ calibration simulation study
-simulations/dd_0            double dipper no calibration simulation study
-simulations/dd_coars        double dipper w/ coarsening simulation study
-simulations/dd_std          double dipper w/ calibration simulation study
-simulations/gow             gower dissimilarity simulation study
+dmctscript                 simple example script on simulated data
+aux0                       auxiliary no calibration simulation study
+auxcoars                   auxiliary w/ coarsening simulation study
+auxstd                     auxiliary w/ calibration simulation study
+dd0                        double dipper no calibration simulation study
+ddcoars                    double dipper w/ coarsening simulation study
+ddstd                      double dipper w/ calibration simulation study
+gow                         gower dissimilarity simulation study
