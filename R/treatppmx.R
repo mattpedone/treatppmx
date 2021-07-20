@@ -24,5 +24,5 @@
 #' @importFrom pROC multiclass.roc
 #' @importFrom stats cor.test
 #' @importFrom stats cor
-#' @importFrom cluster kmeans
+#' @importFrom stats kmeans
 NULL
