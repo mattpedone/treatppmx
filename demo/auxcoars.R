@@ -35,7 +35,7 @@ vecadp <- c(1, 2, 10)
 idxsc <- 1
 
 for(consim in 1:2){
-  for(coardegree in 1:2){
+  for(coardegree in 1:3){
     for(alphadp in 1:3){
       for(k in 1:K){
         X <- data.frame(t(mydata))[, -c(41:92)]#data.frame(mydata)#
