@@ -65,17 +65,17 @@ alpha_DP <- 1
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 100
-burnin <- 50
-thinning <- 1
+iterations <- 100000
+burnin <- 50000
+thinning <- 10
 
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
   out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
                         z = Z, zpred = Ztest, asstreat = trt, #treatment,
                         alpha = alpha_DP, CC = n_aux, reuse = 1,
-                        PPMx = 1, similarity = 2, consim = 1,  gowtot = 1,
-                        alphagow = 5, calibration = 2, coardegree = 2,
+                        PPMx = 1, similarity = 2, consim = 2,  gowtot = 1,
+                        alphagow = 5, calibration = 2, coardegree = 3,
                         similparam = vec_par, modelpriors, update_hierarchy = T,
                         iter = iterations, burn = burnin, thin = thinning, hsp = T))
 time_ppmx/60
@@ -103,13 +103,11 @@ for(i in 1:max(mc_vi2$cl)){
 # Similarity matrix ----
 
 melted_psm <- melt(psm)
-head(melted_psm)
 
 ggplot(data = melted_psm, aes(x=Var1, y=Var2, fill=value)) +
   geom_tile()
 
 melted_psm2 <- melt(psm2)
-head(melted_psm2)
 
 ggplot(data = melted_psm2, aes(x=Var1, y=Var2, fill=value)) +
   geom_tile()

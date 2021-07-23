@@ -22,8 +22,8 @@
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
 #'   3 - Gower dissimilarity
-#' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total. if gowtot ==0,
-#' then Average Gower dissimilarity is taken
+#' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
+#' if gowtot ==0,  then Average Gower dissimilarity is taken
 #' @param alphagow $\alpha$ parameter to compute gower dissimilarity
 #' @param consim integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG
 #' @param vector (dimension \eqn{nobs\times 1}) containing response vector
