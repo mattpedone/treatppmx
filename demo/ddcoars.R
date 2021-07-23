@@ -35,10 +35,10 @@ vecadp <- c(1, 2, 10)
 idxsc <- 1
 
 for(consim in 1:2){
-  for(coardegree in 1:2){
+  for(coardegree in 1:3){
     for(alphadp in 1:3){
       for(k in 1:K){
-        X <- data.frame(t(mydata))[, -c(41:92)]#data.frame(mydata)#
+        X <- data.frame(t(mydata))[, -c(11:92)]#data.frame(mydata)#
         Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
         Y <- mytot[,,k]
         idx <- sort(sample(1:nrow(Y), 52, replace = F))
