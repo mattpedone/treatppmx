@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // dm_ppmx_ct
 Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, int CC, int reuse, int consim, int similarity, int gowtot, int alphagow, arma::vec dissimtn, arma::vec dissimtt, int calibration, int coardegree, arma::mat y, arma::mat z, arma::mat zpred, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_V0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar, int A, arma::vec n_a, arma::mat curr_cluster, arma::mat card_cluster, arma::vec ncluster_curr);
 RcppExport SEXP _treatppmx_dm_ppmx_ct(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP treatmentsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP gowtotSEXP, SEXP alphagowSEXP, SEXP dissimtnSEXP, SEXP dissimttSEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP ySEXP, SEXP zSEXP, SEXP zpredSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP npredSEXP, SEXP similparamSEXP, SEXP hP0_m0SEXP, SEXP hP0_L0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_V0SEXP, SEXP upd_hierSEXP, SEXP initbetaSEXP, SEXP hspSEXP, SEXP mhtuneparSEXP, SEXP ASEXP, SEXP n_aSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {

@@ -60,8 +60,8 @@ my_dm_ppmx_ct(
 
 \item{consim}{integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG}
 
-\item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total. if gowtot ==0,
-then Average Gower dissimilarity is taken}
+\item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total.
+if gowtot ==0,  then Average Gower dissimilarity is taken}
 
 \item{alphagow}{$\alpha$ parameter to compute gower dissimilarity}
 

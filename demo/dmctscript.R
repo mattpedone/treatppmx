@@ -31,11 +31,11 @@ devtools::load_all()
 
 k=sample(1:100, 1)
 print(k)
-X <- data.frame(t(mydata))[, -c(41:92)]#data.frame(mydata)#
+X <- data.frame(t(mydata))[, -c(11:92)]#data.frame(mydata)#
 Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
 #Z <- apply(Z, 2, scale)
 Y <- mytot[,,k]
-idx <- sort(sample(1:nrow(Y), 52, replace = F))#c(35:46)#c(1:10)##
+idx <- sort(sample(1:nrow(Y), 12, replace = F))#c(35:46)#c(1:10)##
 #trtsgn[idx]
 wk <- c(0, 40, 100)
 df <- data.frame(myprob[[2]]%*%(wk)-myprob[[1]]%*%(wk))
@@ -65,8 +65,8 @@ alpha_DP <- 1
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 100000
-burnin <- 50000
+iterations <- 20000
+burnin <- 10000
 thinning <- 10
 
 nout <- (iterations-burnin)/thinning
@@ -74,8 +74,8 @@ time_ppmx <- system.time(
   out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
                         z = Z, zpred = Ztest, asstreat = trt, #treatment,
                         alpha = alpha_DP, CC = n_aux, reuse = 1,
-                        PPMx = 1, similarity = 2, consim = 2,  gowtot = 1,
-                        alphagow = 5, calibration = 2, coardegree = 3,
+                        PPMx = 1, similarity = 3, consim = 2,  gowtot = 1,
+                        alphagow = 2, calibration = 2, coardegree = 2,
                         similparam = vec_par, modelpriors, update_hierarchy = T,
                         iter = iterations, burn = burnin, thin = thinning, hsp = T))
 time_ppmx/60
