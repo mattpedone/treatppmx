@@ -252,17 +252,13 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
 
   #prognostic covariates
   #print((Ytest))
-  if(nrow(Ztest)==1){
-    beta <- array(0, dim = c(ncol(Ztest), length(Ytest), nout))
-  } else{
-    beta <- array(0, dim = c(ncol(Ztest), ncol(Ytest), nout))
-  }
+  beta <- array(0, dim = c(ncol(z), length(y), nout))
 
   beta0 <- out$beta
   for(iter in 1:nout){
     for(k in 1:ncol(Y)){
-      for(q in 1:ncol(Ztest)){
-        h <- q + (k-1) * ncol(Ztest)
+      for(q in 1:ncol(z)){
+        h <- q + (k-1) * ncol(z)
         beta[q, k, iter] <- beta0[h, iter]
       }
     }
