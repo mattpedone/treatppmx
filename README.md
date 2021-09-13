@@ -24,12 +24,12 @@ Output is generated following the same reference and the script is `/data/data-r
 
 ## NGG
 
-- [ ] devo aggiungere un argomento alla funzione che sarà cohesion = {1, 2}
+- [x] devo aggiungere un argomento alla funzione che sarà cohesion = {1, 2}
 
-- [ ] il parametro $\alpha$ della funzione R e Rcpp deve diventare un vettore di dimensioni 2. Contiene (seguendo la notazione di notex) alpha e sigma
+- [x] il parametro $\alpha$ della funzione R e Rcpp deve diventare un vettore di dimensioni 2. Contiene (seguendo la notazione di notex) alpha e sigma
 
-- [ ] calcola matrice triangolare V 1 colonna (integrazione numerica)
+- [x] calcola matrice triangolare V 1 colonna (integrazione numerica)
 
-- [ ] calcola matrice triangolare V restante (formula ricorsiva)
+- [x] calcola matrice triangolare V restante (formula ricorsiva)
 
 - [ ] aggiungi pesi nuova coesione
