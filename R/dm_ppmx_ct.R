@@ -218,8 +218,6 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     }
   }
 
-  Vwm
-
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
@@ -229,7 +227,8 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),
-                 as.vector(catvec), as.double(alpha), as.integer(CC), as.integer(reuse),
+                 as.vector(catvec), as.double(alpha), as.double(sigma), as.matrix(Vwm), as.integer(cohesion),
+                 as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), as.integer(gowtot),
                  as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
                  as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(z), as.matrix(zpred),
