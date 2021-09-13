@@ -194,6 +194,32 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
 
   treatments <- treatments - 1
 
+  #calcola 1 colonna V
+  #calcola resto matrice
+  #passa a funzione cpp
+  #   -V
+  #   -sigma
+  #   -cohesion
+
+  a <- alpha
+  sigma <- sigma
+  integrand <- function(u, n, sigma, a){u^(n-1)*exp((a/sigma)-((a*(1+u)^sigma)/(sigma)))*((1+u)^(-n+sigma))}
+  Vwm <- matrix(0, nrow = nobs+1, ncol = nobs +1)
+  Vwm[1, 1] <- 1
+
+  for(n in 2:(nobs+1)){
+    numsol <- as.double(integrate(integrand, lower = 0, upper = Inf, n = n, sigma = sigma, a = a)[1])
+    Vwm[n, 1] <- (a/gamma(n))*numsol
+    }
+
+  for(n in 1:nobs){
+    for(k in 1:n){
+      Vwm[n+1, k+1] <- Vwm[n, k] -((n-(sigma*k))*Vwm[n+1, k])
+    }
+  }
+
+  Vwm
+
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
