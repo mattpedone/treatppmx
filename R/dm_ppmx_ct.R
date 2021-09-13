@@ -14,10 +14,14 @@
 #' @param ncat number of categorical covariates
 #' @param catvec \eqn{ncat \times 1} vector indicating the number of categories for each categorical covariate
 #' @param alpha value of \eqn{\alpha} for cohesion function (concentration parameter in DP)
+#' @param sigma value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)
 #' @param CC number of auxiliary parameters
 #' @param reuse option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
 #'   0 - reuse algorithm is NOT adopted
 #'   1 - reuse algorithm is adopted
+#' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
+#'   1 - DirichletProcess-like cohesion (DP) cohesion
+#'   2 - Normalized Generalized Gamma Process (NGG) cohesion
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
@@ -49,7 +53,7 @@
 # se non funziona l output di myppmx deve essere una lista
 
 my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1,
-                       CC = 3, reuse = 1, PPMx = 1, similarity = 1, consim=1,
+                       sigma = 0.2, CC = 3, reuse = 1, PPMx = 1, cohesion = 2, similarity = 1, consim=1,
                        gowtot = 1, alphagow = 1, calibration=0, coardegree = 1,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
                        burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 5){
