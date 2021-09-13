@@ -8,7 +8,7 @@
 // [[Rcpp::export]]
 Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments,
                       int PPMx, int ncon, int ncat, arma::vec catvec, double alpha,
-                      int CC, int reuse, int consim, int similarity,
+                      double sigma, int cohesion, int CC, int reuse, int consim, int similarity,
                       int gowtot, int alphagow, arma::vec dissimtn, arma::vec dissimtt,
                       int calibration, int coardegree,
                       arma::mat y, arma::mat z, arma::mat zpred, arma::vec xcon,
