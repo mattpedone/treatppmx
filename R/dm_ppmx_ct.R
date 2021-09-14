@@ -52,7 +52,7 @@
 # poi in R li metto in una lista
 # se non funziona l output di myppmx deve essere una lista
 
-my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1,
+my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1.0,
                        sigma = 0.2, CC = 3, reuse = 1, PPMx = 1, cohesion = 2, similarity = 1, consim=1,
                        gowtot = 1, alphagow = 1, calibration=0, coardegree = 1,
                        similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
@@ -203,16 +203,16 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
 
   a <- alpha
   sigma <- sigma
-  integrand <- function(u, n, sigma, a){u^(n-1)*exp((a/sigma)-((a*(1+u)^sigma)/(sigma)))*((1+u)^(-n+sigma))}
-  Vwm <- matrix(0, nrow = nobs+1, ncol = nobs +1)
+  integrand <- function(u, n, sigma, a){u^(n-1)*exp((a/sigma)-((a*((1+u)^sigma))/(sigma)))*((1+u)^(-n+sigma))}
+  Vwm <- matrix(NA, nrow = max_n_treat+2, ncol = max_n_treat +2)
   Vwm[1, 1] <- 1
 
-  for(n in 2:(nobs+1)){
+  for(n in 2:(max_n_treat+2)){
     numsol <- as.double(integrate(integrand, lower = 0, upper = Inf, n = n, sigma = sigma, a = a)[1])
     Vwm[n, 1] <- (a/gamma(n))*numsol
     }
 
-  for(n in 1:nobs){
+  for(n in 1:max_n_treat+1){
     for(k in 1:n){
       Vwm[n+1, k+1] <- Vwm[n, k] -((n-(sigma*k))*Vwm[n+1, k])
     }
@@ -224,6 +224,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   hP0_nu0 <- as.double(modelpriors$hP0_nu0)
   hP0_V0 <- as.vector(modelpriors$hP0_V0)
   treatments <- c(as.vector(treatments))
+
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),

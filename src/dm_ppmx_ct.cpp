@@ -638,10 +638,17 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             //ast: qui ci metto l'if per coehesion (dentro ciclo sui cluster perchè dipende da j)
             // cef1
             //compute PLAIN cluster probabilities
-            weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-              lgcatY - lgcatN + // Categorical part only nonzero if PPMx=TRUE
+
+            // cohesion part
+            if(cohesion == 1){
+              weight(tt, j) = log((double) nj_curr(tt, j));
+            }
+            if(cohesion == 2){
+              weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+            }
+            weight(tt, j) += lgcatY - lgcatN + // Categorical part
               lgconY - lgconN;  // Continuous;
-            //le similarità le scrivo così invece che con gtilY(j) e gtilN(j), così quando ho PPM, valgono 0 ed è corretto
+            //le similarità le scrivo così invece che con gtilY(j) e gtilN(j), così quando ho PPM valgono 0 ed è corretto
             //al contrario se è un PPMx lgcatY, lgcatN, lgconY, lgconN hanno i valori del j-esimo cluster
             for(k = 0; k < dim; k++){
               wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
@@ -652,17 +659,22 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
 
             if((calibration == 2) & (PPMx == 1)){
+              //ast: qui ci metto l'if per coehesion
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log((double) nj_curr(tt, j));
+              }
+              if(cohesion == 2){
+                weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+              }
               if(coardegree == 1){
-                weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                  (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
+                weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               if(coardegree == 2){
-                weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                  (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               if(coardegree == 3){
-                weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                  (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
@@ -681,8 +693,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
           }
 
-          //ast: qui ci metto if per cohesion (fuori tanto è costante nei cluster vuoti)
-          // cemf1
           for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
             jj = j - nclu_curr(tt);
             lgcondraw = 0.0;
@@ -745,8 +755,15 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               gtilN(j) = lgcondraw + lgcatdraw;//ATTENZIONE
             }//closes PPMx
 
-            weight(tt, j) = log(alpha) - log(CC) + //cohesion + auxiliary ptms
-              lgcondraw + // Continuous covariate part
+            //ast: qui ci metto if per cohesion
+            // cohesion part
+            if(cohesion == 1){
+              weight(tt, j) = log(alpha) - log(CC);
+            }
+            if(cohesion == 2){
+              weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+            }
+            weight(tt, j) += lgcondraw + // Continuous covariate part
               lgcatdraw; // categorical covariate part
             for(k = 0; k < dim; k++){
               wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
@@ -757,17 +774,21 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
 
             if((calibration == 2) & (PPMx == 1)){
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log(alpha) - log(CC);
+              }
+              if(cohesion == 2){
+                weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+              }
               if(coardegree == 1){
-                weight(tt, j) = log(alpha) - log(CC) +
-                  (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+                weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
               }
               if(coardegree == 2){
-                weight(tt, j) = log(alpha) - log(CC) +
-                  (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
+                weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
               }
               if(coardegree == 3){
-                weight(tt, j) = log(alpha) - log(CC) + // cohesion part
-                  (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
               }
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
@@ -812,9 +833,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               lgtilYk = lgtilY(j) - log(sgY);
 
               //ast: qui ci metto if per cohesion (dentro perché dipende da j)
-              // cef2
-              weight(tt, j) = log((double) nj_curr(tt, j)) +  // Cohesion part
-                lgtilYk - lgtilNk; //cov cont and cat
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log((double) nj_curr(tt, j));
+              }
+              if(cohesion == 2){
+                weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+              }
+              weight(tt, j) += lgtilYk - lgtilNk; //cov cont and cat
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
                 weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
@@ -824,16 +850,20 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               }
             }
 
-            //ast: qui ci metto if per cohesion (fuori perché costante su cluster vuoti)
-            // cemf2
+
             // calibration for empty clusters
             for(j = nclu_curr(tt); j < nclu_curr(tt) + CC; j++){
               jj = j - nclu_curr(tt);
               lgtilNk = lgtilN(j) - log(sgN);
 
-              weight(tt, j) = log(alpha) - log(CC) +  // Cohesion part
-                //lgtilYk -
-                lgtilNk;
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log(alpha) - log(CC);
+              }
+              if(cohesion == 2){
+                weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+              }
+              weight(tt, j) += lgtilNk;
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
                 weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
@@ -1061,6 +1091,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              lgcatN=0.0, lgcatY=0.0;
 
              if(PPMx == 1){
+
+               if(similarity != 3){
                for(p = 0; p < ncon; p++){
                  sumxtmp = sumx(tt, j * ncon + p);
                  sumx2tmp = sumx2(tt, j * ncon + p);
@@ -1145,7 +1177,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    lgcatY = lgcatY + lgcatt;
                  }
                }//this closes the loop on categorical covariates
-
+               }
                gtilY(j) = lgconY + lgcatY;
                gtilN(j) = lgconN + lgcatN;
 
@@ -1189,30 +1221,39 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  }
                }
              }//this closes the if on PPMx
-             //ast: qui ci metto if per cohesion (dipende da j)
-             // cep1
-             weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-               lgcatY - lgcatN + // Categorical part
+
+             //ast: qui ci metto if per cohesion
+             // cohesion part
+             if(cohesion == 1){
+               weight(tt, j) = log((double) nj_curr(tt, j));
+             }
+             if(cohesion == 2){
+               weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+             }
+             weight(tt, j) += lgcatY - lgcatN + // Categorical part
                lgconY - lgconN;  // Continuous part
 
              if((calibration == 2) & (PPMx == 1)){
+               //ast: qui ci metto if per cohesion
+               // cohesion part
+               if(cohesion == 1){
+                 weight(tt, j) = log((double) nj_curr(tt, j));
+               }
+               if(cohesion == 2){
+                 weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+               }
                if(coardegree == 1){
-                 weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                   (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
+                 weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
                }
                if(coardegree == 2){
-                 weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                   (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                 weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcatY + lgconY - lgcatN - lgconN);
                }
                if(coardegree == 3){
-                 weight(tt, j) = log((double) nj_curr(tt, j)) + // cohesion part
-                   (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
+                 weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcatY + lgconY - lgcatN - lgconN);
                }
              }
            }//this closes the loop on existing clusters
 
-            //ast: qui ci metto if per cohesion (fuori costante su clu vuoti)
-            // cemp1
            //probabilità che la predittiva metta l'osservazione in un cluster tutto suo
            for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
              jj = j - nclu_curr(tt);
@@ -1260,28 +1301,47 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                gtilN(j) = lgcondraw + lgcatdraw;
              }//closes PPMx
 
-             weight(tt, j) = log(alpha) - log(CC) + //cohesion + auxiliary ptms
-               lgcondraw + // Continuous covariate part
+             //ast: qui ci metto if per cohesion
+             // cohesion part
+             if(cohesion == 1){
+               weight(tt, j) = log(alpha) - log(CC);
+             }
+             if(cohesion == 2){
+               weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+             }
+             weight(tt, j) += lgcondraw + // Continuous covariate part
                lgcatdraw; // categorical covariate part
 
              // Gower dissimilarity
              if(similarity == 3){
-               weight(tt, j) = log(alpha) - log(CC);
+               //ast: qui ci metto if per cohesion
+               // cohesion part
+               if(cohesion == 1){
+                 weight(tt, j) = log(alpha) - log(CC);
+               }
+               if(cohesion == 2){
+                 weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+               }
              }
 
              // Coarsening
              if((calibration == 2) & (PPMx == 1)){
+               //ast: qui ci metto if per cohesion
+               // cohesion part
+               if(cohesion == 1){
+                 weight(tt, j) = log(alpha) - log(CC);
+               }
+               if(cohesion == 2){
+                 weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+               }
                if(coardegree == 1){
-                 weight(tt, j) = log(alpha) - log(CC) +
-                   (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
+                 weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
                }
                if(coardegree == 2){
-                 weight(tt, j) = log(alpha) - log(CC) +
-                   (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
+                 weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*(lgcondraw + lgcatdraw);
                }
                if(coardegree == 3){
-                 weight(tt, j) = log(alpha) - log(CC) +
-                   (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcondraw + lgcatdraw);
+                 weight(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/3.0)))*(lgcondraw + lgcatdraw);
                }
              }
            }//chiude loop su empty cluster
@@ -1317,21 +1377,28 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                lgtilNk = lgtilN(j) - log(sgN);
                lgtilYk = lgtilY(j) - log(sgY);
               //ast: qui ci metto if per cohesion (dipende da j)
-              // cep2
-               weight(tt, j) = log((double) nj_curr(tt, j)) +  // Cohesion part
-                 lgtilYk - lgtilNk; //This takes into account both cont and cat vars
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log((double) nj_curr(tt, j));
+              }
+              if(cohesion == 2){
+                weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+              }
+               weight(tt, j) += lgtilYk - lgtilNk; //This takes into account both cont and cat vars
              }
-
-               //ast: qui ci metto if per cohesion (fuori costante su clu vuoti)
              // calibration for empty clusters
-             // cemp2
              for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
                jj = j - nclu_curr(tt);
                lgtilNk = lgtilN(j) - log(sgN);
                //lgtilYk = lgtilY(j) - log(sgY);
-               weight(tt, j) = log(alpha) - log(CC) +  // Cohesion part
-                 //lgtilYk -
-                 lgtilNk;
+               //ast: qui ci metto if per cohesion
+               if(cohesion == 1){
+                 weight(tt, j) = log(alpha) - log(CC);
+               }
+               if(cohesion == 2){
+                 weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1));//*(nj_curr(tt, j)-sigma);
+               }
+               weight(tt, j) += lgtilNk;
              }
            }//chiude calibrazione 1
 
@@ -1390,7 +1457,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
      //////////////////////
      // Save MCMC iterates
      //////////////////////
-     //Rcpp::Rcout << "check? " << pii_pred.slice(1).row(0) << std::endl;
      if((l > (burn-1)) & ((l + 1) % thin == 0)){
 
        for(i = 0; i < nobs; i++){
