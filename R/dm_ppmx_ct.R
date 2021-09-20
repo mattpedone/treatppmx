@@ -1,62 +1,59 @@
 #' PPMx
 #'
-#' @param y response variable
-#' @param X covariates
-#' @param Xpred covariate for prediction
-#' @param z prognostic covariates
-#' @param zpred prognostic covariates for prediction
-#' @param asstreat treatment for patients in training set. vector of charachters
-#' @param iter MCMC number of iteration
-#' @param burn MCMC iteration discarded due to burnin
-#' @param thin thinning for MCMC
-#' @param nobs length of response vector
-#' @param ncon number of continuous covariates
-#' @param ncat number of categorical covariates
-#' @param catvec \eqn{ncat \times 1} vector indicating the number of categories for each categorical covariate
-#' @param alpha value of \eqn{\alpha} for cohesion function (concentration parameter in DP)
-#' @param sigma value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)
-#' @param CC number of auxiliary parameters
-#' @param reuse option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
-#'   0 - reuse algorithm is NOT adopted
-#'   1 - reuse algorithm is adopted
+#' @param y ordinal-valued response variable
+#' @param X predictive biomarkers
+#' @param Xpred predictive covariates for new untreated patient
+#' @param Z prognostic covariates
+#' @param Zpred prognostic covariates for new untreated patient
+#' @param asstreat treatment for patients in training set. vector of integers
+#' @param PPMx option for the use of product partition model with covariates. (default is yes)
 #' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
 #'   1 - DirichletProcess-like cohesion (DP) cohesion
 #'   2 - Normalized Generalized Gamma Process (NGG) cohesion
+#' @param alpha value of \eqn{\alpha} for cohesion function (concentration parameter in DP)
+#' @param sigma value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
 #'   3 - Gower dissimilarity
-#' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
-#' if gowtot ==0,  then Average Gower dissimilarity is taken
-#' @param alphagow $\alpha$ parameter to compute gower dissimilarity
 #' @param consim integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG
-#' @param vector (dimension \eqn{nobs\times 1}) containing response vector
-#' @param xcon \eqn{nobs \times ncon} contiguous double vector that contains continuous covariate values
-#' @param xcat \eqn{nobs \times ncat} contiguous int vector that contains categorical covariate values
 #' @param similparam vector containing similarity functions paramaters
 # double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-#' @param modelpriors vector containing prior values for model
-# @param mhtune vector containing tuning parameters for MCMC updates
-#' @param calibration whether the similarity should be calibrated. Options are
+#' @param calibration If the similarity function is Auxiliary or Double Dipper, the similarity
+#' can be calibrated. Options are
 #'   0 - no calibration
 #'   1 - standardize similarity value for each covariate
 #'   2 - coarsening is applied so that each similarity is raised to the 1/p power
-#' @param coardegree option to temper the coarsening
-#'   1 - $g(x^\star)^{1/p}$
-#'   2 - $g(x^\star)^{1/p^{1/2}}$
-#'   3 - $g(x^\star)^{1/p^{1/3}}$
-#' @param update_hierarchy should hypeparameter for BNP intercept be updated? if 1 yes (default)
-#' @param initpc: partial correlation initialization for prognostic covariates coefficient (default)
+#' @param coardegree If the similarity is coarsened, it is possible to temper the coarsening
+#'   1 - $g(x^*)^{1/p}$
+#'   2 - $g(x^*)^{1/p^{1/2}}$
+#'   3 - $g(x^*)^{1/p^{1/3}}$
+#' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
+#' if gowtot == 0,  then Average Gower dissimilarity is taken
+#' @param alphagow $\alpha$ parameter to compute gower dissimilarity
+#' @param modelpriors vector containing prior values for model
+#' @param update_hierarchy should hyperparameter for BNP intercept be updated? if 1 yes (default)
+#' @param hsp parameter for employ horseshoe prior for coefficients for prognostic markers
+#' @param iter MCMC number of iteration
+#' @param burn MCMC iteration discarded due to burnin
+#' @param thin thinning for MCMC
+#' @param mhtunepar vector containing tuning parameters for MCMC updates
+#' @param CC number of auxiliary parameters for algorithm 8 by Neal
+#' @param reuse option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
+#'   0 - reuse algorithm is not adopted
+#'   1 - reuse algorithm is adopted
+#' @param nclu_init: partial correlation initialization for prognostic covariates coefficient (default)
 #' @export
 # mancano come input tutti gli storage per l output che inizializzo in R e passo come input qui
 # poi in R li metto in una lista
 # se non funziona l output di myppmx deve essere una lista
 
-my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat = NULL, alpha=1.0,
-                       sigma = 0.2, CC = 3, reuse = 1, PPMx = 1, cohesion = 2, similarity = 1, consim=1,
-                       gowtot = 1, alphagow = 1, calibration=0, coardegree = 1,
-                       similparam, modelpriors, update_hierarchy = 1, hsp = 1, iter=1100,
-                       burn=100,thin=1, mhtunepar = c(.05, .05), nclu_init = 5){
+my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
+                          PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
+                          similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,
+                          gowtot = 1, alphagow = 1, modelpriors, update_hierarchy = 1, hsp = 1,
+                          iter=1100, burn=100, thin=1, mhtunepar = c(.05, .05),
+                          CC = 3, reuse = 1, nclu_init = 5){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -156,19 +153,19 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
     dissimtt <- 0
   }
 
-  cormat = matrix(0, ncol(y), ncol(z))
-  pmat = matrix(0, ncol(y), ncol(z))
+  cormat = matrix(0, ncol(y), ncol(Z))
+  pmat = matrix(0, ncol(y), ncol(Z))
   yy = y/rowSums(y) # compositionalize
   for(rr in 1:ncol(y)){
-    for(cc in 1:ncol(z)){
-      pmat[rr, cc] = suppressWarnings(stats::cor.test(z[, cc], yy[, rr], method = "spearman",
+    for(cc in 1:ncol(Z)){
+      pmat[rr, cc] = suppressWarnings(stats::cor.test(Z[, cc], yy[, rr], method = "spearman",
                                      exact = F)$p.value)
-      cormat[rr, cc] = suppressWarnings(stats::cor(z[, cc], yy[, rr], method = "spearman"))
+      cormat[rr, cc] = suppressWarnings(stats::cor(Z[, cc], yy[, rr], method = "spearman"))
     }
   }
   # defaults to 0.2 false discovery rate
   pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
-              ncol(z))
+              ncol(Z))
   betmat = cormat * pm
   beta <- as.vector(t(betmat))
   beta[is.na(beta)] <- 0.0
@@ -178,6 +175,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
   treatments <- asstreat#treatments vec
   n_a <- table(treatments)#num_treat vec 2
   max_n_treat <- max(n_a)#num_treat.max
+  print(max_n_treat)
 
   curr_cluster <- matrix(0, A, max_n_treat)
   card_cluster <- matrix(0, A, max_n_treat)
@@ -203,20 +201,42 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
 
   a <- alpha
   sigma <- sigma
-  integrand <- function(u, n, sigma, a){u^(n-1)*exp((a/sigma)-((a*((1+u)^sigma))/(sigma)))*((1+u)^(-n+sigma))}
-  Vwm <- matrix(NA, nrow = max_n_treat+2, ncol = max_n_treat +2)
+  a <- 10; sigma <- .5; max_n_treat <- 10
+  #integrand <- function(u, n, sigma, a){u^(n-1)*exp((a/sigma)-((a*((1+u)^sigma))/(sigma)))*((1+u)^(-n+sigma))}
+  integrand <- function(u, n, sigma, a){
+    u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
+    }
+  #integrand <- function(u, n, sigma, k, a){u^(n-1)*exp((a/sigma)-((a*((1+u)^sigma))/(sigma)))*((1+u)^(-n+(k*sigma)))}
+  Vwm <- matrix(NA, nrow = max_n_treat+1, ncol = max_n_treat+1)
   Vwm[1, 1] <- 1
 
-  for(n in 2:(max_n_treat+2)){
+  for(n in 2:(max_n_treat+1)){
     numsol <- as.double(integrate(integrand, lower = 0, upper = Inf, n = n, sigma = sigma, a = a)[1])
+    if(numsol<0){print(numsol)}
     Vwm[n, 1] <- (a/gamma(n))*numsol
-    }
+  }
 
-  for(n in 1:max_n_treat+1){
+  for(n in 1:(max_n_treat)){
+    #cat("n: ", n, "\n")
     for(k in 1:n){
+      #cat("k: ", k, "\n")
+      #cat("n = ", n, "k = ", k, "\n")
+      #cat("n, k = ", Vwm[n, k], "\n")
+      #cat("n+1, k = ", ((n-(sigma*k))*Vwm[n+1, k]), "\n")
       Vwm[n+1, k+1] <- Vwm[n, k] -((n-(sigma*k))*Vwm[n+1, k])
+      #if(Vwm[n+1, k+1]){print(Vwm[n+1, k+1])}
+      #cat("n+1, k+1 = ", Vwm[n+1, k+1], "\n")
     }
   }
+  #sum(Vwm<0)
+  #apply(Vwm, 1, sum, na.rm=T)
+
+  #for(n in 2:(max_n_treat+1)){
+  #  for(k in 1:n){
+  #    numsol <- as.double(integrate(integrand, lower = 0, upper = Inf, n = n, sigma = sigma, k = k, a = a)[1])
+  #    Vwm[n, k] <- ((a^k)/gamma(n))*numsol
+  #  }
+  #}
 
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
@@ -232,7 +252,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), as.integer(gowtot),
                  as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
-                 as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(z), as.matrix(zpred),
+                 as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(Z), as.matrix(Zpred),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                  as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
@@ -282,13 +302,13 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, z=NULL, zpred=NULL, asstreat 
 
   #prognostic covariates
   #print((Ytest))
-  beta <- array(0, dim = c(ncol(z), length(y), nout))
+  beta <- array(0, dim = c(ncol(Z), length(y), nout))
 
   beta0 <- out$beta
   for(iter in 1:nout){
     for(k in 1:ncol(Y)){
-      for(q in 1:ncol(z)){
-        h <- q + (k-1) * ncol(z)
+      for(q in 1:ncol(Z)){
+        h <- q + (k-1) * ncol(Z)
         beta[q, k, iter] <- beta0[h, iter]
       }
     }

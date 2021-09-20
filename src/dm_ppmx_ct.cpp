@@ -645,6 +645,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
             if(cohesion == 2){
               weight(tt, j) = (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+              //Rcpp::Rcout << "weight: " << weight(tt, j) << std::endl;
             }
             weight(tt, j) += lgcatY - lgcatN + // Categorical part
               lgconY - lgconN;  // Continuous;
@@ -1012,7 +1013,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         }
       }
 
-      //UPDATE PROGNOSTIC COVARIATES
+      //UPDATE PROGNOSTIC COVARIATES' COEFFICIENTS
 
       for(k = 0; k < dim; k++){
         for(q = 0; q < Q; q++){
@@ -1228,7 +1229,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                weight(tt, j) = log((double) nj_curr(tt, j));
              }
              if(cohesion == 2){
-               weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))*(nj_curr(tt, j)-sigma);
+               weight(tt, j) = (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))*((nj_curr(tt, j))-sigma);
              }
              weight(tt, j) += lgcatY - lgcatN + // Categorical part
                lgconY - lgconN;  // Continuous part
