@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 dm_ppmx_ct <- function(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, sigma, Vwm, cohesion, CC, reuse, consim, similarity, gowtot, alphagow, dissimtn, dissimtt, calibration, coardegree, y, z, zpred, xcon, xcat, xconp, xcatp, npred, similparam, hP0_m0, hP0_L0, hP0_nu0, hP0_V0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr) {
-    .Call(`_treatppmx_dm_ppmx_ct`, iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, sigma, Vwm, cohesion, CC, reuse, consim, similarity, gowtot, alphagow, dissimtn, dissimtt, calibration, coardegree, y, z, zpred, xcon, xcat, xconp, xcatp, npred, similparam, hP0_m0, hP0_L0, hP0_nu0, hP0_V0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr)
+    .Call('_treatppmx_dm_ppmx_ct', PACKAGE = 'treatppmx', iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, sigma, Vwm, cohesion, CC, reuse, consim, similarity, gowtot, alphagow, dissimtn, dissimtt, calibration, coardegree, y, z, zpred, xcon, xcat, xconp, xcatp, npred, similparam, hP0_m0, hP0_L0, hP0_nu0, hP0_V0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr)
 }
 
 myround <- function(x) {
-    .Call(`_treatppmx_myround`, x)
+    .Call('_treatppmx_myround', PACKAGE = 'treatppmx', x)
 }
 
 rmultinom_rcpp <- function(n, size, prob) {
-    .Call(`_treatppmx_rmultinom_rcpp`, n, size, prob)
+    .Call('_treatppmx_rmultinom_rcpp', PACKAGE = 'treatppmx', n, size, prob)
 }
 
 dmultinom_rcpp <- function(x, size, prob, Log) {
-    .Call(`_treatppmx_dmultinom_rcpp`, x, size, prob, Log)
+    .Call('_treatppmx_dmultinom_rcpp', PACKAGE = 'treatppmx', x, size, prob, Log)
 }
 

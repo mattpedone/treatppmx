@@ -61,7 +61,7 @@
   modelpriors$hP0_nu0 <- ncol(Y) + 2
   modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-  alpha_DP <- 1
+  alpha_DP <- 10
   n_aux <- 5
   vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
   #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
