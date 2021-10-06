@@ -202,30 +202,28 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
   a <- alpha
   sigma <- sigma
   a <- 1; sigma <- .1; max_n_treat <- 100
-  integrand <- function(u, n, sigma, a){
-    u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
-    }
+  #integrand <- function(u, n, sigma, a){
+  #  u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
+  #  }
   Vwm <- matrix(NA, nrow = max_n_treat+1, ncol = max_n_treat+1)
   Vwm[1, 1] <- 1
 
   for(n in 2:(max_n_treat+1)){
-    numsol <- as.double(integrate(integrand, lower = 0, upper = Inf, n = n, sigma = sigma, a = a)[1])
-    if(numsol<0){print(numsol)}
-    Vwm[n, 1] <- (a/gamma(n))*numsol
+    Vwm[n, (1:n)] <- vweights::computev(n, sigma, a)
   }
 
-  for(n in 1:(max_n_treat)){
-    #cat("n: ", n, "\n")
-    for(k in 1:n){
-      #Vwm[n+1, k+1] <- Vwm[n, k] -((n-(sigma*k))*Vwm[n+1, k])
-      #Vwm[n+1, k+1] <- exp(log(Vwm[n+1, k]) + log(exp(log(Vwm[n, k])- log(Vwm[n+1, k]))-(n-sigma*k)))
-      Vwm[n+1, k+1] <- exp(log(n-sigma*k)+log(Vwm[n+1, k]) + log(exp(log(Vwm[n, k])- (log(n-sigma*k)+log(Vwm[n+1,k])))-1))#chiude exp
-      #Vwm[n+1, k+1] <- exp(log(Vwm[n,k])+log(1-exp(log(n-(sigma*k))+log(Vwm[n+1, k])-log(Vwm[n,k]))))
-    }
-  }
+  #for(n in 1:(max_n_treat)){
+  #  #cat("n: ", n, "\n")
+  #  for(k in 1:n){
+  #    #Vwm[n+1, k+1] <- Vwm[n, k] -((n-(sigma*k))*Vwm[n+1, k])
+  #    #Vwm[n+1, k+1] <- exp(log(Vwm[n+1, k]) + log(exp(log(Vwm[n, k])- log(Vwm[n+1, k]))-(n-sigma*k)))
+  #    Vwm[n+1, k+1] <- exp(log(n-sigma*k)+log(Vwm[n+1, k]) + log(exp(log(Vwm[n, k])- (log(n-sigma*k)+log(Vwm[n+1,k])))-1))#chiude exp
+  #    #Vwm[n+1, k+1] <- exp(log(Vwm[n,k])+log(1-exp(log(n-(sigma*k))+log(Vwm[n+1, k])-log(Vwm[n,k]))))
+  #  }
+  #}
 
   #Vwm[25,]
-  #Vwm <- log(Vwm)
+  Vwm <- log(Vwm)
 
   alpha <- alpha#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
