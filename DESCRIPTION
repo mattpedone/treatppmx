@@ -1,17 +1,16 @@
 Package: treatppmx
-Title: What the Package Does (One Line, Title Case)
+Type: Package
+Title: Individualized Treatment Selection
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Matteo",
-           family = "Pedone",
-           role = c("aut", "cre"),
-           email = "matteo.pedone@unifi.it",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+Author: Matteo Pedone
+Maintainer: Matteo Pedone <matteo.pedone@unifi.it>
 Description: What the package does (one paragraph).
-License: MIT + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 LinkingTo: Rcpp, RcppArmadillo
-Imports: Rcpp, coda, mcclust, mcclust.ext, mclust, mvtnorm, ggplot2, reshape2, vweights
+Imports: Rcpp, coda, mcclust, mcclust.ext, mclust, mvtnorm, ggplot2, reshape2, vweights, cluster
+URL: https://github.com/mattpedone/treatppmx
+BugReports: https://github.com/mattpedone/treatppmx/issues

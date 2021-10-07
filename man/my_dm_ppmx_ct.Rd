@@ -62,7 +62,7 @@ my_dm_ppmx_ct(
 2 - Double dipper similarity
 3 - Gower dissimilarity}
 
-\item{consim}{integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG}
+\item{consim}{integer 1 or 2.  1 implies sim for con var is NN.  2 implies sim is NNIG}
 
 \item{similparam}{vector containing similarity functions paramaters}
 
@@ -73,14 +73,14 @@ can be calibrated. Options are
 2 - coarsening is applied so that each similarity is raised to the 1/p power}
 
 \item{coardegree}{If the similarity is coarsened, it is possible to temper the coarsening
-1 - $g(x^\emph{)^{1/p}$
-2 - $g(x^})^{1/p^{1/2}}$
-3 - $g(x^*)^{1/p^{1/3}}$}
+1 - \eqn{g(x^*)^{1/p}}
+2 - \eqn{g(x^*)^{1/p^{1/2}}}
+3 - \eqn{g(x^*)^{1/p^{1/3}}}}
 
 \item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total.
 if gowtot == 0,  then Average Gower dissimilarity is taken}
 
-\item{alphagow}{$\alpha$ parameter to compute gower dissimilarity}
+\item{alphagow}{\eqn{\alpha} parameter to compute gower dissimilarity}
 
 \item{modelpriors}{vector containing prior values for model}
 
@@ -102,7 +102,10 @@ if gowtot == 0,  then Average Gower dissimilarity is taken}
 0 - reuse algorithm is not adopted
 1 - reuse algorithm is adopted}
 
-\item{nclu_init:}{partial correlation initialization for prognostic covariates coefficient (default)}
+\item{nclu_init}{number of cluster used for partial correlation initialization for prognostic covariates coefficient (default)}
+}
+\value{
+List
 }
 \description{
 PPMx

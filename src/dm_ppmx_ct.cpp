@@ -242,7 +242,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   double v = similparam(2);
   double k0 = similparam(3);
   double nu0 = similparam(4);
-  double n0 = similparam(5);
+  //double n0 = similparam(5);
 
   arma::vec gtilN(num_treat.max() + CC);
   gtilN.fill(0.0);

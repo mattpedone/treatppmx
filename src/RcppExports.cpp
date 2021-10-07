@@ -66,50 +66,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// myround
-double myround(double x);
-RcppExport SEXP _treatppmx_myround(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(myround(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rmultinom_rcpp
-arma::mat rmultinom_rcpp(int n, int size, arma::vec prob);
-RcppExport SEXP _treatppmx_rmultinom_rcpp(SEXP nSEXP, SEXP sizeSEXP, SEXP probSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type prob(probSEXP);
-    rcpp_result_gen = Rcpp::wrap(rmultinom_rcpp(n, size, prob));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dmultinom_rcpp
-double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log);
-RcppExport SEXP _treatppmx_dmultinom_rcpp(SEXP xSEXP, SEXP sizeSEXP, SEXP probSEXP, SEXP LogSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type prob(probSEXP);
-    Rcpp::traits::input_parameter< int >::type Log(LogSEXP);
-    rcpp_result_gen = Rcpp::wrap(dmultinom_rcpp(x, size, prob, Log));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_dm_ppmx_ct", (DL_FUNC) &_treatppmx_dm_ppmx_ct, 45},
-    {"_treatppmx_myround", (DL_FUNC) &_treatppmx_myround, 1},
-    {"_treatppmx_rmultinom_rcpp", (DL_FUNC) &_treatppmx_rmultinom_rcpp, 3},
-    {"_treatppmx_dmultinom_rcpp", (DL_FUNC) &_treatppmx_dmultinom_rcpp, 4},
     {NULL, NULL, 0}
 };
 

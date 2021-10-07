@@ -5,8 +5,19 @@
 \alias{treatppmx}
 \title{Treatment PPMx}
 \description{
-The implementation has been done in \code{C++} through the use of \code{Rcpp} and \code{RcppArmadillo}.
+This package implements the method developed by Pedone, Argiento, Stingo to
+perform personalized treatment selection for oncological patients.
+Both prognostic and predictive biomarkers are taken into accounto to
+select the optimal treatment. In particular, redictive biomarkers are
+exploited to inform a random partition model to obtain homogeneous clusters.
+The implementation has been done in \code{C++} through the use of
+\code{Rcpp} and \code{RcppArmadillo}.
+}
+\references{
+TBA
 }
 \author{
-matt
+Matteo Pedone
+
+Maintainer: Matteo Pedone \email{matteo.pedone@unifi.it}
 }

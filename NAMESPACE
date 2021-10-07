@@ -2,6 +2,7 @@
 
 export(my_dm_ppmx_ct)
 importFrom(Rcpp,sourceCpp)
+importFrom(cluster,daisy)
 importFrom(coda,effectiveSize)
 importFrom(ggplot2,aes)
 importFrom(ggplot2,geom_line)

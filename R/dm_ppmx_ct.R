@@ -16,7 +16,7 @@
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
 #'   3 - Gower dissimilarity
-#' @param consim integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG
+#' @param consim integer 1 or 2.  1 implies sim for con var is NN.  2 implies sim is NNIG
 #' @param similparam vector containing similarity functions paramaters
 # double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
 #' @param calibration If the similarity function is Auxiliary or Double Dipper, the similarity
@@ -25,12 +25,12 @@
 #'   1 - standardize similarity value for each covariate
 #'   2 - coarsening is applied so that each similarity is raised to the 1/p power
 #' @param coardegree If the similarity is coarsened, it is possible to temper the coarsening
-#'   1 - $g(x^*)^{1/p}$
-#'   2 - $g(x^*)^{1/p^{1/2}}$
-#'   3 - $g(x^*)^{1/p^{1/3}}$
+#'   1 - \eqn{g(x^*)^{1/p}}
+#'   2 - \eqn{g(x^*)^{1/p^{1/2}}}
+#'   3 - \eqn{g(x^*)^{1/p^{1/3}}}
 #' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
 #' if gowtot == 0,  then Average Gower dissimilarity is taken
-#' @param alphagow $\alpha$ parameter to compute gower dissimilarity
+#' @param alphagow \eqn{\alpha} parameter to compute gower dissimilarity
 #' @param modelpriors vector containing prior values for model
 #' @param update_hierarchy should hyperparameter for BNP intercept be updated? if 1 yes (default)
 #' @param hsp parameter for employ horseshoe prior for coefficients for prognostic markers
@@ -42,7 +42,8 @@
 #' @param reuse option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
 #'   0 - reuse algorithm is not adopted
 #'   1 - reuse algorithm is adopted
-#' @param nclu_init: partial correlation initialization for prognostic covariates coefficient (default)
+#' @param nclu_init number of cluster used for partial correlation initialization for prognostic covariates coefficient (default)
+#' @return List
 #' @export
 # mancano come input tutti gli storage per l output che inizializzo in R e passo come input qui
 # poi in R li metto in una lista
@@ -145,7 +146,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
   }
 
   if(similarity == 3){
-    dissim <- as.matrix(cluster::daisy(Xall, metric="gower"))
+    dissim <- as.matrix(daisy(Xall, metric="gower"))
     dissimtn <- dissim[1:nobs, 1:nobs]
     dissimtt <- dissim[-c(1:nobs), 1:nobs]
   }else{
@@ -293,7 +294,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
 
   beta0 <- out$beta
   for(iter in 1:nout){
-    for(k in 1:ncol(Y)){
+    for(k in 1:ncol(y)){
       for(q in 1:ncol(Z)){
         h <- q + (k-1) * ncol(Z)
         beta[q, k, iter] <- beta0[h, iter]
