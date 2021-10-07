@@ -19,8 +19,8 @@
   #data from Ma et al. Biom. J. (2017)
   #mydata contiene le covariate continue
   #myoutot contiene la risposta in ciascuna delle 100 repliche
-  # è la versione "sintetica" di mytot
-  #myprob contiene le probabilità di ciascun livello della risposta nei due trattamenti
+  #versione "sintetica" di mytot
+  #myprob contiene le prob di ciascun livello della risposta nei due trattamenti
   #per ciascun soggetto
   #newx sono due var normali di media 0 e var 1 e 3 (non usate??)
   #orgx contiene le due prognostiche non trasformate
