@@ -113,7 +113,6 @@ arma::vec cholesky(arma::vec A, int n) {
   return L;
 }
 
-// [[Rcpp::export]]
 double myround( double x )
 {
   const double sd = 1000; //for accuracy to 3 decimal places
@@ -760,7 +759,6 @@ Rcpp::IntegerVector rmultinom_1(int size, Rcpp::NumericVector &probs, int N) {
   return outcome;
 }
 
-// [[Rcpp::export]]
 arma::mat rmultinom_rcpp(int n, int size, arma::vec prob) {
   Rcpp::NumericVector probs(prob.size());
   probs = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(prob));
@@ -794,7 +792,6 @@ arma::mat rmultinom_rcpp(int n, int size, arma::vec prob) {
  )
  */
 
-// [[Rcpp::export]]
 double dmultinom_rcpp(arma::vec x, int size, arma::vec prob, int Log){
   int K = prob.size();
   double s = arma::sum(prob);
