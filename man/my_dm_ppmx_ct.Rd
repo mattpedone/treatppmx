@@ -8,20 +8,20 @@ my_dm_ppmx_ct(
   y,
   X = NULL,
   Xpred = NULL,
-  z = NULL,
-  zpred = NULL,
+  Z = NULL,
+  Zpred = NULL,
   asstreat = NULL,
-  alpha = 1,
-  CC = 3,
-  reuse = 1,
   PPMx = 1,
+  cohesion = 2,
+  alpha = 1,
+  sigma = 0.2,
   similarity = 1,
   consim = 1,
-  gowtot = 1,
-  alphagow = 1,
+  similparam,
   calibration = 0,
   coardegree = 1,
-  similparam,
+  gowtot = 1,
+  alphagow = 1,
   modelpriors,
   update_hierarchy = 1,
   hsp = 1,
@@ -29,29 +29,33 @@ my_dm_ppmx_ct(
   burn = 100,
   thin = 1,
   mhtunepar = c(0.05, 0.05),
+  CC = 3,
+  reuse = 1,
   nclu_init = 5
 )
 }
 \arguments{
-\item{y}{response variable}
+\item{y}{ordinal-valued response variable}
 
-\item{X}{covariates}
+\item{X}{predictive biomarkers}
 
-\item{Xpred}{covariate for prediction}
+\item{Xpred}{predictive covariates for new untreated patient}
 
-\item{z}{prognostic covariates}
+\item{Z}{prognostic covariates}
 
-\item{zpred}{prognostic covariates for prediction}
+\item{Zpred}{prognostic covariates for new untreated patient}
 
-\item{asstreat}{treatment for patients in training set. vector of charachters}
+\item{asstreat}{treatment for patients in training set. vector of integers}
+
+\item{PPMx}{option for the use of product partition model with covariates. (default is yes)}
+
+\item{cohesion}{type of cohesion function that is employed for the PPMx prior on partitions. Options are
+1 - DirichletProcess-like cohesion (DP) cohesion
+2 - Normalized Generalized Gamma Process (NGG) cohesion}
 
 \item{alpha}{value of \eqn{\alpha} for cohesion function (concentration parameter in DP)}
 
-\item{CC}{number of auxiliary parameters}
-
-\item{reuse}{option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
-0 - reuse algorithm is NOT adopted
-1 - reuse algorithm is adopted}
+\item{sigma}{value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)}
 
 \item{similarity}{type of similarity function that is employed for the PPMx prior on partitions. Options are
 1 - Auxiliary similarity
@@ -60,26 +64,29 @@ my_dm_ppmx_ct(
 
 \item{consim}{integer 1 or 2.  1 implies sim for con var is N-N.  2 implies sim is N-NIG}
 
-\item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total.
-if gowtot ==0,  then Average Gower dissimilarity is taken}
+\item{similparam}{vector containing similarity functions paramaters}
 
-\item{alphagow}{$\alpha$ parameter to compute gower dissimilarity}
-
-\item{calibration}{whether the similarity should be calibrated. Options are
+\item{calibration}{If the similarity function is Auxiliary or Double Dipper, the similarity
+can be calibrated. Options are
 0 - no calibration
 1 - standardize similarity value for each covariate
 2 - coarsening is applied so that each similarity is raised to the 1/p power}
 
-\item{coardegree}{option to temper the coarsening
-1 - $g(x^\star)^{1/p}$
-2 - $g(x^\star)^{1/p^{1/2}}$
-3 - $g(x^\star)^{1/p^{1/3}}$}
+\item{coardegree}{If the similarity is coarsened, it is possible to temper the coarsening
+1 - $g(x^\emph{)^{1/p}$
+2 - $g(x^})^{1/p^{1/2}}$
+3 - $g(x^*)^{1/p^{1/3}}$}
 
-\item{similparam}{vector containing similarity functions paramaters}
+\item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total.
+if gowtot == 0,  then Average Gower dissimilarity is taken}
+
+\item{alphagow}{$\alpha$ parameter to compute gower dissimilarity}
 
 \item{modelpriors}{vector containing prior values for model}
 
-\item{update_hierarchy}{should hypeparameter for BNP intercept be updated? if 1 yes (default)}
+\item{update_hierarchy}{should hyperparameter for BNP intercept be updated? if 1 yes (default)}
+
+\item{hsp}{parameter for employ horseshoe prior for coefficients for prognostic markers}
 
 \item{iter}{MCMC number of iteration}
 
@@ -87,21 +94,15 @@ if gowtot ==0,  then Average Gower dissimilarity is taken}
 
 \item{thin}{thinning for MCMC}
 
-\item{nobs}{length of response vector}
+\item{mhtunepar}{vector containing tuning parameters for MCMC updates}
 
-\item{ncon}{number of continuous covariates}
+\item{CC}{number of auxiliary parameters for algorithm 8 by Neal}
 
-\item{ncat}{number of categorical covariates}
+\item{reuse}{option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
+0 - reuse algorithm is not adopted
+1 - reuse algorithm is adopted}
 
-\item{catvec}{\eqn{ncat \times 1} vector indicating the number of categories for each categorical covariate}
-
-\item{vector}{(dimension \eqn{nobs\times 1}) containing response vector}
-
-\item{xcon}{\eqn{nobs \times ncon} contiguous double vector that contains continuous covariate values}
-
-\item{xcat}{\eqn{nobs \times ncat} contiguous int vector that contains categorical covariate values}
-
-\item{initpc:}{partial correlation initialization for prognostic covariates coefficient (default)}
+\item{nclu_init:}{partial correlation initialization for prognostic covariates coefficient (default)}
 }
 \description{
 PPMx
