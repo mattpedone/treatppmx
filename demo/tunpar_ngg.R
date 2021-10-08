@@ -1,10 +1,12 @@
-rm(list=ls())
-load("data/SimuOutsce2.rda")
+#rm(list=ls())
+#load("data/SimuOutsce2.rda")
 
-library(treatppmx)
+#library(treatppmx)
 library(parallel)
 library(doParallel)
-source("R/countUT.R");
+#source("R/countUT.R");
+
+devtools::load_all()
 
 K <- 10 #repliche
 npat <- 152
