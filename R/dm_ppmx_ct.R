@@ -27,7 +27,6 @@
 #' @param coardegree If the similarity is coarsened, it is possible to temper the coarsening
 #'   1 - \eqn{g(x^*)^{1/p}}
 #'   2 - \eqn{g(x^*)^{1/p^{1/2}}}
-#'   3 - \eqn{g(x^*)^{1/p^{1/3}}}
 #' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
 #' if gowtot == 0,  then Average Gower dissimilarity is taken
 #' @param alphagow \eqn{\alpha} parameter to compute gower dissimilarity
