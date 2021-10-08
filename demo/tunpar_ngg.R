@@ -6,9 +6,10 @@ library(parallel)
 library(doParallel)
 source("R/countUT.R");
 
-K <- 10 #repliche
-npat <- 152
-predAPT_all<-array(0,dim=c(npat,9,K))
+K <- 2 #repliche
+npat <- 12
+ncolout <- (dim(mytot)[2]*2)+2+max(trtsgn)
+predAPT_all<-array(0,dim=c(npat, ncolout+3,K))
 
 wk <- c(0, 40, 100)
 
@@ -48,8 +49,9 @@ for(k in 1:K){
                             cohesion = 2, similarity = 2, consim = 2,
                             alphagow = 2, calibration = 2, coardegree = 2,
                             similparam = vec_par, modelpriors = modelpriors, iter = iterations,
-                            burn = burnin, thin = thinning, nclu_init = 1), error = function(e){FALSE})
-  ifelse(is.logical(out_ppmx), return(rep(0, 6)), return(c(apply(out_ppmx$ypred, c(1,2,3), mean))))
+                            burn = burnin, thin = thinning), error = function(e){FALSE})
+  resvec <- c(c(apply(out_ppmx$ypred, c(1,2,3), mean)), out_ppmx$WAIC, out_ppmx$lpml, apply(out_ppmx$nclu, 1, mean))
+  ifelse(is.logical(out_ppmx), return(rep(0, ncolout)), return(resvec))
   #A0 <- c(apply(out_ppmx$ypred, c(1,2,3), mean));#A0
   #return(A0)
     }
@@ -60,7 +62,7 @@ for(k in 1:K){
   predAPT_all[,2,k]<-A2
   myt <- as.numeric(A1<A2) +1
   predAPT_all[,3,k]<-myt
-  predAPT_all[,4:9,k]<-myres
+  predAPT_all[,4:(ncolout+3),k]<-myres
 }
 
 my.pick <- 1:K
@@ -86,3 +88,4 @@ resPPMX <- rbind(MOT, MTUg,NPC)
 colnames(resPPMX) <- c("mean", "sd")
 resPPMX
 #save(resPPMX,file="resPPMX.rda")
+
