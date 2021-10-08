@@ -42,15 +42,16 @@ for(k in 1:K){
 
   myres <- foreach(sub = 1:npat, .combine = rbind) %dopar%
     {
-  out_ppmx <- my_dm_ppmx_ct(y = data.matrix(Y[-sub,]), X = data.frame(X[-sub,]), Xpred = data.frame(X[sub,]),
+  out_ppmx <- tryCatch(expr = my_dm_ppmx_ct(y = data.matrix(Y[-sub,]), X = data.frame(X[-sub,]), Xpred = data.frame(X[sub,]),
                             Z = data.frame(Z[-sub,]), Zpred = data.frame(Z[sub,]), asstreat = trtsgn[-sub],
                             alpha = 1, sigma = .1, CC = n_aux,
                             cohesion = 2, similarity = 2, consim = 2,
                             alphagow = 2, calibration = 2, coardegree = 2,
                             similparam = vec_par, modelpriors = modelpriors, iter = iterations,
-                            burn = burnin, thin = thinning, nclu_init = 1)
-  A0 <- c(apply(out_ppmx$ypred, c(1,2,3), mean));#A0
-  return(A0)
+                            burn = burnin, thin = thinning, nclu_init = 1), error = function(e){FALSE})
+  ifelse(is.logical(out_ppmx), return(rep(0, 6)), return(c(apply(out_ppmx$ypred, c(1,2,3), mean))))
+  #A0 <- c(apply(out_ppmx$ypred, c(1,2,3), mean));#A0
+  #return(A0)
     }
 
   ##treatment prediction with utility function ----
