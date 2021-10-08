@@ -1,13 +1,13 @@
 rm(list=ls())
-#load("data/SimuOutsce2.rda")
 load("data/SimuOutsce2.rda")
+
 library(treatppmx)
 library(parallel)
 library(doParallel)
 source("R/countUT.R");
 
 K <- 10 #repliche
-npat <- 12
+npat <- 152
 ncolout <- (dim(mytot)[2]*2)+2+max(trtsgn)
 predAPT_all<-array(0,dim=c(npat, ncolout+3,K))
 
@@ -15,17 +15,12 @@ wk <- c(0, 40, 100)
 
 for(k in 1:K){
   cat("k: ", k, "\n")
-  #predAPT<-matrix(1,nrow= npat,ncol=10);  ### ut1,ut2,trt,cluster
   cor_all <- parallel::detectCores()-1#cores to be allocated
   registerDoParallel(cores = cor_all)
 
   X <- data.frame(t(mydata))[, -c(11:92)]#data.frame(mydata)#
-  X <- X[1:npat,]
-  #X <- data.frame(noisy_pbm)
-  Z <- data.frame(cbind(myx2, myx3))#data.frame(orgx)#
-  Z <- Z[1:npat,]
-  Y <- mytot[1:npat,,k]
-  trtsgn <- trtsgn[1:npat]
+  Z <- data.frame(cbind(myx2, myx3))
+  Y <- mytot[,,k]
 
   modelpriors <- list()
   modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(10, ncol(Y))
@@ -52,8 +47,6 @@ for(k in 1:K){
                             burn = burnin, thin = thinning), error = function(e){FALSE})
   resvec <- c(c(apply(out_ppmx$ypred, c(1,2,3), mean)), out_ppmx$WAIC, out_ppmx$lpml, apply(out_ppmx$nclu, 1, mean))
   ifelse(is.logical(out_ppmx), return(rep(0, ncolout)), return(resvec))
-  #A0 <- c(apply(out_ppmx$ypred, c(1,2,3), mean));#A0
-  #return(A0)
     }
 
   ##treatment prediction with utility function ----
@@ -72,18 +65,18 @@ optrt<-as.numeric( mywk2> mywk1)+1;
 ut.sum<-sum(abs(mywk2-mywk1));ut.diff<- abs(as.numeric(mywk2- mywk1));
 
 #MOT
-#ut.sum <- ut.sum[1:npat]
 PPMXCT<-  apply(abs((predAPT_all[,3, 1:K]-optrt)),2,sum)
 MOT <- c(round(mean(PPMXCT)), round(sd(PPMXCT), 1))
 
 #MTUg
-#MTUg<-cbind(MTU=round(apply(my.result,2,mean)/ut.sum,4),
-#SD=round(sqrt(apply(my.result/ut.sum,2,var)),2));
 PPMXpp<-  -(2*apply(abs((predAPT_all[,3, 1:K]-optrt))*ut.diff,2,sum)-ut.sum);
 MTUg <- c(round(mean(PPMXpp/ut.sum), 4), round(sd(PPMXpp/ut.sum), 4))
+
 #NPC
 PPMXCUT<-as.vector(countUT(predAPT_all));
 NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
+
+#results
 resPPMX <- rbind(MOT, MTUg,NPC)
 colnames(resPPMX) <- c("mean", "sd")
 resPPMX
