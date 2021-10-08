@@ -6,7 +6,7 @@ library(parallel)
 library(doParallel)
 source("R/countUT.R");
 
-K <- 2 #repliche
+K <- 10 #repliche
 npat <- 12
 ncolout <- (dim(mytot)[2]*2)+2+max(trtsgn)
 predAPT_all<-array(0,dim=c(npat, ncolout+3,K))
