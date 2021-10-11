@@ -35,6 +35,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // h - prognostico covariate "instrumental" index
   // tt - treatments index
   // it - observation in cluster tt index
+
+  //Gower dissimilarity has been commented
   int l, ll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it;
   int dim = y.n_cols;
   int Q = z.n_cols;
@@ -101,38 +103,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   arma::mat nj_curr = card_cluster;
   arma::vec nclu_curr = ncluster_curr;
 
-  /*arma::mat curr_clu(nT, num_treat.max());
-  arma::mat nj_curr(nT, num_treat.max(), arma::fill::zeros);
-  arma::vec nclu_curr(nT, arma::fill::zeros);
-  //two clusters or
-  //each observation is initialized in a separate cluster (commented)
-  for(tt = 0; tt < nT; tt++){
-    for(i = 0; i < num_treat(tt); i++){
-      curr_clu(tt, i) = R::rbinom(2, 0.25) + 1;//i + 1;
-    }
-  }
-
-
-  for(tt = 0; tt < nT; tt++){
-    for(i = 0; i < num_treat(tt); i++){
-      for(ii = 0; ii < num_treat(tt); ii++){
-        if(curr_clu(tt, i) == ii+1)
-          nj_curr(tt, ii) += 1;
-        }
-      }
-  }
-
-  //numero di cluster in ciascun trattamento
-  for(tt = 0; tt < nT; tt++){
-    for(i = 0; i < num_treat(tt); i++){
-      if(nj_curr(tt, i) > 0) nclu_curr(tt) += 1;
-    }
-  }*/
-
   /*
-   * questo è il vettore dei pesi, le probabilità per \rho (Alg 8, Neal 2000)
-   * Ha lunghezza pari al massimo numeri di componenti possibile + il numero
-   * di variabili ausiliarie che alloco permanentemente con il Reuse Alg
+   * this is the vector for weights, probabilities for \rho (Alg 8, Neal 2000)
+   * Its length is equal to the max number of components + number of auxiliary
+   * variables that are allocated via Reuse Alg
    */
 
   arma::mat weight(nT, num_treat.max() + CC);
@@ -142,7 +116,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     vp = pow(num_treat(tt) + CC, -1.0);
     weight.row(tt).fill(vp);
   }
-
 
   ////////////////////////////////////////////////////
   //// cluster specific parameters stuff
@@ -227,7 +200,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //int njtmp;
 
   //needed for Gower dissimilarity
-  double npdN, npdY, npd;
+  //double npdN, npdY, npd;
 
   double lgconN, lgconY, lgcatN, lgcatY, tmp;
   double lgcont, lgcatt;
@@ -594,7 +567,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               gtilN(j) = lgconN + lgcatN;
 
               // Gower dissimilarity
-              if(similarity == 3){
+              /*
+               * if(similarity == 3){
                 npd = 0.0;
                 lgconY = 0.0;
                 lgconN = 0.0;
@@ -633,29 +607,32 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                   lgconY = -(alphagow)*lgconY;
                 }
               }
+               */
             }// this closes PPMx
 
             //ast: qui ci metto l'if per coehesion (dentro ciclo sui cluster perchè dipende da j)
             // cef1
             //compute PLAIN cluster probabilities
 
-            // cohesion part
-            if(cohesion == 1){
-              weight(tt, j) = log((double) nj_curr(tt, j));
-            }
-            if(cohesion == 2){
-              weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
-              //Rcpp::Rcout << "weight: " << weight(tt, j) << std::endl;
-            }
-            weight(tt, j) += lgcatY - lgcatN + // Categorical part
-              lgconY - lgconN;  // Continuous;
-            //le similarità le scrivo così invece che con gtilY(j) e gtilN(j), così quando ho PPM valgono 0 ed è corretto
-            //al contrario se è un PPMx lgcatY, lgcatN, lgconY, lgconN hanno i valori del j-esimo cluster
-            for(k = 0; k < dim; k++){
-              wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
-              weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
-              if(y(i, k) != 1){
-                weight(tt, j) -=  log(JJ(i, k));
+            if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log((double) nj_curr(tt, j));
+              }
+              if(cohesion == 2){
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
+                //Rcpp::Rcout << "weight: " << weight(tt, j) << std::endl;
+              }
+              weight(tt, j) += lgcatY - lgcatN + // Categorical part
+                lgconY - lgconN;  // Continuous;
+              //le similarità le scrivo così invece che con gtilY(j) e gtilN(j), così quando ho PPM valgono 0 ed è corretto
+              //al contrario se è un PPMx lgcatY, lgcatN, lgconY, lgconN hanno i valori del j-esimo cluster
+              for(k = 0; k < dim; k++){
+                wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
+                weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
+                if(y(i, k) != 1){
+                  weight(tt, j) -=  log(JJ(i, k));
+                }
               }
             }
 
@@ -721,9 +698,9 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 }
               }//chiude ciclo su p covariate continue
 
-              if(similarity == 3){
+              /*if(similarity == 3){
                 lgcondraw = 0.0;
-              }
+              }*/
 
               // Categorical Covariates
 
@@ -745,29 +722,30 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 }
               }//chiude ciclo su covariate discrete
 
-              if(similarity == 3){
+              /*if(similarity == 3){
                 lgcatdraw = 0.0;
-              }
+              }*/
 
               gtilY(j) = lgcondraw + lgcatdraw;
               gtilN(j) = lgcondraw + lgcatdraw;//ATTENZIONE
             }//closes PPMx
 
-            //ast: qui ci metto if per cohesion
-            // cohesion part
-            if(cohesion == 1){
-              weight(tt, j) = log(alpha) - log(CC);
-            }
-            if(cohesion == 2){
-              weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
-            }
-            weight(tt, j) += lgcondraw + // Continuous covariate part
-              lgcatdraw; // categorical covariate part
-            for(k = 0; k < dim; k++){
-              wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
-              weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
-              if(y(i, k) != 1){
-                weight(tt, j) -=  log(JJ(i, k));
+            if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log(alpha) - log(CC);
+              }
+              if(cohesion == 2){
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+              }
+              weight(tt, j) += lgcondraw + // Continuous covariate part
+                lgcatdraw; // categorical covariate part
+              for(k = 0; k < dim; k++){
+                wo = calculate_gamma(eta_empty.slice(tt), z, beta, jj, k, i, 0);
+                weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
+                if(y(i, k) != 1){
+                  weight(tt, j) -=  log(JJ(i, k));
+                }
               }
             }
 
@@ -1177,7 +1155,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                gtilN(j) = lgconN + lgcatN;
 
                // Gower dissimilarity
-               if(similarity == 3){
+               /*if(similarity == 3){
                  npd = 0.0;
                  lgconY = 0.0;
                  lgconN = 0.0;
@@ -1214,19 +1192,20 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    lgconN = -(alphagow)*lgconN;
                    lgconY = -(alphagow)*lgconY;
                  }
-               }
+               }*/
              }//this closes the if on PPMx
 
-             //ast: qui ci metto if per cohesion
-             // cohesion part
-             if(cohesion == 1){
-               weight(tt, j) = log((double) nj_curr(tt, j));
+             if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
+              // cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log((double) nj_curr(tt, j));
+              }
+              if(cohesion == 2){
+                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))+((nj_curr(tt, j))-sigma));
+              }
+              weight(tt, j) += lgcatY - lgcatN + // Categorical part
+                lgconY - lgconN;  // Continuous part
              }
-             if(cohesion == 2){
-               weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))+((nj_curr(tt, j))-sigma));
-             }
-             weight(tt, j) += lgcatY - lgcatN + // Categorical part
-               lgconY - lgconN;  // Continuous part
 
              if((calibration == 2) & (PPMx == 1)){
                //ast: qui ci metto if per cohesion
@@ -1293,19 +1272,19 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                gtilN(j) = lgcondraw + lgcatdraw;
              }//closes PPMx
 
-             //ast: qui ci metto if per cohesion
-             // cohesion part
-             if(cohesion == 1){
-               weight(tt, j) = log(alpha) - log(CC);
+             if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){// cohesion part
+              if(cohesion == 1){
+                weight(tt, j) = log(alpha) - log(CC);
+              }
+              if(cohesion == 2){
+                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+              }
+              weight(tt, j) += lgcondraw + // Continuous covariate part
+                lgcatdraw; // categorical covariate part
              }
-             if(cohesion == 2){
-               weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
-             }
-             weight(tt, j) += lgcondraw + // Continuous covariate part
-               lgcatdraw; // categorical covariate part
 
              // Gower dissimilarity
-             if(similarity == 3){
+             /*if(similarity == 3){
                //ast: qui ci metto if per cohesion
                // cohesion part
                if(cohesion == 1){
@@ -1314,7 +1293,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                if(cohesion == 2){
                  weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
                }
-             }
+             }*/
 
              // Coarsening
              if((calibration == 2) & (PPMx == 1)){

@@ -15,7 +15,7 @@
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
-#'   3 - Gower dissimilarity
+#   3 - Gower dissimilarity
 #' @param consim integer 1 or 2.  1 implies sim for con var is NN.  2 implies sim is NNIG
 #' @param similparam vector containing similarity functions paramaters
 # double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
