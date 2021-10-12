@@ -2,6 +2,7 @@
 
 export(genmech)
 export(my_dm_ppmx_ct)
+export(npc)
 importFrom(Rcpp,sourceCpp)
 importFrom(cluster,daisy)
 importFrom(coda,effectiveSize)
