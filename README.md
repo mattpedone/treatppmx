@@ -51,3 +51,5 @@ It has only been tested on a PC running Ubuntu 20.04.2 LTS.
 # to-do-list
 
 - [ ] [References in the documentation](https://cran.r-project.org/web/packages/Rdpack/vignettes/Inserting_bibtex_references.pdf)
+
+è solo una prova
