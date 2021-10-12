@@ -155,6 +155,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
   #}
 
   pmat = matrix(0, ncol(y), ncol(Z))
+  noprog <- 0
   if((is.null(Z)) & (is.null(Zpred))){
     beta <- pmat
     Z <- matrix(0, nrow = nrow(X), ncol = 1)
