@@ -10,7 +10,9 @@ genmech(
   progscen = 1,
   predscen = 1,
   nnoise = 15,
-  nset = 30
+  nset = 30,
+  save = FALSE,
+  filename = "myscenario"
 )
 }
 \arguments{
@@ -32,6 +34,12 @@ generate outcomes}
 \item{nnoise}{number of noisy covariates added to predictive biomarkers}
 
 \item{nset}{number of replicated scenarios generated}
+
+\item{save}{logical. if TRUE the function save the results in a .rda file.
+Default is FALSE.}
+
+\item{filename}{Name given to the file is results are save in .rda file.
+Default is ``myscenario.rda''}
 }
 \value{
 a list of 5 elements.

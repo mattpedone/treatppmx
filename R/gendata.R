@@ -70,6 +70,10 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #'   generate outcomes
 #' @param nnoise number of noisy covariates added to predictive biomarkers
 #' @param nset number of replicated scenarios generated
+#' @param save logical. if TRUE the function save the results in a .rda file.
+#' Default is FALSE.
+#' @param filename Name given to the file is results are save in .rda file.
+#' Default is ``myscenario.rda''
 #' @return a list of 5 elements.
 #'   \itemize{
 #'   \item 1 - List of \code{nset} outcome variables.
@@ -81,7 +85,8 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #' @export
 
 genmech <- function(npred = 10, mydata = "data/Simu152pats.txt", progscen = 1,
-                    predscen = 1, nnoise = 15, nset = 30){
+                    predscen = 1, nnoise = 15, nset = 30, save = FALSE,
+                    filename = "myscenario"){
 
   genenorm <- t(scale(t(read.table(file = mydata))))
   mypca <- prcomp(t(genenorm[c(1:npred),]))
@@ -175,12 +180,25 @@ genmech <- function(npred = 10, mydata = "data/Simu152pats.txt", progscen = 1,
   biom <- cbind(Xpredcov, Zprogcov)
 
   # RETURN
-  fulldata <- list(
+  if(save == FALSE){
+    fulldata <- list(
     Y = myy,
     Yord = myoutot,
     treatment = trtsgn,
     cov = biom,
-    prob = myprob
-  )
-  return(fulldata)
+    prob = myprob)
+    return(fulldata)
+  } else {
+    #this is mainly done for compatibility with Ma's script. In this way
+    #comparison can be run smoothly
+    mydata <- genenorm
+    orgx <- cbind(genenorm[91,], genenorm[92,])
+    myx2 <- x2
+    myx3 <- x3
+    newx <- cbind(rnorm(n = nobs, mean = 0, sd = 1), rnorm(n = nobs, mean = 0,
+                                                           sd = 3))
+    myfile <- paste0("data/", filename, ".rda")
+    save(myoutot, mytot, mydata, trtsgn, myprob, orgx, myx2, myx3, newx,
+         file = myfile)
+  }
 }
