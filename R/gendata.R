@@ -7,14 +7,7 @@
 
 #' genoutcome
 #'
-#' generates outcome variables. The response is an ordinal outcome variable.
-#' In particular, it has three benefit-incresing levels. Patients are assigned
-#' to two competing treatments.
-#' The ordinal outcome variable are generated using two separate
-#' continuation-ratio logistic functions. The information carried by many
-#' predictive features can be summarized via dimension reduction techniques.
-#' This implementation, in particular, considers thr first two principal
-#' components of a PCA.
+#' Generates outcome variables. The response is an ordinal outcome variable.
 #'
 #' See Ma et al. (2019) Supplementary Material for all the details.
 #'
@@ -28,7 +21,7 @@
 #' @param metx combination of the pca to generate the exponetial
 #' @param x2 first prognostic covariate (x2)
 #' @param x3 second prognostic covariate (x3)
-#' @return a \eqn{nobs\times 4} matrix. The first column contains the generated
+#' @return a \eqn{\code{nobs}\times 4} matrix. The first column contains the generated
 #' outcome variable, the other three the probabilities for the categories.
 
 genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
@@ -52,9 +45,17 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 
 #' genmech
 #'
-#' generates the data for the different simulations scenarios. It follows the
+#' Generates the data for the different simulations scenarios. It follows the
 #' strategy designed by Ma et al. (2019). It is used to generate the data for all
-#' the simulation study scenarios we used.
+#' the simulation study scenarios we used. In particular, it has three benefit-incresing levels. Patients are assigned
+#' to two competing treatments.
+#' The ordinal outcome variable are generated using two separate
+#' continuation-ratio logistic functions. The information carried by many
+#' predictive features can be summarized via dimension reduction techniques.
+#' This implementation, in particular, considers thr first two principal
+#' components of a PCA.
+#'
+#' See Ma et al. (2019) Supplementary Material for all the details.
 #'
 #' @param npred number of predictive covariates used to generate the outcome
 #' @param mydata input dataset file
@@ -63,15 +64,15 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #'   2 - Prognostic biomarkers are transformed
 #' @param predscen Predictive covariates option:
 #'   1 - 10 Predictive biomarkers are considered to generate outcomes (default)
-#'   2 - @param nnoise noisy std normals are added to the design matrix of predictive
+#'   2 - \code{nnoise} noisy std normals are added to the design matrix of predictive
 #'   covariates in addition to 10 the predictive biomarkers considered to
 #'   generate outcomes
-#'  @param nnoise number of noisy covariates added to predictive biomarkers
+#' @param nnoise number of noisy covariates added to predictive biomarkers
 #' @param nset number of replicated scenarios generated
 #' @return a list of 5 elements.
 #'   \itemize{
-#'   \item 1 - List of @param nset outcome variables.
-#'   \item 2 - List of @param nset outcome variables in ordinal notation.
+#'   \item 1 - List of \code{nset} outcome variables.
+#'   \item 2 - List of \code{nset} outcome variables in ordinal notation.
 #'   \item 3 - A vector of assigned treatments.
 #'   \item 4 - A matrix of all biomarkers.
 #'   \item 5 - A list of outcome probabilities (one element for each treatment).

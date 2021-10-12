@@ -59,8 +59,7 @@ my_dm_ppmx_ct(
 
 \item{similarity}{type of similarity function that is employed for the PPMx prior on partitions. Options are
 1 - Auxiliary similarity
-2 - Double dipper similarity
-3 - Gower dissimilarity}
+2 - Double dipper similarity}
 
 \item{consim}{integer 1 or 2.  1 implies sim for con var is NN.  2 implies sim is NNIG}
 
@@ -74,8 +73,7 @@ can be calibrated. Options are
 
 \item{coardegree}{If the similarity is coarsened, it is possible to temper the coarsening
 1 - \eqn{g(x^*)^{1/p}}
-2 - \eqn{g(x^*)^{1/p^{1/2}}}
-3 - \eqn{g(x^*)^{1/p^{1/3}}}}
+2 - \eqn{g(x^*)^{1/p^{1/2}}}}
 
 \item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total.
 if gowtot == 0,  then Average Gower dissimilarity is taken}

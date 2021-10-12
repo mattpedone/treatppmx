@@ -44,4 +44,7 @@
 #' @importFrom ggplot2 geom_tile
 #' @importFrom reshape2 melt
 #' @importFrom cluster daisy
+#' @importFrom stats prcomp
+#' @importFrom stats rmultinom
+#' @importFrom utils read.table
 NULL
