@@ -11,7 +11,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                       double sigma, arma::mat Vwm, int cohesion, int CC, int reuse, int consim, int similarity,
                       int gowtot, int alphagow, arma::vec dissimtn, arma::vec dissimtt,
                       int calibration, int coardegree,
-                      arma::mat y, arma::mat z, arma::mat zpred, arma::vec xcon,
+                      arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon,
                       arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred,
                       arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0,
                       double hP0_nu0, arma::vec hP0_V0, int upd_hier,
@@ -985,31 +985,33 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         }
       }
 
-      //UPDATE PROGNOSTIC COVARIATES' COEFFICIENTS
+      if(noprog != 1){
+        //UPDATE PROGNOSTIC COVARIATES' COEFFICIENTS
 
-      for(k = 0; k < dim; k++){
-        for(q = 0; q < Q; q++){
-          //h = q + k * Q;
-          h = k + q * dim;
-          beta_temp(q) = beta(h);
+        for(k = 0; k < dim; k++){
+          for(q = 0; q < Q; q++){
+            //h = q + k * Q;
+            h = k + q * dim;
+            beta_temp(q) = beta(h);
+          }
+          l_beta_out = beta_update(z, JJ, loggamma, beta_temp, beta_flag,
+                                   mu_beta, sigma_beta, k, mhtunepar(1));
+          beta_temp = Rcpp::as<arma::vec>(l_beta_out[0]);
+          for(q = 0; q < Q; q++){
+            //h = q + k * Q;
+            h = k + q * dim;
+            beta(h) = beta_temp(q);
+          }
+          loggamma = Rcpp::as<arma::mat>(l_beta_out[1]);
+          beta_flag = Rcpp::as<arma::mat>(l_beta_out[2]);
         }
-        l_beta_out = beta_update(z, JJ, loggamma, beta_temp, beta_flag,
-                                 mu_beta, sigma_beta, k, mhtunepar(1));
-        beta_temp = Rcpp::as<arma::vec>(l_beta_out[0]);
-        for(q = 0; q < Q; q++){
-          //h = q + k * Q;
-          h = k + q * dim;
-          beta(h) = beta_temp(q);
-        }
-        loggamma = Rcpp::as<arma::mat>(l_beta_out[1]);
-        beta_flag = Rcpp::as<arma::mat>(l_beta_out[2]);
-      }
 
-      //UPDATE PMTS FOR HS PRIOR
-      if(hsp == 1){
-        lambda = up_lambda_hs(beta, lambda, tau);
-        tau = up_tau_hs(beta, lambda, tau);
-        sigma_beta = lambda * tau;
+        //UPDATE PMTS FOR HS PRIOR
+        if(hsp == 1){
+          lambda = up_lambda_hs(beta, lambda, tau);
+          tau = up_tau_hs(beta, lambda, tau);
+          sigma_beta = lambda * tau;
+        }
       }
 
       /*////////////////////////////////////////////////
@@ -1291,7 +1293,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  weight(tt, j) = log(alpha) - log(CC);
                }
                if(cohesion == 2){
-                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));quicivacommento*(nj_curr(tt, j)-sigma);
                }
              }*/
 

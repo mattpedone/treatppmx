@@ -153,23 +153,30 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
     dissimtt <- 0
   }
 
-  cormat = matrix(0, ncol(y), ncol(Z))
   pmat = matrix(0, ncol(y), ncol(Z))
-  yy = y/rowSums(y) # compositionalize
-  for(rr in 1:ncol(y)){
-    for(cc in 1:ncol(Z)){
-      pmat[rr, cc] = suppressWarnings(stats::cor.test(Z[, cc], yy[, rr], method = "spearman",
-                                     exact = F)$p.value)
-      cormat[rr, cc] = suppressWarnings(stats::cor(Z[, cc], yy[, rr], method = "spearman"))
+  if((is.null(Z)) & (is.null(Zpred))){
+    beta <- pmat
+    Z <- matrix(0, nrow = nrow(X), ncol = 1)
+    Zpred <- matrix(0, nrow = nrow(Xpred), ncol = 1)
+    noprog <- 1
+  } else {
+    cormat = matrix(0, ncol(y), ncol(Z))
+    yy = y/rowSums(y) # compositionalize
+    for(rr in 1:ncol(y)){
+      for(cc in 1:ncol(Z)){
+        pmat[rr, cc] = suppressWarnings(stats::cor.test(Z[, cc], yy[, rr], method = "spearman",
+                                                        exact = F)$p.value)
+        cormat[rr, cc] = suppressWarnings(stats::cor(Z[, cc], yy[, rr], method = "spearman"))
+      }
     }
+    # defaults to 0.2 false discovery rate
+    pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
+                ncol(Z))
+    betmat = cormat * pm
+    beta <- as.vector(t(betmat))
+    beta[is.na(beta)] <- 0.0
+    beta <- beta + 0.0001
   }
-  # defaults to 0.2 false discovery rate
-  pm = matrix((stats::p.adjust(c(pmat), method = "fdr") <= 0.2) + 0, ncol(y),
-              ncol(Z))
-  betmat = cormat * pm
-  beta <- as.vector(t(betmat))
-  beta[is.na(beta)] <- 0.0
-  beta <- beta + 0.0001
 
   A <- length(unique(asstreat))#nT int
   treatments <- asstreat#treatments vec
@@ -239,7 +246,8 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), as.integer(gowtot),
                  as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
-                 as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(Z), as.matrix(Zpred),
+                 as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(Z),
+                 as.matrix(Zpred), as.integer(noprog),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
                  as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
