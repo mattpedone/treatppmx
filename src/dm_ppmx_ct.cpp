@@ -8,8 +8,8 @@
 // [[Rcpp::export]]
 Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments,
                       int PPMx, int ncon, int ncat, arma::vec catvec, double alpha,
-                      double sigma, arma::mat Vwm, int cohesion, int CC, int reuse, int consim, int similarity,
-                      int gowtot, int alphagow, arma::vec dissimtn, arma::vec dissimtt,
+                      double sigma, arma::mat Vwm, int cohesion, int CC, int reuse,
+                      int consim, int similarity,
                       int calibration, int coardegree,
                       arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon,
                       arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred,
@@ -18,6 +18,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                       arma::vec initbeta, int hsp, arma::vec mhtunepar,
                       int A, arma::vec n_a, arma::mat curr_cluster,
                       arma::mat card_cluster, arma::vec ncluster_curr){
+
+  //int gowtot, //int alphagow, //arma::vec dissimtn, //arma::vec dissimtt,
 
   // l - MCMC index
   // ll - MCMC index for saving iterates

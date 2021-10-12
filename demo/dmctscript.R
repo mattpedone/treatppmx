@@ -75,7 +75,8 @@
                           Z = Z, Zpred = Ztest, asstreat = trt,
                           alpha = alpha_DP, sigma = .2, CC = n_aux,
                           cohesion = 2, similarity = 2, consim = 2,
-                          alphagow = 2, calibration = 2, coardegree = 2,
+                          #alphagow = 2,
+                          calibration = 2, coardegree = 2,
                           similparam = vec_par, modelpriors = modelpriors, iter = iterations,
                           burn = burnin, thin = thinning))
   time_ppmx/60

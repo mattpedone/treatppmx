@@ -27,9 +27,9 @@
 #' @param coardegree If the similarity is coarsened, it is possible to temper the coarsening
 #'   1 - \eqn{g(x^*)^{1/p}}
 #'   2 - \eqn{g(x^*)^{1/p^{1/2}}}
-#' @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
-#' if gowtot == 0,  then Average Gower dissimilarity is taken
-#' @param alphagow \eqn{\alpha} parameter to compute gower dissimilarity
+# @param gowtot if similarity parameter is 3 then Gower dissimilarity is employed. default total.
+# if gowtot == 0,  then Average Gower dissimilarity is taken
+# @param alphagow \eqn{\alpha} parameter to compute gower dissimilarity
 #' @param modelpriors vector containing prior values for model
 #' @param update_hierarchy should hyperparameter for BNP intercept be updated? if 1 yes (default)
 #' @param hsp parameter for employ horseshoe prior for coefficients for prognostic markers
@@ -51,7 +51,8 @@
 my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
                           PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
                           similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,
-                          gowtot = 1, alphagow = 1, modelpriors, update_hierarchy = 1, hsp = 1,
+                          #gowtot = 1, alphagow = 1,
+                          modelpriors, update_hierarchy = 1, hsp = 1,
                           iter=1100, burn=100, thin=1, mhtunepar = c(.05, .05),
                           CC = 3, reuse = 1, nclu_init = 5){
 
@@ -144,14 +145,14 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
     }
   }
 
-  if(similarity == 3){
-    dissim <- as.matrix(daisy(Xall, metric="gower"))
-    dissimtn <- dissim[1:nobs, 1:nobs]
-    dissimtt <- dissim[-c(1:nobs), 1:nobs]
-  }else{
-    dissimtn <- 0
-    dissimtt <- 0
-  }
+  #if(similarity == 3){
+  #  dissim <- as.matrix(daisy(Xall, metric="gower"))
+  #  dissimtn <- dissim[1:nobs, 1:nobs]
+  #  dissimtt <- dissim[-c(1:nobs), 1:nobs]
+  #}else{
+  #  dissimtn <- 0
+  #  dissimtt <- 0
+  #}
 
   pmat = matrix(0, ncol(y), ncol(Z))
   if((is.null(Z)) & (is.null(Zpred))){
@@ -244,8 +245,8 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
                  as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(alpha), as.double(sigma), as.matrix(Vwm), as.integer(cohesion),
                  as.integer(CC), as.integer(reuse),
-                 as.integer(consim), as.integer(similarity), as.integer(gowtot),
-                 as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
+                 as.integer(consim), as.integer(similarity), #as.integer(gowtot),
+                 #as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
                  as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(Z),
                  as.matrix(Zpred), as.integer(noprog),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),

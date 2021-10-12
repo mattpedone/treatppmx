@@ -20,8 +20,6 @@ my_dm_ppmx_ct(
   similparam,
   calibration = 0,
   coardegree = 1,
-  gowtot = 1,
-  alphagow = 1,
   modelpriors,
   update_hierarchy = 1,
   hsp = 1,
@@ -74,11 +72,6 @@ can be calibrated. Options are
 \item{coardegree}{If the similarity is coarsened, it is possible to temper the coarsening
 1 - \eqn{g(x^*)^{1/p}}
 2 - \eqn{g(x^*)^{1/p^{1/2}}}}
-
-\item{gowtot}{if similarity parameter is 3 then Gower dissimilarity is employed. default total.
-if gowtot == 0,  then Average Gower dissimilarity is taken}
-
-\item{alphagow}{\eqn{\alpha} parameter to compute gower dissimilarity}
 
 \item{modelpriors}{vector containing prior values for model}
 
