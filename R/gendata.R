@@ -60,8 +60,9 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #' @param npred number of predictive covariates used to generate the outcome
 #' @param mydata input dataset file
 #' @param progscen Prognostic covariates option:
-#'   1 - Prognostic biomarkers are considered in the original scale (default)
-#'   2 - Prognostic biomarkers are transformed
+#'   0 - No prognostic biomarkers.
+#'   1 - Prognostic biomarkers are considered in the original scale (default).
+#'   2 - Prognostic biomarkers are transformed.
 #' @param predscen Predictive covariates option:
 #'   1 - 10 Predictive biomarkers are considered to generate outcomes (default)
 #'   2 - \code{nnoise} noisy std normals are added to the design matrix of predictive
@@ -94,12 +95,21 @@ genmech <- function(npred = 10, mydata = "data/Simu152pats.txt", progscen = 1,
   ## for the noisy scenario
 
   # Prognostic Markers
-  ## original scale
-  x2 <- genenorm[91,]
-  x3 <- genenorm[92,]
-  ## transformation
-  myx2 <- sign(x2)*(sign(x2)*x2)^(0.5)
-  myx3 <- sign(x3)*(sign(x3)*x3)^(0.2)
+  if(progscen == 0){
+    ## no prognostic covariates
+    x2 <- rep(0, nobs)
+    x3 <- rep(0, nobs)
+  }
+  if(progscen == 1){
+    ## original scale
+    x2 <- genenorm[91,]
+    x3 <- genenorm[92,]
+  }
+  if(progscen == 2){
+    ## transformation
+    x2 <- sign(x2)*(sign(x2)*x2)^(0.5)
+    x3 <- sign(x3)*(sign(x3)*x3)^(0.2)
+  }
 
   # pmts probabilities for treatment 1
   alpha1 <- c(-0.5, -1)
@@ -112,22 +122,12 @@ genmech <- function(npred = 10, mydata = "data/Simu152pats.txt", progscen = 1,
   beta2 <- c(1, 0.5)
   beta3 <- c(0.7,1)
 
-  if(progscen == 1){
-    #probabilities for treatment 1
-    prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, x2, x3)
-    #probabilities for treatment 2
-    prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, x2, x3)
-    probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, x2, x3)
-    Zprogcov <- cbind(x2, x3)
-  }
-  if(progscen == 2){
-    #probabilities for treatment 1
-    prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, myx2, myx3)
-    #probabilities for treatment 2
-    prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, myx2, myx3)
-    probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, myx2, myx3)
-    Zprogcov <- cbind(myx2, myx3)
-  }
+  #probabilities for treatment 1
+  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, x2, x3)
+  #probabilities for treatment 2
+  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, x2, x3)
+  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, x2, x3)
+  Zprogcov <- cbind(x2, x3)
 
   # Now we construct prob with both prog and pred features
   myprob1 <- myprob2 <- matrix( 0, nrow = nobs, ncol = 3)

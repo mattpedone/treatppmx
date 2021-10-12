@@ -19,8 +19,9 @@ genmech(
 \item{mydata}{input dataset file}
 
 \item{progscen}{Prognostic covariates option:
-1 - Prognostic biomarkers are considered in the original scale (default)
-2 - Prognostic biomarkers are transformed}
+0 - No prognostic biomarkers.
+1 - Prognostic biomarkers are considered in the original scale (default).
+2 - Prognostic biomarkers are transformed.}
 
 \item{predscen}{Predictive covariates option:
 1 - 10 Predictive biomarkers are considered to generate outcomes (default)
