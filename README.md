@@ -52,3 +52,11 @@ It has only been tested on a PC running Ubuntu 20.04.2 LTS.
 
 - [ ] [References in the documentation](https://cran.r-project.org/web/packages/Rdpack/vignettes/Inserting_bibtex_references.pdf)
 
+- [ ] crea script da salvare in `/demo` per generare gli scenari che salvo in `/data`
+- [ ] modifica file `R/data.R` commentando tutti gli scenari
+- [ ] crea script da salvare in `/demo` per analizzare tutti gli scenari
+- [ ] sistema per bene tutta la documentazione
+- [ ] descrivi nel readme la struttura della cartella data e degli script
+
+- [ ] aggiungi passaggio prima per ottenere tsimupats????
+

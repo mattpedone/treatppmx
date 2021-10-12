@@ -6,7 +6,7 @@
 \usage{
 genmech(
   npred = 10,
-  mydata = "data/Simu152pats.txt",
+  mydata = "data/simupats.rda",
   progscen = 1,
   predscen = 1,
   nnoise = 15,
@@ -18,7 +18,8 @@ genmech(
 \arguments{
 \item{npred}{number of predictive covariates used to generate the outcome}
 
-\item{mydata}{input dataset file}
+\item{mydata}{input dataset file. It must be a dataset with observation on the rows and
+variables on the columns. Covariates should not be scaled.}
 
 \item{progscen}{Prognostic covariates option:
 0 - No prognostic biomarkers.

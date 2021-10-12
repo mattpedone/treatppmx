@@ -58,7 +58,8 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #' See Ma et al. (2019) Supplementary Material for all the details.
 #'
 #' @param npred number of predictive covariates used to generate the outcome
-#' @param mydata input dataset file
+#' @param mydata input dataset file. It must be a dataset with observation on the rows and
+#' variables on the columns. Covariates should not be scaled.
 #' @param progscen Prognostic covariates option:
 #'   0 - No prognostic biomarkers.
 #'   1 - Prognostic biomarkers are considered in the original scale (default).
@@ -84,11 +85,11 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #' }
 #' @export
 
-genmech <- function(npred = 10, mydata = "data/Simu152pats.txt", progscen = 1,
+genmech <- function(npred = 10, mydata = "data/simupats.rda", progscen = 1,
                     predscen = 1, nnoise = 15, nset = 30, save = FALSE,
                     filename = "myscenario"){
-
-  genenorm <- t(scale(t(read.table(file = mydata))))
+  load(mydata)
+  genenorm <- t(scale(as.matrix(tsimupats)))
   mypca <- prcomp(t(genenorm[c(1:npred),]))
 
   nobs <- length(mypca$x[,1])
