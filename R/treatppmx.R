@@ -46,5 +46,5 @@
 #' @importFrom cluster daisy
 #' @importFrom stats prcomp
 #' @importFrom stats rmultinom
-#' @importFrom utils read.table
+#' @importFrom utils data
 NULL

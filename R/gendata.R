@@ -9,7 +9,10 @@
 #'
 #' Generates outcome variables. The response is an ordinal outcome variable.
 #'
-#' See Ma et al. (2019) Supplementary Material for all the details.
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
 #'
 #'
 #' @param nobs number of observations
@@ -43,6 +46,28 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
   return(outcome)
 }
 
+#' getdata
+#'
+#' It is just an helper function.
+#' Using load() or data() I had to call the dataframe by the name of the object.
+#' It caused the devtools::check() to return this note:
+#' checking R code for possible problems ... NOTE
+#' genmech: no visible binding for global variable ‘simupats’
+#' Undefined global functions or variables:
+#'   simupats
+#'
+#'  It is just a shortcut to get things done. I could have worked on the Lazyload
+#'  See https://stackoverflow.com/questions/30951204/load-dataset-from-r-package-using-data-assign-it-directly-to-a-variable
+#' @param ... literal character strings or names
+#'
+
+getdata <- function(...)
+{
+  e <- new.env()
+  name <- data(..., envir = e)[1]
+  e[[name]]
+}
+
 #' genmech
 #'
 #' Generates the data for the different simulations scenarios. It follows the
@@ -55,10 +80,19 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #' This implementation, in particular, considers thr first two principal
 #' components of a PCA.
 #'
-#' See Ma et al. (2019) Supplementary Material for all the details.
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2016). Bayesian predictive modeling
+#' for genomic based personalized treatment selection. \emph{Biometrics},
+#' \strong{72}(2), 575-583.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1111/biom.12448}
+#'
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
 #'
 #' @param npred number of predictive covariates used to generate the outcome
-#' @param mydata input dataset file. It must be a dataset with observation on the rows and
+# @param mydata input dataset file. It must be a dataset with observation on the rows and
 #' variables on the columns. Covariates should not be scaled.
 #' @param progscen Prognostic covariates option:
 #'   0 - No prognostic biomarkers.
@@ -85,11 +119,12 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 #' }
 #' @export
 
-genmech <- function(npred = 10, mydata = "data/simupats.rda", progscen = 1,
+genmech <- function(npred = 10, progscen = 1,
                     predscen = 1, nnoise = 15, nset = 30, save = FALSE,
                     filename = "myscenario"){
-  load(mydata)
-  genenorm <- t(scale(as.matrix(tsimupats)))
+
+  mydata <- getdata("simupats")
+  genenorm <- t(scale(as.matrix(mydata)))
   mypca <- prcomp(t(genenorm[c(1:npred),]))
 
   nobs <- length(mypca$x[,1])

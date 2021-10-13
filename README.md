@@ -33,7 +33,7 @@ Run some comparison agains Ma and DP-like cohesion function.
 * Note: sub-directories of 1Mb or more:
       libs   5.7Mb
       
-      https://www.r-bloggers.com/2016/04/cran-check-note-sub-directories-of-1mb-or-more-libs/
+      \url{https://www.r-bloggers.com/2016/04/cran-check-note-sub-directories-of-1mb-or-more-libs/}
 
 ## Installation
 
@@ -58,5 +58,8 @@ It has only been tested on a PC running Ubuntu 20.04.2 LTS.
 - [ ] sistema per bene tutta la documentazione
 - [ ] descrivi nel readme la struttura della cartella data e degli script
 
-- [ ] aggiungi passaggio prima per ottenere tsimupats????
+- [ ] script per ottenere scenari
+- [ ] salva scenario in `.RData`
+- [ ] scipt con parallel per analisi scenario/sensitività (fissa seed)
+- [ ] salva risultati in `.RData`
 

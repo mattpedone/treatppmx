@@ -14,3 +14,5 @@ LinkingTo: Rcpp, RcppArmadillo
 Imports: Rcpp, coda, mcclust, mcclust.ext, mclust, mvtnorm, ggplot2, reshape2, vweights, cluster
 URL: https://github.com/mattpedone/treatppmx
 BugReports: https://github.com/mattpedone/treatppmx/issues
+Depends: 
+    R (>= 2.10)

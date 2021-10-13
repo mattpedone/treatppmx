@@ -6,7 +6,6 @@
 \usage{
 genmech(
   npred = 10,
-  mydata = "data/simupats.rda",
   progscen = 1,
   predscen = 1,
   nnoise = 15,
@@ -16,9 +15,7 @@ genmech(
 )
 }
 \arguments{
-\item{npred}{number of predictive covariates used to generate the outcome}
-
-\item{mydata}{input dataset file. It must be a dataset with observation on the rows and
+\item{npred}{number of predictive covariates used to generate the outcome
 variables on the columns. Covariates should not be scaled.}
 
 \item{progscen}{Prognostic covariates option:
@@ -63,6 +60,14 @@ predictive features can be summarized via dimension reduction techniques.
 This implementation, in particular, considers thr first two principal
 components of a PCA.
 }
-\details{
-See Ma et al. (2019) Supplementary Material for all the details.
+\references{
+Ma, J., Stingo, F. C., & Hobbs, B. P. (2016). Bayesian predictive modeling
+for genomic based personalized treatment selection. \emph{Biometrics},
+\strong{72}(2), 575-583.
+\url{https://onlinelibrary.wiley.com/doi/full/10.1111/biom.12448}
+
+Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+treatment selection strategies that integrate predictive with prognostic
+determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+\url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
 }
