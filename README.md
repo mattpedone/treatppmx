@@ -12,7 +12,7 @@ Run some comparison agains Ma and DP-like cohesion function.
 * Note: sub-directories of 1Mb or more:
       libs   5.7Mb
       
-      \url{https://www.r-bloggers.com/2016/04/cran-check-note-sub-directories-of-1mb-or-more-libs/}
+ https://www.r-bloggers.com/2016/04/cran-check-note-sub-directories-of-1mb-or-more-libs/
 
 ## Installation
 
