@@ -38,6 +38,6 @@ Queste cose falle nell'altro pacchetto:
 
 - [ ] script per ottenere scenari
 - [ ] salva scenario in `.RData`
-- [ ] scipt con parallel per analisi scenario/sensitività (fissa seed)
+- [ ] script con parallel per analisi scenario/sensitività (fissa seed)
 - [ ] salva risultati in `.RData`
 
