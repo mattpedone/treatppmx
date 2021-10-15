@@ -148,8 +148,10 @@ genmech <- function(npred = 10, progscen = 1,
   }
   if(progscen == 2){
     ## transformation
-    z2 <- sign(x2)*(sign(x2)*x2)^(0.5)
-    z3 <- sign(x3)*(sign(x3)*x3)^(0.2)
+    z2 <- genenorm[91,]
+    z3 <- genenorm[92,]
+    z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
+    z3 <- sign(z3)*(sign(z3)*z3)^(0.2)
   }
 
   # pmts probabilities for treatment 1
