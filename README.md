@@ -31,7 +31,7 @@ It has only been tested on a PC running Ubuntu 20.04.2 LTS.
 
 - [ ] [References in the documentation](https://cran.r-project.org/web/packages/Rdpack/vignettes/Inserting_bibtex_references.pdf)
 - [ ] sistema demo
-- [ ] in `genmech` sistema notazione prognostiche
+- [x] in `genmech` sistema notazione prognostiche
 - [ ] sistema per bene tutta la documentazione (references)
 - [ ] descrivi nel readme 
 

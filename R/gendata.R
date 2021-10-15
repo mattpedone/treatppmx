@@ -138,18 +138,18 @@ genmech <- function(npred = 10, progscen = 1,
   # Prognostic Markers
   if(progscen == 0){
     ## no prognostic covariates
-    x2 <- rep(0, nobs)
-    x3 <- rep(0, nobs)
+    z2 <- rep(0, nobs)
+    z3 <- rep(0, nobs)
   }
   if(progscen == 1){
     ## original scale
-    x2 <- genenorm[91,]
-    x3 <- genenorm[92,]
+    z2 <- genenorm[91,]
+    z3 <- genenorm[92,]
   }
   if(progscen == 2){
     ## transformation
-    x2 <- sign(x2)*(sign(x2)*x2)^(0.5)
-    x3 <- sign(x3)*(sign(x3)*x3)^(0.2)
+    z2 <- sign(x2)*(sign(x2)*x2)^(0.5)
+    z3 <- sign(x3)*(sign(x3)*x3)^(0.2)
   }
 
   # pmts probabilities for treatment 1
@@ -164,11 +164,11 @@ genmech <- function(npred = 10, progscen = 1,
   beta3 <- c(0.7,1)
 
   #probabilities for treatment 1
-  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, x2, x3)
+  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, z2, z3)
   #probabilities for treatment 2
-  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, x2, x3)
-  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, x2, x3)
-  Zprogcov <- cbind(x2, x3)
+  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, z2, z3)
+  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, z2, z3)
+  Zprogcov <- cbind(z2, z3)
 
   # Now we construct prob with both prog and pred features
   myprob1 <- myprob2 <- matrix( 0, nrow = nobs, ncol = 3)
@@ -228,13 +228,13 @@ genmech <- function(npred = 10, progscen = 1,
     #this is mainly done for compatibility with Ma's script. In this way
     #comparison can be run smoothly
     mydata <- t(genenorm)
-    orgx <- cbind(genenorm[91,], genenorm[92,])
-    myx2 <- x2
-    myx3 <- x3
-    newx <- cbind(rnorm(n = nobs, mean = 0, sd = 1), rnorm(n = nobs, mean = 0,
+    orgz <- cbind(genenorm[91,], genenorm[92,])
+    myz2 <- z2
+    myz3 <- z3
+    newz <- cbind(rnorm(n = nobs, mean = 0, sd = 1), rnorm(n = nobs, mean = 0,
                                                            sd = 3))
     myfile <- paste0("data/", filename, ".rda")
-    save(myoutot, mytot, mydata, trtsgn, myprob, orgx, myx2, myx3, newx,
+    save(myoutot, mytot, mydata, trtsgn, myprob, orgz, myz2, myz3, newz,
          file = myfile)
   }
 }
