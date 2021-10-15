@@ -24,7 +24,7 @@ variables on the columns. Covariates should not be scaled.}
 2 - Prognostic biomarkers are transformed.}
 
 \item{predscen}{Predictive covariates option:
-1 - 10 Predictive biomarkers are considered to generate outcomes (default)
+1 - \code{npred} Predictive biomarkers are considered to generate outcomes (default)
 2 - \code{nnoise} noisy std normals are added to the design matrix of predictive
 covariates in addition to 10 the predictive biomarkers considered to
 generate outcomes}
