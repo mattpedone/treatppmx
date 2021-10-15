@@ -35,10 +35,4 @@ It has only been tested on a PC running Ubuntu 20.04.2 LTS.
 - [ ] sistema per bene tutta la documentazione (references)
 - [ ] descrivi nel readme 
 
-Queste cose falle nell'altro pacchetto:
-
-- [ ] script per ottenere scenari
-- [ ] salva scenario in `.RData`
-- [ ] script con parallel per analisi scenario/sensitività (fissa seed)
-- [ ] salva risultati in `.RData`
 
