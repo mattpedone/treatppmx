@@ -227,7 +227,7 @@ genmech <- function(npred = 10, progscen = 1,
   } else {
     #this is mainly done for compatibility with Ma's script. In this way
     #comparison can be run smoothly
-    mydata <- genenorm
+    mydata <- t(genenorm)
     orgx <- cbind(genenorm[91,], genenorm[92,])
     myx2 <- x2
     myx3 <- x3
