@@ -124,8 +124,8 @@ genmech <- function(npred = 10, progscen = 1,
                     filename = "myscenario"){
 
   mydata <- getdata("simupats")
-  genenorm <- t(scale(as.matrix(mydata)))
-  mypca <- prcomp(t(genenorm[c(1:npred),]))
+  genenorm <- scale(as.matrix(mydata))
+  mypca <- prcomp(genenorm[,c(1:npred)])
 
   nobs <- length(mypca$x[,1])
 
@@ -143,13 +143,13 @@ genmech <- function(npred = 10, progscen = 1,
   }
   if(progscen == 1){
     ## original scale
-    z2 <- genenorm[91,]
-    z3 <- genenorm[92,]
+    z2 <- genenorm[,91]
+    z3 <- genenorm[,92]
   }
   if(progscen == 2){
     ## transformation
-    z2 <- genenorm[91,]
-    z3 <- genenorm[92,]
+    z2 <- genenorm[,91]
+    z3 <- genenorm[,92]
     z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
     z3 <- sign(z3)*(sign(z3)*z3)^(0.2)
   }
@@ -204,7 +204,7 @@ genmech <- function(npred = 10, progscen = 1,
   }
 
   # Aggregate biomarkers
-  Xpredcov <- t(genenorm[-c(91,92),])
+  Xpredcov <- t(genenorm[,c(1:npred)])
   cont <- 1
   if(predscen == 2){
     repeat{
@@ -229,8 +229,8 @@ genmech <- function(npred = 10, progscen = 1,
   } else {
     #this is mainly done for compatibility with Ma's script. In this way
     #comparison can be run smoothly
-    mydata <- t(genenorm)
-    orgz <- cbind(genenorm[91,], genenorm[92,])
+    mydata <- genenorm[,c(1:npred)]
+    orgz <- cbind(genenorm[,91], genenorm[,92])
     myz2 <- z2
     myz3 <- z3
     newz <- cbind(rnorm(n = nobs, mean = 0, sd = 1), rnorm(n = nobs, mean = 0,
