@@ -5,27 +5,27 @@
 ## Also simulate 100 realizations data sets                                   ####
 ##################################################################################
 
-#' genoutcome
-#'
-#' Generates outcome variables. The response is an ordinal outcome variable.
-#'
-#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
-#' treatment selection strategies that integrate predictive with prognostic
-#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
-#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
-#'
-#'
-#' @param nobs number of observations
-#' @param alpha intercept
-#' @param beta1 coefficient for the predictive covariates. More precisely it is
-#' a coefficient for the combination of the pca to generate the exponetial.
-#' @param beta2 coefficient for the first prognostic covariate (x2)
-#' @param beta3 coefficient for the second prognostic covariate (x3)
-#' @param metx combination of the pca to generate the exponetial
-#' @param x2 first prognostic covariate (x2)
-#' @param x3 second prognostic covariate (x3)
-#' @return a \eqn{\code{nobs}\times 4} matrix. The first column contains the generated
-#' outcome variable, the other three the probabilities for the categories.
+# genoutcome
+#
+# Generates outcome variables. The response is an ordinal outcome variable.
+#
+# Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+# treatment selection strategies that integrate predictive with prognostic
+# determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+# \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#
+#
+# @param nobs number of observations
+# @param alpha intercept
+# @param beta1 coefficient for the predictive covariates. More precisely it is
+# a coefficient for the combination of the pca to generate the exponetial.
+# @param beta2 coefficient for the first prognostic covariate (x2)
+# @param beta3 coefficient for the second prognostic covariate (x3)
+# @param metx combination of the pca to generate the exponetial
+# @param x2 first prognostic covariate (x2)
+# @param x3 second prognostic covariate (x3)
+# @return a \eqn{\code{nobs}\times 4} matrix. The first column contains the generated
+# outcome variable, the other three the probabilities for the categories.
 
 genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
   prob <- matrix(0, nrow = nobs, ncol = 3)
@@ -46,20 +46,20 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
   return(outcome)
 }
 
-#' getdata
-#'
-#' It is just an helper function.
-#' Using load() or data() I had to call the dataframe by the name of the object.
-#' It caused the devtools::check() to return this note:
-#' checking R code for possible problems ... NOTE
-#' genmech: no visible binding for global variable ‘simupats’
-#' Undefined global functions or variables:
-#'   simupats
-#'
-#'  It is just a shortcut to get things done. I could have worked on the Lazyload
-#'  See https://stackoverflow.com/questions/30951204/load-dataset-from-r-package-using-data-assign-it-directly-to-a-variable
-#' @param ... literal character strings or names
-#'
+# getdata
+#
+# It is just an helper function.
+# Using load() or data() I had to call the dataframe by the name of the object.
+# It caused the devtools::check() to return this note:
+# checking R code for possible problems ... NOTE
+# genmech: no visible binding for global variable ‘simupats’
+# Undefined global functions or variables:
+#   simupats
+#
+#  It is just a shortcut to get things done. I could have worked on the Lazyload
+#  See https://stackoverflow.com/questions/30951204/load-dataset-from-r-package-using-data-assign-it-directly-to-a-variable
+# @param ... literal character strings or names
+#
 
 getdata <- function(...)
 {
@@ -99,7 +99,7 @@ getdata <- function(...)
 #'   1 - Prognostic biomarkers are considered in the original scale (default).
 #'   2 - Prognostic biomarkers are transformed.
 #' @param predscen Predictive covariates option:
-#'   1 - 10 Predictive biomarkers are considered to generate outcomes (default)
+#'   1 - \code{npred} Predictive biomarkers are considered to generate outcomes (default)
 #'   2 - \code{nnoise} noisy std normals are added to the design matrix of predictive
 #'   covariates in addition to 10 the predictive biomarkers considered to
 #'   generate outcomes
