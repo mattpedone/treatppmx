@@ -184,7 +184,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
   treatments <- asstreat#treatments vec
   n_a <- table(treatments)#num_treat vec 2
   max_n_treat <- max(n_a)#num_treat.max
-  print(max_n_treat)
+  #print(max_n_treat)
 
   curr_cluster <- matrix(0, A, max_n_treat)
   card_cluster <- matrix(0, A, max_n_treat)
