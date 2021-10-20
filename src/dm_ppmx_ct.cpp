@@ -342,7 +342,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //arma::mat sigma_out(1, dim*dim);
   //arma::cube eta_out(nout, dim, nT);
   arma::field<arma::mat> eta_out(nout, nT);
-  arma::mat beta_out(Q * dim, nout, arma::fill::ones);
+  arma::mat beta_out(Q * dim, nout, arma::fill::zeros);
   arma::cube Clui(nT, num_treat.max(), nout, arma::fill::zeros);
   arma::mat predclass_out(nout * npred, nT, arma::fill::zeros);
   arma::vec like(nout * nobs, arma::fill::ones);
@@ -1069,7 +1069,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
              if(PPMx == 1){
 
-               if(similarity != 3){
+               //if(similarity != 3){
                for(p = 0; p < ncon; p++){
                  sumxtmp = sumx(tt, j * ncon + p);
                  sumx2tmp = sumx2(tt, j * ncon + p);
@@ -1154,7 +1154,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    lgcatY = lgcatY + lgcatt;
                  }
                }//this closes the loop on categorical covariates
-               }
+
                gtilY(j) = lgconY + lgcatY;
                gtilN(j) = lgconN + lgcatN;
 
