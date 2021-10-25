@@ -951,7 +951,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             Swork += (eta_star_curr.slice(tt).col(j) - mu0.col(tt)) * (eta_star_curr.slice(tt).col(j) - mu0.col(tt)).t();
           }
           Bwork = nuiw*Psi0_mat + Swork;
-          Bwork = arma::inv(Bwork);
+          //Bwork = arma::inv(Bwork);
           for(i = 0; i < dim; i++){
             for(j = 0; j < dim; j++){
               Bvecwork(i*dim + j) = Bwork(i, j);
