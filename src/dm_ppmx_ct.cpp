@@ -966,7 +966,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
           }
 
-          Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*arma::inv(L0_mat);
+          Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*L0_mat;//arma::inv(L0_mat);
           Vwork = arma::inv(Vwork);
 
           for(j = 0; j < dim; j++){
@@ -976,7 +976,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             Rwork += eta_star_curr.slice(tt).col(j);
           }
 
-          Awork = Vwork*((arma::inv(sigma0_mat)*emme0)+ arma::inv(L0_mat)*Rwork);
+          Awork = Vwork*((arma::inv(sigma0_mat)*emme0) + L0_mat*Rwork);//arma::inv(L0_mat)*Rwork);
 
           for(i = 0; i < dim; i++){
             for(j = 0; j < dim; j++){
