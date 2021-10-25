@@ -296,7 +296,7 @@ double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0,
   return exp(out);
 }
 
-/* Random Draw from Wishart distribution
+/* Random Draw from Inverse-Wishart distribution
  * nu degrees of freedom
  * Sig matrix parameter NOT THE CHOLESKY DECOMPOSITION
  * dim dimension of the Wishart distribution
