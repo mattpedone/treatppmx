@@ -951,7 +951,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             Swork += (eta_star_curr.slice(tt).col(j) - mu0.col(tt)) * (eta_star_curr.slice(tt).col(j) - mu0.col(tt)).t();
           }
           Bwork = nuiw*Psi0_mat + Swork;
-          //Bwork = arma::inv(Bwork);
+          Bwork = arma::inv(Bwork);
           for(i = 0; i < dim; i++){
             for(j = 0; j < dim; j++){
               Bvecwork(i*dim + j) = Bwork(i, j);
@@ -967,7 +967,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           }
 
           Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*L0_mat;//arma::inv(L0_mat);
-          Vwork = arma::inv(Vwork);
+          //Vwork = arma::inv(Vwork);
 
           for(j = 0; j < dim; j++){
             Rwork(j) = 0;
@@ -976,7 +976,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             Rwork += eta_star_curr.slice(tt).col(j);
           }
 
-          Awork = Vwork*((arma::inv(sigma0_mat)*emme0) + L0_mat*Rwork);//arma::inv(L0_mat)*Rwork);
+          Awork = Vwork*((arma::inv(sigma0_mat)*emme0) + L0_mat*Rwork);//arma::inv(L0_mat)*Rwork);//
 
           for(i = 0; i < dim; i++){
             for(j = 0; j < dim; j++){

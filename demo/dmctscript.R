@@ -29,12 +29,13 @@
 
 devtools::load_all()
 
-k=sample(1:30, 1)
+k=1 #sample(1:30, 1)
 print(k)
 X <- data.frame(mydata)
 Z <- data.frame(cbind(myz2, myz3))
 Y <- mytot[,,k]
-idx <- sort(sample(1:nrow(Y), 12, replace = F))
+idx <- sort(sample(1:nrow(Y), 1, replace = F))
+print(idx)
 wk <- c(0, 40, 100)
 df <- data.frame(myprob[[2]]%*%(wk)-myprob[[1]]%*%(wk))
 colnames(df) <- c("Utility")
@@ -59,9 +60,9 @@ modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- ncol(Y) + 2
 modelpriors$hP0_V0 <- diag(10, ncol(Y))
 
-alpha_DP <- 10
+alpha_DP <- 1
 n_aux <- 5
-vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
+vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
 iterations <- 100000
 burnin <- 50000
@@ -70,12 +71,12 @@ thinning <- 10
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
   out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
-                            Z = Z, Zpred = Ztest, asstreat = trt,
+                            Z = Z, Zpred = Ztest, asstreat = trt, PPMx = 1,
                             alpha = alpha_DP, sigma = .2, CC = n_aux,
-                            cohesion = 2, similarity = 2, consim = 2,
+                            cohesion = 1, similarity = 2, consim = 1,
                             calibration = 2, coardegree = 2,
                             similparam = vec_par, modelpriors = modelpriors, iter = iterations,
-                            burn = burnin, thin = thinning))
+                            burn = burnin, thin = thinning, nclu_init = 10))
 time_ppmx/60
 
 # Posterior clustering ----
@@ -157,3 +158,4 @@ predtrt <- as.numeric(A0[,,2]%*%wk > A0[,,1]%*%wk)+1
 print(optrt); print(predtrt)
 
 sum(optrt==predtrt)/length(predtrt)
+
