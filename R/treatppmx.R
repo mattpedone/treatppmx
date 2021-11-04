@@ -47,4 +47,5 @@
 #' @importFrom stats prcomp
 #' @importFrom stats rmultinom
 #' @importFrom utils data
+#' @importFrom stats setNames
 NULL

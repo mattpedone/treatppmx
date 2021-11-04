@@ -63,9 +63,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// prior_ppmx_core
+arma::vec prior_ppmx_core(int iter, int burn, int thin, int nobs, int PPMx, int ncon, int ncat, double alpha, double sigma, arma::mat Vwm, int cohesion, int CC, int consim, int similarity, int calibration, int coardegree, arma::vec xcon, arma::vec similparam, arma::vec curr_cluster, arma::vec card_cluster, int ncluster_curr);
+RcppExport SEXP _treatppmx_prior_ppmx_core(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP alphaSEXP, SEXP sigmaSEXP, SEXP VwmSEXP, SEXP cohesionSEXP, SEXP CCSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP xconSEXP, SEXP similparamSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
+    Rcpp::traits::input_parameter< int >::type PPMx(PPMxSEXP);
+    Rcpp::traits::input_parameter< int >::type ncon(nconSEXP);
+    Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Vwm(VwmSEXP);
+    Rcpp::traits::input_parameter< int >::type cohesion(cohesionSEXP);
+    Rcpp::traits::input_parameter< int >::type CC(CCSEXP);
+    Rcpp::traits::input_parameter< int >::type consim(consimSEXP);
+    Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
+    Rcpp::traits::input_parameter< int >::type calibration(calibrationSEXP);
+    Rcpp::traits::input_parameter< int >::type coardegree(coardegreeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcon(xconSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type similparam(similparamSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type curr_cluster(curr_clusterSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type card_cluster(card_clusterSEXP);
+    Rcpp::traits::input_parameter< int >::type ncluster_curr(ncluster_currSEXP);
+    rcpp_result_gen = Rcpp::wrap(prior_ppmx_core(iter, burn, thin, nobs, PPMx, ncon, ncat, alpha, sigma, Vwm, cohesion, CC, consim, similarity, calibration, coardegree, xcon, similparam, curr_cluster, card_cluster, ncluster_curr));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_dm_ppmx_ct", (DL_FUNC) &_treatppmx_dm_ppmx_ct, 42},
+    {"_treatppmx_prior_ppmx_core", (DL_FUNC) &_treatppmx_prior_ppmx_core, 21},
     {NULL, NULL, 0}
 };
 

@@ -210,7 +210,7 @@ my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat 
 
   a <- alpha
   sigma <- sigma
-  a <- 1; sigma <- .1; max_n_treat <- 100
+  #a <- 1; sigma <- .1; max_n_treat <- 100
   #integrand <- function(u, n, sigma, a){
   #  u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
   #  }
