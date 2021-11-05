@@ -70,7 +70,7 @@ thinning <- 10
 
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
-  out_ppmx <- my_dm_ppmx_ct(y = Y, X = X, Xpred = Xtest,
+  out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest,
                             Z = Z, Zpred = Ztest, asstreat = trt, PPMx = 1,
                             alpha = alpha_DP, sigma = .2, CC = n_aux,
                             cohesion = 1, similarity = 2, consim = 1,

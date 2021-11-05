@@ -1,4 +1,4 @@
-#' PPMx
+#' ppmxct
 #'
 #' @param y ordinal-valued response variable
 #' @param X predictive biomarkers
@@ -48,7 +48,7 @@
 # poi in R li metto in una lista
 # se non funziona l output di myppmx deve essere una lista
 
-my_dm_ppmx_ct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
+ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
                           PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
                           similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,
                           #gowtot = 1, alphagow = 1,
