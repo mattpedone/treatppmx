@@ -240,6 +240,7 @@ double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld,
  * Sig vector for VARIANCE MATRIX
  * dim dimension of multivarite normal distribution
  */
+// [[Rcpp::export]]
 arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim){
   int i,j;
   arma::vec cholV(dim * dim);
@@ -301,6 +302,7 @@ double dinvwish(arma::vec SSiginv, int dim, double detSig, double detS, int nu0,
  * Sig matrix parameter NOT THE CHOLESKY DECOMPOSITION
  * dim dimension of the Wishart distribution
  */
+// [[Rcpp::export]]
 arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
 
   int i, j, k;
