@@ -9,3 +9,11 @@ prior_ppmx_core <- function(iter, burn, thin, nobs, PPMx, ncon, ncat, alpha, sig
     .Call('_treatppmx_prior_ppmx_core', PACKAGE = 'treatppmx', iter, burn, thin, nobs, PPMx, ncon, ncat, alpha, sigma, Vwm, cohesion, CC, consim, similarity, calibration, coardegree, xcon, similparam, curr_cluster, card_cluster, ncluster_curr)
 }
 
+ran_mvnorm <- function(m, Sig, dim) {
+    .Call('_treatppmx_ran_mvnorm', PACKAGE = 'treatppmx', m, Sig, dim)
+}
+
+ran_iwish <- function(nu, Sig, dim) {
+    .Call('_treatppmx_ran_iwish', PACKAGE = 'treatppmx', nu, Sig, dim)
+}
+
