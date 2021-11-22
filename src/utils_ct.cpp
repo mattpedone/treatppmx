@@ -330,7 +330,7 @@ arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
     }
   }
 
-  /*arma::mat outmat(dim, dim);
+  arma::mat outmat(dim, dim);
   for(j = 0; j < dim; j++){
     for(k = 0; k < dim; k++){
       outmat(j,  k) = out(j * dim + k);
@@ -342,7 +342,7 @@ arma::vec ran_iwish(int nu, arma::vec Sig, int dim){
     for(k = 0; k < dim; k++){
       out(j * dim + k) = outmat(j,  k);
     }
-  }*/
+  }
   return out;
 }
 

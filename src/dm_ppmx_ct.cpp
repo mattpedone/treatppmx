@@ -13,8 +13,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                       int calibration, int coardegree,
                       arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon,
                       arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred,
-                      arma::vec similparam, arma::vec hP0_m0, arma::vec hP0_L0,
-                      double hP0_nu0, arma::vec hP0_V0, int upd_hier,
+                      arma::vec similparam, arma::vec hP0_mu0, arma::vec hP0_L0,
+                      double hP0_nu0, arma::vec hP0_S0, int upd_hier,
                       arma::vec initbeta, int hsp, arma::vec mhtunepar,
                       int A, arma::vec n_a, arma::mat curr_cluster,
                       arma::mat card_cluster, arma::vec ncluster_curr){
@@ -242,22 +242,31 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // (alg 8 Neal 2 step)
   ////////////////////////////////////////
 
-  arma::mat mu0(dim, nT);
-  arma::mat L0v(dim * dim, nT);
+  arma::vec mu0(dim);
+  arma::mat Lambda0(dim, dim);
+  arma::vec L0v(dim * dim);
 
-  for(tt = 0; tt < nT; tt++){
-    mu0.col(tt) = hP0_m0;
-    L0v.col(tt) = hP0_L0;
+  mu0 = hP0_mu0;
+  for(i = 0; i < dim; i++){
+    for(jj = 0; jj < dim; jj++){
+      Lambda0(i, jj) = hP0_L0(i*dim + jj);
+    }
   }
+  L0v = hP0_L0;
 
   arma::mat L0_mat(dim, dim, arma::fill::zeros);
 
   double nuiw = hP0_nu0; //scalar parameter for L0-IW
 
-  arma::vec Psi0(dim * dim); //matrix parameter for L0-IW
-  Psi0 = hP0_V0;
+  arma::mat S0(dim, dim); //matrix parameter for L0-IW
 
-  arma::vec emme0(dim, arma::fill::zeros); //prior mean for mu0
+  for(i = 0; i < dim; i++){
+    for(jj = 0; jj < dim; jj++){
+      S0(i, jj) = hP0_S0(i*dim + jj);
+    }
+  }
+
+  /*arma::vec emme0(dim, arma::fill::zeros); //prior mean for mu0
   arma::vec sigma0(dim * dim, arma::fill::zeros); //prior variance for mu0
 
   int idx = 0;
@@ -301,7 +310,31 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   arma::mat Bwork(dim, dim, arma::fill::zeros);
   arma::vec Bvecwork(dim*dim, arma::fill::zeros);
   arma::mat Awork(dim, dim, arma::fill::zeros);
-  arma::vec Avecwork(dim*dim, arma::fill::zeros);
+  arma::vec Avecwork(dim*dim, arma::fill::zeros);*/
+
+  arma::cube Theta(dim, num_treat.max(), nT, arma::fill::zeros);
+  arma::cube Sigma(dim * dim, num_treat.max(), nT, arma::fill::zeros);
+
+  int idx = 0;
+  for(tt = 0; tt < nT; tt++){
+    for(j = 0; j < num_treat.max(); j++){
+      idx = 0;
+      for(i = 0; i < dim; i++){
+        Sigma.slice(tt).col(j).row(idx) = 1;
+        //Sigma(idx, j, tt) = 1.0;
+        idx += (dim + 1);
+      }
+    }
+  }
+
+  arma::mat Sigma_work(dim, dim, arma::fill::zeros);
+  arma::mat lambda_n(dim, dim, arma::fill::zeros);
+  arma::vec mu_n(dim, arma::fill::zeros);
+  arma::vec lambda_n_vec(dim * dim, arma::fill::zeros);
+
+  arma::mat Stheta(dim, dim, arma::fill::zeros);
+  arma::mat S_n(dim, dim, arma::fill::zeros);
+  arma::vec S_n_vec(dim * dim, arma::fill::zeros);
 
   //Stuff needed for in-sample e out-of-sample prediction
   arma::vec pii(dim);
@@ -369,7 +402,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
          * per il Reuse algorithm (CC vettori di lunghezza dim)
          */
         for(mm = 0; mm < CC; mm++){
-          eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0.col(tt), L0v.col(tt), dim);
+          eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0, L0v, dim);
         }
       }
 
@@ -666,7 +699,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           //SIMILARITY & CALIBRATION EMPTY CLUSTERS
           if(reuse == 0){
             for(mm = 0; mm < CC; mm++){
-              eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0.col(tt), L0v.col(tt), dim);
+              eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0, L0v, dim);//ran_mvnorm(Theta.slice(tt).col(j), Sigma.slice(tt).col(j), dim);
             }
           }
 
@@ -904,7 +937,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                        z, beta, curr_clu(tt, it)-1, k, i, 1);
             }
             //}
-            eta_empty.slice(tt).col(id_empty) = ran_mvnorm(mu0.col(tt), L0v.col(tt), dim);
+            eta_empty.slice(tt).col(id_empty) = ran_mvnorm(mu0, L0v, dim);
           }
 
           if(PPMx == 1){
@@ -928,10 +961,12 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
       for(tt = 0; tt < (nT); tt++){
         for(j = 0; j < nclu_curr(tt); j++){
+          //Rcpp::Rcout << "mu: " << mu0.col(tt) << std::endl;
+          //Rcpp::Rcout << "L0: " << L0v.col(tt) << std::endl;
           l_eta_out = eta_update(JJ, loggamma, curr_clu.row(tt).t(),
                                  treatments, tt, eta_star_curr.slice(tt).col(j),
                                  eta_flag.row(tt).t(),
-                                 mu0.col(tt), L0v.col(tt), j, mhtunepar(0));
+                                 Theta.slice(tt).col(j), Sigma.slice(tt).col(j), j, mhtunepar(0));
 
           eta_star_curr.slice(tt).col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
           loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
@@ -940,14 +975,13 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         sumtotclu(tt) += nclu_curr(tt);
       } //this closes the loop on tt
 
-      if(upd_hier == 1){
+      /*if(upd_hier == 1){
         for(tt = 0; tt < nT; tt++){
           for(j = 0; j < (dim*dim); j++){
             Swork(j) = 0.0;
           }
 
           for(j = 0; j < nclu_curr(tt); j++){
-            //Swork += (eta_star_curr.slice(tt).col(j) - emme0) * (eta_star_curr.slice(tt).col(j) - emme0).t();
             Swork += (eta_star_curr.slice(tt).col(j) - mu0.col(tt)) * (eta_star_curr.slice(tt).col(j) - mu0.col(tt)).t();
           }
           Bwork = nuiw*Psi0_mat + Swork;
@@ -966,7 +1000,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
           }
 
-          Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*L0_mat;//arma::inv(L0_mat);
+          Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*L0_mat;
           Vwork = arma::inv(Vwork);
 
           for(j = 0; j < dim; j++){
@@ -976,15 +1010,87 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             Rwork += eta_star_curr.slice(tt).col(j);
           }
 
-          Awork = Vwork*((arma::inv(sigma0_mat)*emme0) + L0_mat*Rwork);//arma::inv(L0_mat)*Rwork);//
+          Awork = Vwork*((arma::inv(sigma0_mat)*emme0) + L0_mat*Rwork);
 
-          for(i = 0; i < dim; i++){
+         for(i = 0; i < dim; i++){
             for(j = 0; j < dim; j++){
               Vvecwork(i*dim + j) = Vwork(i, j);
             }
           }
 
           mu0.col(tt) = ran_mvnorm(Awork, Vvecwork, dim);
+        }
+      }*/
+
+      if(upd_hier == 1){
+        //Rcpp::Rcout << "begin uh" << std::endl;
+        for(tt = 0; tt < nT; tt++){
+          //Rcpp::Rcout << "begin uh -- tt" << std::endl;
+          for(j = 0; j < nclu_curr(tt); j++){
+            //Rcpp::Rcout << "begin uh -- tt -- j" << std::endl;
+            for(i = 0; i < dim; i++){
+              for(jj = 0; jj < dim; jj++){
+                Sigma_work(i, jj) = Sigma.slice(tt).col(jj)(i*dim + jj);
+              }
+            }
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Sigma Work" << std::endl;
+
+            lambda_n = nj_curr(tt, j) * arma::inv(Sigma_work);
+            lambda_n = arma::inv(Lambda0) + lambda_n;
+            lambda_n = arma::inv(lambda_n);
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Lambda_n" << std::endl;
+
+            for(i = 0; i < dim; i++){
+              for(jj = 0; jj < dim; jj++){
+                lambda_n_vec(i*dim + jj) = lambda_n(i, jj);
+              }
+            }
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Lambda_n vec" << std::endl;
+
+            mu_n = lambda_n * (arma::inv(Lambda0) * mu0 + nj_curr(tt, j) * arma::inv(Sigma_work) * eta_star_curr.slice(tt).col(j));
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- mu_n" << std::endl;
+
+            Theta.slice(tt).col(j) = ran_mvnorm(mu_n, lambda_n_vec, dim);
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- theta" << std::endl;
+
+            for(j = 0; j < (dim*dim); j++){
+              Stheta(j) = 0.0;
+            }
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Stheta -- intermediate" << std::endl;
+
+            //Rcpp::Rcout << "# clu: " << nclu_curr(tt) << std::endl;
+
+            for(j = 0; j < nclu_curr(tt); j++){
+              Stheta += (eta_star_curr.slice(tt).col(j) - Theta.slice(tt).col(j)) *
+                (eta_star_curr.slice(tt).col(j) - Theta.slice(tt).col(j)).t();
+              //Rcpp::Rcout << "begin uh -- tt -- j -- Stheta -- each Stheta_j" << std::endl;
+              //Rcpp::Rcout << "j: " << j << std::endl;
+              //Rcpp::Rcout << Stheta << std::endl;
+            }
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Stheta" << std::endl;
+
+            S_n = arma::inv(S0 + Stheta);
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- S_n" << std::endl;
+
+            for(i = 0; i < dim; i++){
+              for(jj = 0; jj < dim; jj++){
+                S_n_vec(i*dim + jj) = S_n(i, jj);
+              }
+            }
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- S_n_vec" << std::endl;
+
+            Sigma.slice(tt).col(j) = ran_iwish(nuiw + nj_curr(tt, j), S_n_vec, dim);
+
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Sigma" << std::endl;
+          }
         }
       }
 
@@ -1409,7 +1515,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
            if((newci) <= (nclu_curr(tt))){
              eta_pred = eta_star_curr.slice(tt).col(newci - 1);
            }else{
-             eta_pred = ran_mvnorm(mu0.col(tt), L0v.col(tt), dim);
+             eta_pred = ran_mvnorm(Theta.slice(tt).col(j), Sigma.slice(tt).col(j), dim);
            }
 
            //NEED TO UPDATE GAMMA TOO
