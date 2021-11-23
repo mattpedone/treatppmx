@@ -39,8 +39,8 @@ modelpriors$hP0_nu0 <- ncol(Y) + 20; modelpriors$hP0_V0 <- diag(100, ncol(Y))
 n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
 vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 25#0#00#0
-burnin <- 10#00#0
+iterations <- 5000#0
+burnin <- 1000#0
 thinning <- 1#0
 
 nout <- (iterations-burnin)/thinning
@@ -235,7 +235,7 @@ for(i in 1:nrow(Y)){
 
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(100, ncol(Y))
-modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(.10, ncol(Y))
+modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1, ncol(Y))
 
 n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
 vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
@@ -249,7 +249,7 @@ sub <- sample(1:npat, 1)
 out_ppmx <- ppmxct(y = data.matrix(Y[-sub,]), X = data.frame(X[-sub,]),
                    Xpred = data.frame(X[sub,]), Z = data.frame(Z[-sub,]),
                    Zpred = data.frame(Z[sub,]), asstreat = trtsgn[-sub], #treatment,
-                   PPMx = 1, cohesion = 2, alpha = 10, sigma = 0.25,
+                   PPMx = 1, cohesion = 2, alpha = 1, sigma = 0.25,
                    similarity = 2, consim = 1, similparam = vec_par,
                    calibration = 2, coardegree = 2, modelpriors,
                    update_hierarchy = T,
@@ -281,7 +281,37 @@ df <- cbind(Index = as.numeric(row.names(df)), df)
 df <- reshape2::melt(df, id.vars="Index")
 ggplot2::ggplot(df, aes(x = Index, y = value, col = variable)) + geom_line() + theme_classic()
 
-# Eta posterior
+## Eta posterior
+#moda <- function(v) {
+#  tmp <- unique(v)
+#  v[which.max(tabulate(match(v, tmp)))]
+#}
+#
+#df <- data.frame(t(out_ppmx$nclu))
+#mode <- apply(df, 2, moda)
+#
+#idx1 <- df[,1] == mode[1]
+#idx2 <- df[,2] == mode[2]
+#
+#nmax <- length(unlist(out_ppmx$eta[1,1]))/3
+#
+#eta1 <- array(unlist(out_ppmx$eta[idx1, 1]), dim = c(3, nmax, sum(idx1)))[,1:mode[1],]
+#
+#plot(density(eta1[1,1,]))
+#plot(density(eta1[2,1,]))
+#plot(density(eta1[3,1,]))
+#
+#plot(density(eta1[1,2,]))
+#plot(density(eta1[2,2,]))
+#plot(density(eta1[3,2,]))
+#
+#plot(density(eta1[1,3,]))
+#plot(density(eta1[2,3,]))
+#plot(density(eta1[3,3,]))
+#
+#plot(density(eta1[1,4,]))
+#plot(density(eta1[2,4,]))
+#plot(density(eta1[3,4,]))
 
 
 #posterior predictive probabilities

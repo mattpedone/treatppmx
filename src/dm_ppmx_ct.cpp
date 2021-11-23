@@ -1089,7 +1089,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
             Sigma.slice(tt).col(j) = ran_iwish(nuiw + nj_curr(tt, j), S_n_vec, dim);
 
-            //Rcpp::Rcout << "begin uh -- tt -- j -- Sigma" << std::endl;
+            Rcpp::Rcout << "begin uh -- tt -- j -- Sigma" << Sigma.slice(tt).col(j).t() << std::endl;
           }
         }
       }
