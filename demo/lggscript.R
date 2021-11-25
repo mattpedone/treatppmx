@@ -204,9 +204,6 @@ rm(list=ls())
 set.seed(121, kind = "L'Ecuyer-CMRG")
 devtools::load_all()
 load("~/Dropbox/PHD/study-treatppmx/data/LGGdata.rda")
-#library(treatppmx)
-library(parallel)
-library(doParallel)
 library(mcclust)
 library(mcclust.ext)
 
@@ -222,9 +219,6 @@ gof_all <- rep(0, 2)
 
 wk <- c(0, 40, 100)
 
-cor_all <- parallel::detectCores()-1#cores to be allocated
-registerDoParallel(cores = cor_all)
-
 X <- data.frame(scale(matchRTComp[,16:38]))
 Z <- data.frame(scale(matchRTComp[,c(11,13)]))#data.frame(orgx)#
 #aggiusta!
@@ -235,17 +229,17 @@ for(i in 1:nrow(Y)){
 
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(100, ncol(Y))
-modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1, ncol(Y))
+modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1000, ncol(Y))
 
 n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
-vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
+vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 5000
+iterations <- 1500
 burnin <- 1000
-thinning <- 10
+thinning <- 1
 
 nout <- (iterations-burnin)/thinning
-sub <- sample(1:npat, 1)
+sub <- 112#sample(1:npat, 1); sub #59 well separated
 out_ppmx <- ppmxct(y = data.matrix(Y[-sub,]), X = data.frame(X[-sub,]),
                    Xpred = data.frame(X[sub,]), Z = data.frame(Z[-sub,]),
                    Zpred = data.frame(Z[sub,]), asstreat = trtsgn[-sub], #treatment,
@@ -281,7 +275,34 @@ df <- cbind(Index = as.numeric(row.names(df)), df)
 df <- reshape2::melt(df, id.vars="Index")
 ggplot2::ggplot(df, aes(x = Index, y = value, col = variable)) + geom_line() + theme_classic()
 
-## Eta posterior
+#posterior predictive probabilities
+A0 <- c(apply(out_ppmx$ypred, c(1,2,3), mean), mc, mc_b, mc_vi, out_ppmx$WAIC, out_ppmx$lpml)
+A0
+
+A0 <- c(apply(out_ppmx$pipred, c(1,2,3), median), mc, mc_b, mc_vi, out_ppmx$WAIC, out_ppmx$lpml)
+A0
+
+#posterior distribution of predictive utility
+ns <- dim(out_ppmx$pipred)[4]
+
+dpu <- matrix(0, ns, 2)
+for(i in 1:ns){
+  dpu[i,] <- apply(out_ppmx$pipred[,,,i]*wk, 2, sum)
+}
+
+par(mfrow=c(2, 1))
+mymean <- apply(out_ppmx$pipred, c(1,2,3), mean); sum(mymean[,,1] * wk) - sum(mymean[,,2] * wk)
+mymedian <- apply(out_ppmx$pipred, c(1,2,3), median); sum(mymedian[,,1] * wk) - sum(mymedian[,,2] * wk)
+#plot(density(dpu[,1]), ylim = c(0, .055))
+hist(dpu[,1], breaks = 20)
+abline(v = mymean[1:3]%*%wk, col = "red")
+abline(v = mymedian[1:3]%*%wk, col = "blue")
+#plot(density(dpu[,2]), ylim = c(0, .055))
+hist(dpu[,2], breaks = 20)
+abline(v = mymean[4:6]%*%wk, col = "red")
+abline(v = mymedian[4:6]%*%wk, col = "blue")
+
+#### ---- Eta posterior ---- ####
 #moda <- function(v) {
 #  tmp <- unique(v)
 #  v[which.max(tabulate(match(v, tmp)))]
@@ -312,11 +333,6 @@ ggplot2::ggplot(df, aes(x = Index, y = value, col = variable)) + geom_line() + t
 #plot(density(eta1[1,4,]))
 #plot(density(eta1[2,4,]))
 #plot(density(eta1[3,4,]))
-
-
-#posterior predictive probabilities
-A0 <- c(apply(out_ppmx$ypred, c(1,2,3), mean), mc, mc_b, mc_vi, out_ppmx$WAIC, out_ppmx$lpml)
-A0
 
 #### ---- Check RNG ---- ####
 

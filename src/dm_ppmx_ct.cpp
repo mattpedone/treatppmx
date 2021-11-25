@@ -1089,7 +1089,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
             Sigma.slice(tt).col(j) = ran_iwish(nuiw + nj_curr(tt, j), S_n_vec, dim);
 
-            Rcpp::Rcout << "begin uh -- tt -- j -- Sigma" << Sigma.slice(tt).col(j).t() << std::endl;
+            //Rcpp::Rcout << "begin uh -- tt -- j -- Sigma" << Sigma.slice(tt).col(j).t() << std::endl;
           }
         }
       }
@@ -1526,8 +1526,15 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
            thisrow = exp(loggamma_pred);
 
            pii_pred.slice(tt).row(pp) = (thisrow/arma::sum(thisrow)).t();
+           /*Rcpp::Rcout << "theta: " << Theta.slice(tt).col(j).t() << std::endl;
+           Rcpp::Rcout << "sigma: " << Sigma.slice(tt).col(j).t() << std::endl;
+           Rcpp::Rcout << "eta_pred: " << eta_pred << std::endl;
+           Rcpp::Rcout << "pipred: " << pii_pred.slice(tt).row(pp) << std::endl;*/
 
            ppred.slice(tt).row(pp) = rmultinom_rcpp(1, 1, pii_pred.slice(tt).row(pp).t());
+           /*if(sum(ppred.slice(tt).row(pp)) < 1.0){
+             Rcpp::Rcout << "pipred: " << ppred.slice(tt).row(pp) << std::endl;
+           }*/
            predclass(pp, tt) = newci;
          }//this closesthe loop for each treatment
        }//this closes the loop on npred subjects

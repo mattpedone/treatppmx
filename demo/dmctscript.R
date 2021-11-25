@@ -1,36 +1,7 @@
-#rm(list=ls())
-#
-#library(Rcpp)
-#library(RcppArmadillo)
-#library(mvtnorm)
-#library(mcclust)
-#library(mclust)
-#library(coda)
-#library(mcclust.ext)
-##require(ggplot2)
-##library(reshape2)
-#
-#Rcpp::sourceCpp(file = "src/utils_ct.cpp")
-#Rcpp::sourceCpp(file = "src/dm_ppmx_ct.cpp")
-#source(file = "R/rppmx.R")
-#source(file = "R/dm_ppmx_ct.R")
-#
-#load("data/SimuOutsce2.rda")
-#data from Ma et al. Biom. J. (2017)
-#mydata contiene le covariate continue
-#myoutot contiene la risposta in ciascuna delle 100 repliche
-#versione "sintetica" di mytot
-#myprob contiene le prob di ciascun livello della risposta nei due trattamenti
-#per ciascun soggetto
-#newx sono due var normali di media 0 e var 1 e 3 (non usate??)
-#orgx contiene le due prognostiche non trasformate
-#myx2 myx3 sono le due prognostiche trasformate
-#trtsgn sono i trattamenti assegnati casualmente (trial clinico)
-
 devtools::load_all()
 
 k=1 #sample(1:30, 1)
-load("~/Dropbox/PHD/study-treatppmx/data/scenario2.rda")
+load("~/Dropbox/PHD/study-treatppmx/data/scenario3.rda")
 print(k)
 X <- data.frame(mydata)
 Z <- data.frame(cbind(myz2, myz3))
@@ -57,7 +28,7 @@ optrt <- as.numeric(myprob[[2]][idx,]%*%wk > myprob[[1]][idx,]%*%wk)+1; optrt
 
 modelpriors <- list()
 modelpriors$hP0_m0 <- rep(0, ncol(Y))
-modelpriors$hP0_L0 <- diag(100, ncol(Y))
+modelpriors$hP0_L0 <- diag(10, ncol(Y))
 modelpriors$hP0_nu0 <- ncol(Y) + 2
 modelpriors$hP0_V0 <- diag(.10, ncol(Y))
 
@@ -65,19 +36,18 @@ alpha_DP <- 10
 n_aux <- 5
 vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 25000#0000
-burnin <- 10000#0000
-thinning <- 10
+iterations <- 15000#0#0000
+burnin <- 5000#00#0000
+thinning <- 1#0
 
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
-  out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest,
-                            Z = Z, Zpred = Ztest, asstreat = trt, PPMx = 1,
-                            alpha = alpha_DP, sigma = .2, CC = n_aux,
-                            cohesion = 2, similarity = 2, consim = 1,
-                            calibration = 2, coardegree = 2,
-                            similparam = vec_par, modelpriors = modelpriors, iter = iterations,
-                            burn = burnin, thin = thinning, nclu_init = 10))
+  out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest, Z = Z, Zpred = Ztest,
+                     asstreat = trt, PPMx = 1, alpha = alpha_DP, sigma = .2,
+                     CC = n_aux, cohesion = 2, similarity = 2, consim = 2,
+                     calibration = 2, coardegree = 2, similparam = vec_par,
+                     modelpriors = modelpriors, iter = iterations,
+                     burn = burnin, thin = thinning, nclu_init = 10))
 time_ppmx/60
 
 # Posterior clustering ----
@@ -151,12 +121,33 @@ sum(apply(round(apply(out_ppmx$isypred[which(trt == 1),,], c(1,2), mean))==Y[whi
 sum(apply(round(apply(out_ppmx$isypred[which(trt == 2),,], c(1,2), mean))==Y[which(trt == 2),], 1, sum)==3)/sum((trt == 2))
 
 #posterior predictive probabilities ----
-A0 <- apply(out_ppmx$ypred, c(1,2,3), mean);#A0
+A0 <- apply(out_ppmx$ypred, c(1,2,3), mean, na.rm=TRUE);#A0
+A0 <- c(apply(out_ppmx$pipred, c(1,2,3), median, na.rm=TRUE))#, mc, mc_b, mc_vi, out_ppmx$WAIC, out_ppmx$lpml)
 
 #treatmente prediction with utility function ----
 optrt <- as.numeric(myprob[[2]][idx,]%*%wk > myprob[[1]][idx,]%*%wk)+1
-predtrt <- as.numeric(A0[,,2]%*%wk > A0[,,1]%*%wk)+1
+#predtrt <- as.numeric(A0[,,2]%*%wk > A0[,,1]%*%wk)+1
+predtrt <- as.numeric(A0[4:6]%*%wk > A0[1:3]%*%wk)+1
 print(optrt); print(predtrt)
 
 sum(optrt==predtrt)/length(predtrt)
 
+#posterior distribution of predictive utility
+ns <- dim(out_ppmx$pipred)[4]
+
+dpu <- matrix(0, ns, 2)
+for(i in 1:ns){
+  dpu[i,] <- apply(out_ppmx$pipred[,,,i]*wk, 2, sum)
+}
+
+par(mfrow=c(2, 1))
+mymean <- apply(out_ppmx$pipred, c(1,2,3), mean, na.rm=TRUE); sum(mymean[,,1] * wk) - sum(mymean[,,2] * wk)
+mymedian <- apply(out_ppmx$pipred, c(1,2,3), median, na.rm=TRUE); sum(mymedian[,,1] * wk) - sum(mymedian[,,2] * wk)
+#plot(density(dpu[,1]), ylim = c(0, .055))
+hist(dpu[,1], breaks = 20)
+abline(v = mymean[1:3]%*%wk, col = "red")
+abline(v = mymedian[1:3]%*%wk, col = "blue")
+#plot(density(dpu[,2]), ylim = c(0, .055))
+hist(dpu[,2], breaks = 20)
+abline(v = mymean[4:6]%*%wk, col = "red")
+abline(v = mymedian[4:6]%*%wk, col = "blue")

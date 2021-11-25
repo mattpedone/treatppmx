@@ -316,7 +316,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #pi (dirichlet parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out
-  res$pipred <- out$pipred
+  #res$pipred <- out$pipred
 
   #in sample prediction & model fit
   #yispred <- array(0, dim = c(nobs, ncol(y), nout))
@@ -332,6 +332,17 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
     }
   }
   res$ypred <- ypred#out$ypred
+
+  pipred <- array(0, dim = c(npred, ncol(y), A, nout))
+  for(i in 1:nout){
+    for(a in 1:A){
+      pipred[,,a,i] <- out$pipred[i,1][[1]][,,a]
+    }
+  }
+  res$pipred <- pipred#out$ypred
+  if(any(is.nan(unlist(pipred)))){
+    cat("some NaN occurred", "\n")
+  }
 
   #cluster classification prediction (unsupervised clustering)
   clupred <- matrix(0, nout, npred)
