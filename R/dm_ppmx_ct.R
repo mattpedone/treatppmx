@@ -208,7 +208,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #   -sigma
   #   -cohesion
 
-  a <- alpha
+  a <- alpha*sigma
   sigma <- sigma
   #a <- 1; sigma <- .1; max_n_treat <- 100
   #integrand <- function(u, n, sigma, a){
