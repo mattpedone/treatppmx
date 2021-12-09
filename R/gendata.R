@@ -205,7 +205,7 @@ genmech <- function(npred = 10, progscen = 1,
 
   # Aggregate biomarkers
   Xpredcov <- genenorm[,c(1:npred)]
-  cont <- 1
+  cont <- 0
   if(predscen == 2){
     repeat{
       cont = cont + 1
