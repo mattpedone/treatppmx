@@ -229,7 +229,7 @@ genmech <- function(npred = 10, progscen = 1,
   } else {
     #this is mainly done for compatibility with Ma's script. In this way
     #comparison can be run smoothly
-    mydata <- genenorm[,c(1:npred)]
+    mydata <- Xpredcov#genenorm[,c(1:npred)]
     orgz <- cbind(genenorm[,91], genenorm[,92])
     myz2 <- z2
     myz3 <- z3
