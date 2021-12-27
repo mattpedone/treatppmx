@@ -320,6 +320,7 @@ tt <- function(pred, prog){
          trtsgn = trtsgn, myprob = myprob))
 }
 
+#' @export
 genmech_alt <- function(npred = 10, nset = 30){
   set.seed(121)
   mydata <- getdata("simupats")
