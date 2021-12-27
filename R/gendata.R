@@ -240,3 +240,114 @@ genmech <- function(npred = 10, progscen = 1,
          file = myfile)
   }
 }
+
+pred_sample <- function(p = 25, o = .80){
+  ov <- floor(p*o)
+  all <- c(1:p)
+  comm <- sample(x = all, size = ov, replace = F)
+  all <- all[-comm]
+  res <- length(all)
+  all <- sample(all, res)
+
+  g1 <- all[1:floor(res/2)]
+  g2 <- all[(floor(res/2)+1):res]
+  g1 <- c(g1, comm)
+  g2 <- c(g2, comm)
+  return(list(g1 = sort(g1), g2=sort(g2)))
+}
+
+tt <- function(pred, prog){
+  genenorm <- pred
+  mypca <- prcomp(genenorm)
+
+  nobs <- length(mypca$x[,1])
+
+  # Predictive Markers
+  ## use the combination of the pca to generate the exponential
+  metx1 <- scale(mypca$x[,1]) + scale(mypca$x[,2]) + 0.50
+  metx <- sign(metx1)*(sign(metx1)*metx1)^(0.2) * 0.45
+  ## for the noisy scenario
+
+  # Prognostic Markers
+  ## transformation
+  z2 <- prog[,1]
+  z3 <- prog[,2]
+  z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
+  z3 <- sign(z3)*(sign(z3)*z3)^(0.2)
+
+  # pmts probabilities for treatment 1
+  alpha1 <- c(-0.5, -1)
+  beta11 <- c(2, 2.6)
+  # pmts probabilities for treatment 2
+  alpha2 <- c(0.7, -1)
+  beta21 <- c(-1, -3)
+  # pmts probabilities with prognostic only
+  alpha3 <- c(1, -0.5); beta2 <- c(1, 0.5); beta3 <- c(0.7,1)
+
+  #probabilities for treatment 1
+  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, z2, z3)
+  #probabilities for treatment 2
+  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, z2, z3)
+  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, z2, z3)
+  prog <- cbind(z2, z3)
+
+  # Now we construct prob with both prog and pred features
+  myprob1 <- myprob2 <- matrix( 0, nrow = nobs, ncol = 3)
+
+  for (i in 1:nobs){
+    myprob1[i,] <- prob1[i,2:4]*probprog[i,2:4]/sum(prob1[i,2:4]*probprog[i,2:4])
+    myprob2[i,] <- prob2[i,2:4]*probprog[i,2:4]/sum(prob2[i,2:4]*probprog[i,2:4])
+  }
+
+  myprob <- list(myprob1, myprob2)
+  trtsgn <- rep(c(1,2), nobs/2)
+
+  myy <- matrix(0, nrow = nobs, ncol = 3)
+  myyout <- matrix(0, nrow = nobs, ncol = 1)
+  for(k in 1:nobs){
+    trtemp <- trtsgn[k];
+    if(trtemp == 1){
+      myy[k,1:3] <- t(rmultinom(n = 1, size = 1, prob = myprob[[1]][k,]))
+    }
+    if(trtemp == 2){
+      myy[k,1:3] <- t(rmultinom(n = 1, size = 1, prob = myprob[[2]][k,]))
+    }
+    myyout[k] <- match(1,myy[k,])
+    trtemp <- NULL
+  }
+
+  return(list(myoutot = myyout, mytot = myy, pred = pred, prog = prog,
+         trtsgn = trtsgn, myprob = myprob))
+}
+
+genmech_alt <- function(npred = 10, nset = 30){
+  set.seed(121)
+  mydata <- getdata("simupats")
+  genenorm <- scale(as.matrix(mydata))
+  pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
+  prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
+
+  groups <- pred_sample(p = npred, o = 0.5)
+  id_train <- replicate(nset, sort(sample(1:nrow(pred), 124)))
+  id_test <- c()
+  for(i in 1:nset){
+    id_test <- cbind(id_test, sort(setdiff(1:152, id_train[,i])))
+  }
+  yord <- ymat <- predmk <- progmk <- trtsgn <- prob <- vector("list", length = nset)
+
+  for(i in 1:nset){
+    train <- tt(pred = pred[id_train[,i],groups$g1], prog[id_train[,i],])
+    test <- tt(pred[id_test[,i],groups$g2], prog[id_test[,i],])
+
+    yord[[i]] <- rbind(train$myoutot, test$myoutot)
+    ymat[[i]] <- rbind(train$mytot, test$mytot)
+    predmk[[i]] <- pred[c(id_train[,i], id_test[,i]),]
+    progmk[[i]] <- prog[c(id_train[,i], id_test[,i]),]
+    trtsgn[[i]] <- c(train$trtsgn, test$trtsgn)
+    prob[[i]] <- list(rbind(train$myprob[[1]], test$myprob[[1]]),
+                 rbind(train$myprob[[2]], test$myprob[[2]]))
+  }
+
+  return(list(yord = yord, ymat = ymat, pred = predmk, prog = progmk, trtsgn = trtsgn,
+              prob = prob))
+}
