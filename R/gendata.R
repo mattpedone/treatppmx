@@ -320,6 +320,10 @@ tt <- function(pred, prog){
          trtsgn = trtsgn, myprob = myprob))
 }
 
+#' genmech alternative
+#' @param npred number of predictive covariates used to generate the outcome
+#' @param nset number of replicated scenarios generated
+#'
 #' @export
 genmech_alt <- function(npred = 10, nset = 30){
   set.seed(121)
