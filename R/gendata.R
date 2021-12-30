@@ -323,16 +323,18 @@ tt <- function(pred, prog){
 #' genmech alternative
 #' @param npred number of predictive covariates used to generate the outcome
 #' @param nset number of replicated scenarios generated
+#' @param overlap proportion of predictors used to generate the response in
+#' both the train and the validation set
 #'
 #' @export
-genmech_alt <- function(npred = 10, nset = 30){
+genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8){
   set.seed(121)
   mydata <- getdata("simupats")
   genenorm <- scale(as.matrix(mydata))
   pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
   prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
 
-  groups <- pred_sample(p = npred, o = 0.5)
+  groups <- pred_sample(p = npred, o = overlap)
   id_train <- replicate(nset, sort(sample(1:nrow(pred), 124)))
   id_test <- c()
   for(i in 1:nset){
