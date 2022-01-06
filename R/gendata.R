@@ -335,22 +335,22 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8){
   prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
 
   groups <- pred_sample(p = npred, o = overlap)
-  id_train <- replicate(nset, sort(sample(1:nrow(pred), 124)))
-  id_test <- c()
-  for(i in 1:nset){
-    id_test <- cbind(id_test, sort(setdiff(1:152, id_train[,i])))
-  }
+  id_train <- c(1:124)#replicate(nset, sort(sample(1:nrow(pred), 124)))
+  id_test <- c(125:152)
+  #for(i in 1:nset){
+  #  id_test <- cbind(id_test, sort(setdiff(1:152, id_train[,i])))
+  #}
   yord <- ymat <- predmk <- progmk <- trtsgn <- prob <- vector("list", length = nset)
 
   for(i in 1:nset){
-    train <- tt(pred = pred[id_train[,i],groups$g1], prog[id_train[,i],])
-    test <- tt(pred[id_test[,i],groups$g2], prog[id_test[,i],])
+    train <- tt(pred = pred[id_train,groups$g1], prog[id_train,])
+    test <- tt(pred[id_test,groups$g2], prog[id_test,])
 
     yord[[i]] <- rbind(train$myoutot, test$myoutot)
     ymat[[i]] <- rbind(train$mytot, test$mytot)
-    predmk[[i]] <- pred[c(id_train[,i], id_test[,i]),]
-    progmk[[i]] <- prog[c(id_train[,i], id_test[,i]),]
-    trtsgn[[i]] <- c(train$trtsgn, test$trtsgn)
+    predmk[[i]] <- pred[c(id_train, id_test),]
+    progmk[[i]] <- prog[c(id_train, id_test),]
+    trtsgn[[i]] <- c(train$trtsgn, test$trtsgn)#[c(id_train[,i], id_test[,i])]
     prob[[i]] <- list(rbind(train$myprob[[1]], test$myprob[[1]]),
                  rbind(train$myprob[[2]], test$myprob[[2]]))
   }

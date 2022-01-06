@@ -4,12 +4,15 @@
 \alias{genmech_alt}
 \title{genmech alternative}
 \usage{
-genmech_alt(npred = 10, nset = 30)
+genmech_alt(npred = 10, nset = 30, overlap = 0.8)
 }
 \arguments{
 \item{npred}{number of predictive covariates used to generate the outcome}
 
 \item{nset}{number of replicated scenarios generated}
+
+\item{overlap}{proportion of predictors used to generate the response in
+both the train and the validation set}
 }
 \description{
 genmech alternative
