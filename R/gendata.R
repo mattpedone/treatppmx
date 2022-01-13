@@ -328,12 +328,20 @@ tt <- function(pred, prog){
 #' @param data dataset to be used as input for predictive and prognostic
 #'
 #' @export
-genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, data = "simupats"){
+genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupats"){
   set.seed(121)
-  if(data == "simupats"){
+  if(dataset == "simupats"){
     EXT = 0
+  } else {
+    EXT = 1
   }
-  mydata <- getdata(data)
+
+  if(EXT == 0){
+    mydata <- getdata("simupats")
+  } else {
+    mydata <- getdata("simupats_ext")
+  }
+
   genenorm <- scale(as.matrix(mydata))
 
   if(EXT == 0){
@@ -345,6 +353,7 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, data = "simupats")
     prog <- genenorm[,c(51:53)]#restituisco questi, ma riordinati
     if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
   }
+  cat("EXT2: ", EXT, "\n")
   groups <- pred_sample(p = npred, o = overlap)
   if(EXT == 0){
     id_train <- c(1:124)
@@ -372,3 +381,5 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, data = "simupats")
   return(list(yord = yord, ymat = ymat, pred = predmk, prog = progmk, trtsgn = trtsgn,
               prob = prob))
 }
+
+genmech_alt()
