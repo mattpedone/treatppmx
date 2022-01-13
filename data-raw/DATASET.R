@@ -3,6 +3,8 @@
 ### same way they did.
 ### This is used to simulate 38*4=152 subjects with 92 features
 ### using the top 1000 varied genes;
+### To obtain the dataset simupats_ext, just look for cluster with more than 6
+### genes. (lines 43,49,61)
 #
 ##############################################################################
 #  rm(list=ls());
@@ -62,7 +64,7 @@ for(k in 1:length(seltemp)){
 }
 #mydatagen<-t(mydatatemp)
 simupats <- mydatatemp
-
-#  write.table(mydatagen,file="Simu152pats.txt")
+#simupats_ext <- mydatatemp
 
 usethis::use_data(simupats)
+#usethis::use_data(simupats_ext)
