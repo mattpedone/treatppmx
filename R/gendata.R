@@ -338,12 +338,12 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
 
   if(EXT == 0){
     mydata <- getdata("simupats")
+    #mydata <- data("simupats")
   } else {
     mydata <- getdata("simupats_ext")
+    #data <- data("simupats_ext")
   }
-
   genenorm <- scale(as.matrix(mydata))
-
   if(EXT == 0){
     if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
     pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
@@ -353,7 +353,6 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
     pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
     prog <- genenorm[,c(51:53)]#restituisco questi, ma riordinati
   }
-
   groups <- pred_sample(p = npred, o = overlap)
   if(EXT == 0){
     id_train <- c(1:124)
@@ -381,3 +380,4 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
   return(list(yord = yord, ymat = ymat, pred = predmk, prog = progmk, trtsgn = trtsgn,
               prob = prob))
 }
+
