@@ -325,21 +325,35 @@ tt <- function(pred, prog){
 #' @param nset number of replicated scenarios generated
 #' @param overlap proportion of predictors used to generate the response in
 #' both the train and the validation set
+#' @param data dataset to be used as input for predictive and prognostic
 #'
 #' @export
-genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8){
+genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, data = "simupats"){
   set.seed(121)
-  mydata <- getdata("simupats")
+  if(data == "simupats"){
+    EXT = 0
+  }
+  mydata <- getdata(data)
   genenorm <- scale(as.matrix(mydata))
-  pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
-  prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
 
+  if(EXT == 0){
+    pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
+    prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
+    if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
+  } else {
+    pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
+    prog <- genenorm[,c(51:53)]#restituisco questi, ma riordinati
+    if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
+  }
   groups <- pred_sample(p = npred, o = overlap)
-  id_train <- c(1:124)#replicate(nset, sort(sample(1:nrow(pred), 124)))
-  id_test <- c(125:152)
-  #for(i in 1:nset){
-  #  id_test <- cbind(id_test, sort(setdiff(1:152, id_train[,i])))
-  #}
+  if(EXT == 0){
+    id_train <- c(1:124)
+    id_test <- c(125:152)
+  } else {
+    id_train <- c(1:200)
+    id_test <- c(201:228)
+  }
+
   yord <- ymat <- predmk <- progmk <- trtsgn <- prob <- vector("list", length = nset)
 
   for(i in 1:nset){
