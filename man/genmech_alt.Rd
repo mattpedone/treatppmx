@@ -4,7 +4,7 @@
 \alias{genmech_alt}
 \title{genmech alternative}
 \usage{
-genmech_alt(npred = 10, nset = 30, overlap = 0.8, data = "simupats")
+genmech_alt(npred = 10, nset = 30, overlap = 0.8, dataset = "simupats")
 }
 \arguments{
 \item{npred}{number of predictive covariates used to generate the outcome}
@@ -14,7 +14,7 @@ genmech_alt(npred = 10, nset = 30, overlap = 0.8, data = "simupats")
 \item{overlap}{proportion of predictors used to generate the response in
 both the train and the validation set}
 
-\item{data}{dataset to be used as input for predictive and prognostic}
+\item{dataset}{dataset to be used as input for predictive and prognostic}
 }
 \description{
 genmech alternative

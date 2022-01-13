@@ -325,7 +325,7 @@ tt <- function(pred, prog){
 #' @param nset number of replicated scenarios generated
 #' @param overlap proportion of predictors used to generate the response in
 #' both the train and the validation set
-#' @param data dataset to be used as input for predictive and prognostic
+#' @param dataset dataset to be used as input for predictive and prognostic
 #'
 #' @export
 genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupats"){
@@ -353,7 +353,7 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
     prog <- genenorm[,c(51:53)]#restituisco questi, ma riordinati
     if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
   }
-  cat("EXT2: ", EXT, "\n")
+
   groups <- pred_sample(p = npred, o = overlap)
   if(EXT == 0){
     id_train <- c(1:124)
@@ -381,5 +381,3 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
   return(list(yord = yord, ymat = ymat, pred = predmk, prog = progmk, trtsgn = trtsgn,
               prob = prob))
 }
-
-genmech_alt()
