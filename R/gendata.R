@@ -345,13 +345,13 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
   genenorm <- scale(as.matrix(mydata))
 
   if(EXT == 0){
+    if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
     pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
     prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
-    if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
   } else {
+    if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
     pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
     prog <- genenorm[,c(51:53)]#restituisco questi, ma riordinati
-    if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
   }
 
   groups <- pred_sample(p = npred, o = overlap)
