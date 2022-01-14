@@ -64,7 +64,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // prior_ppmx_core
-arma::vec prior_ppmx_core(int iter, int burn, int thin, int nobs, int PPMx, int ncon, int ncat, double alpha, double sigma, arma::mat Vwm, int cohesion, int CC, int consim, int similarity, int calibration, int coardegree, arma::vec xcon, arma::vec similparam, arma::vec curr_cluster, arma::vec card_cluster, int ncluster_curr);
+Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs, int PPMx, int ncon, int ncat, double alpha, double sigma, arma::mat Vwm, int cohesion, int CC, int consim, int similarity, int calibration, int coardegree, arma::vec xcon, arma::vec similparam, arma::vec curr_cluster, arma::vec card_cluster, int ncluster_curr);
 RcppExport SEXP _treatppmx_prior_ppmx_core(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP alphaSEXP, SEXP sigmaSEXP, SEXP VwmSEXP, SEXP cohesionSEXP, SEXP CCSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP xconSEXP, SEXP similparamSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

@@ -43,6 +43,7 @@ prior_ppmx <- function(X=NULL, PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
 
 
   out <- NULL
+  res <- vector(mode = "list", length = 2L)
 
   if(!is.data.frame(X) & !is.null(X)) X <- data.frame(X)
 
@@ -123,7 +124,8 @@ prior_ppmx <- function(X=NULL, PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
                     as.vector(curr_cluster), as.vector(card_cluster), as.integer(nclu_curr))
 
   ###PREPARE OUTPUT
-  res <- setNames(tabulate(out, nbins = nobs), 1:nobs)
+  res$nclu <- setNames(tabulate(out$nclu, nbins = nobs), 1:nobs)
+  res$nj <- out$njout
 
   return <- res
 

@@ -343,7 +343,7 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
     mydata <- getdata("simupats_ext")
     #data <- data("simupats_ext")
   }
-  for(i in 1:nset){
+  #for(i in 1:nset){
   genenorm <- scale(as.matrix(mydata))
   genenorm <- genenorm[sample(nrow(genenorm)),]
   if(EXT == 0){
@@ -366,8 +366,8 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
 
   yord <- ymat <- predmk <- progmk <- trtsgn <- prob <- vector("list", length = nset)
 
-  #for(i in 1:nset){
-    train <- tt(pred = pred[id_train,groups$g1], prog[id_train,])
+  for(i in 1:nset){
+    train <- tt(pred = pred[id_train,groups$g1], prog = prog[id_train,])
     test <- tt(pred[id_test,groups$g2], prog[id_test,])
 
     yord[[i]] <- rbind(train$myoutot, test$myoutot)

@@ -6,7 +6,7 @@
 #include "utils_ct.h"
 
 // [[Rcpp::export]]
-arma::vec prior_ppmx_core(int iter, int burn, int thin, int nobs,
+Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
                           int PPMx, int ncon, int ncat, double alpha,
                           double sigma, arma::mat Vwm, int cohesion, int CC,
                           int consim, int similarity,
@@ -31,6 +31,7 @@ arma::vec prior_ppmx_core(int iter, int burn, int thin, int nobs,
 
   int nclu_curr = ncluster_curr;
   arma::vec nclu(nout, arma::fill::zeros);
+  arma::mat njout(nobs, nout, arma::fill::zeros);
 
   arma::vec weight(nobs + CC);
   arma::vec pweight(nobs + CC);
@@ -440,10 +441,13 @@ arma::vec prior_ppmx_core(int iter, int burn, int thin, int nobs,
     //this closes the loop on candidate therapies T
     if((l > (burn-1)) & ((l + 1) % thin == 0)){
       nclu(ll) = nclu_curr;
+      njout.col(ll) = nj_curr;
       ll += 1;
     }
   }//CLOSES MCMC iterations
 
   //RETURN
-  return nclu;
+  return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
+    Rcpp::Named("nclu") = nclu,
+    Rcpp::Named("njout") = njout);
 }
