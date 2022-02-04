@@ -13,7 +13,7 @@ ppmxct(
   asstreat = NULL,
   PPMx = 1,
   cohesion = 2,
-  alpha = 1,
+  kappa = 1,
   sigma = 0.2,
   similarity = 1,
   consim = 1,
@@ -51,7 +51,7 @@ ppmxct(
 1 - DirichletProcess-like cohesion (DP) cohesion
 2 - Normalized Generalized Gamma Process (NGG) cohesion}
 
-\item{alpha}{value of \eqn{\alpha} for cohesion function (concentration parameter in DP)}
+\item{kappa}{value of \eqn{\kappa} for cohesion function (concentration parameter in DP)}
 
 \item{sigma}{value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)}
 
