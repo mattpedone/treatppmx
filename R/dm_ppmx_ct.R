@@ -10,7 +10,7 @@
 #' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
 #'   1 - DirichletProcess-like cohesion (DP) cohesion
 #'   2 - Normalized Generalized Gamma Process (NGG) cohesion
-#' @param alpha value of \eqn{\alpha} for cohesion function (concentration parameter in DP)
+#' @param kappa value of \eqn{\kappa} for cohesion function (concentration parameter in DP)
 #' @param sigma value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
@@ -49,7 +49,7 @@
 # se non funziona l output di myppmx deve essere una lista
 
 ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
-                          PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
+                          PPMx = 1, cohesion = 2, kappa=1.0, sigma = 0.2,
                           similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,
                           #gowtot = 1, alphagow = 1,
                           modelpriors, update_hierarchy = 1, hsp = 1,
@@ -61,7 +61,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   # consim=1 => that similarity function of continuous covariate is N-N model (v_j is fixed)
   # consim=2 => that similarity functino of continuous covariate is N-NIG model (v_j is unknown)
   # modelPriors = (mu0, s^2, a1, m)
-  # simParms = (m0, s20, v2, k0, nu0, dir, alpha)
+  # simParms = (m0, s20, v2, k0, nu0, dir, kappa)
   # mh - tuning parameters for MCMC updates of sig2 and sig20
 
 
@@ -208,7 +208,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #   -sigma
   #   -cohesion
 
-  a <- alpha*sigma
+  #a <- kappa#*sigma
   sigma <- sigma
   #a <- 1; sigma <- .1; max_n_treat <- 100
   #integrand <- function(u, n, sigma, a){
@@ -218,7 +218,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   Vwm[1, 1] <- 1
 
   for(n in 2:(max_n_treat+1)){
-    Vwm[n, (1:n)] <- vweights::computev(n, sigma, a)
+    Vwm[n, (1:n)] <- vweights::computev(n, sigma, kappa)
   }
 
   #for(n in 1:(max_n_treat)){
@@ -234,7 +234,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #Vwm[25,]
   Vwm <- log(Vwm)
 
-  alpha <- alpha#similparam[7]
+  kappa <- kappa#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
   hP0_L0 <- as.vector(modelpriors$hP0_L0)
   hP0_nu0 <- as.double(modelpriors$hP0_nu0)
@@ -244,7 +244,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),
-                 as.vector(catvec), as.double(alpha), as.double(sigma), as.matrix(Vwm), as.integer(cohesion),
+                 as.vector(catvec), as.double(kappa), as.double(sigma), as.matrix(Vwm), as.integer(cohesion),
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), #as.integer(gowtot),
                  #as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
