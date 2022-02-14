@@ -10,7 +10,7 @@
 #' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
 #'   1 - DirichletProcess-like cohesion (DP) cohesion
 #'   2 - Normalized Generalized Gamma Process (NGG) cohesion
-#' @param kappa value of \eqn{\kappa} for cohesion function (concentration parameter in DP)
+#' @param kappa value of \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)
 #' @param sigma value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity

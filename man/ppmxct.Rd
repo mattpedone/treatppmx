@@ -51,7 +51,7 @@ ppmxct(
 1 - DirichletProcess-like cohesion (DP) cohesion
 2 - Normalized Generalized Gamma Process (NGG) cohesion}
 
-\item{kappa}{value of \eqn{\kappa} for cohesion function (concentration parameter in DP)}
+\item{kappa}{value of \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)}
 
 \item{sigma}{value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)}
 
