@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // dm_ppmx_ct
-Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, double sigma, arma::mat Vwm, int cohesion, int CC, int reuse, int consim, int similarity, int calibration, int coardegree, arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_mu0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_S0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar, int A, arma::vec n_a, arma::mat curr_cluster, arma::mat card_cluster, arma::vec ncluster_curr);
+Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, arma::vec sigma, arma::cube Vwm, int cohesion, int CC, int reuse, int consim, int similarity, int calibration, int coardegree, arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_mu0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_S0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar, int A, arma::vec n_a, arma::mat curr_cluster, arma::mat card_cluster, arma::vec ncluster_curr);
 RcppExport SEXP _treatppmx_dm_ppmx_ct(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP treatmentsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP sigmaSEXP, SEXP VwmSEXP, SEXP cohesionSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP ySEXP, SEXP zSEXP, SEXP zpredSEXP, SEXP noprogSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP npredSEXP, SEXP similparamSEXP, SEXP hP0_mu0SEXP, SEXP hP0_L0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_S0SEXP, SEXP upd_hierSEXP, SEXP initbetaSEXP, SEXP hspSEXP, SEXP mhtuneparSEXP, SEXP ASEXP, SEXP n_aSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -27,8 +27,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type catvec(catvecSEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Vwm(VwmSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type Vwm(VwmSEXP);
     Rcpp::traits::input_parameter< int >::type cohesion(cohesionSEXP);
     Rcpp::traits::input_parameter< int >::type CC(CCSEXP);
     Rcpp::traits::input_parameter< int >::type reuse(reuseSEXP);

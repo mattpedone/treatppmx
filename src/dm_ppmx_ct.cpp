@@ -8,7 +8,7 @@
 // [[Rcpp::export]]
 Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments,
                       int PPMx, int ncon, int ncat, arma::vec catvec, double alpha,
-                      double sigma, arma::mat Vwm, int cohesion, int CC, int reuse,
+                      arma::vec sigma, arma::cube Vwm, int cohesion, int CC, int reuse,
                       int consim, int similarity,
                       int calibration, int coardegree,
                       arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon,
@@ -37,11 +37,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // h - prognostico covariate "instrumental" index
   // tt - treatments index
   // it - observation in cluster tt index
+  // idxs - index for sigma grid
 
   //Gower dissimilarity has been commented
-  int l, ll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it;
+  int l, ll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it, idxs;
   int dim = y.n_cols;
   int Q = z.n_cols;
+
+  idxs = 5;
 
   int nout = (iter - burn)/(thin); //number of saved iterations
 
@@ -655,7 +658,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                 //Rcpp::Rcout << "weight: " << weight(tt, j) << std::endl;
               }
               weight(tt, j) += lgcatY - lgcatN + // Categorical part
@@ -678,7 +681,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
               }
               if(coardegree == 1){
                 weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
@@ -771,7 +774,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
               }
               weight(tt, j) += lgcondraw + // Continuous covariate part
                 lgcatdraw; // categorical covariate part
@@ -790,7 +793,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
               }
               if(coardegree == 1){
                 weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
@@ -846,7 +849,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
               }
               weight(tt, j) += lgtilYk - lgtilNk; //cov cont and cat
               for(k = 0; k < dim; k++){
@@ -869,7 +872,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt))/Vwm(num_treat(tt)-2, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
               }
               weight(tt, j) += lgtilNk;
               for(k = 0; k < dim; k++){
@@ -1312,7 +1315,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))+((nj_curr(tt, j))-sigma));
+                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs))+((nj_curr(tt, j))-sigma(tt)));
               }
               weight(tt, j) += lgcatY - lgcatN + // Categorical part
                 lgconY - lgconN;  // Continuous part
@@ -1325,7 +1328,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  weight(tt, j) = log((double) nj_curr(tt, j));
                }
                if(cohesion == 2){
-                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
+                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                }
                if(coardegree == 1){
                  weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
@@ -1388,7 +1391,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt), idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
               }
               weight(tt, j) += lgcondraw + // Continuous covariate part
                 lgcatdraw; // categorical covariate part
@@ -1414,7 +1417,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  weight(tt, j) = log(alpha) - log(CC);
                }
                if(cohesion == 2){
-                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt), idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                }
                if(coardegree == 1){
                  weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
@@ -1461,7 +1464,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1))+(nj_curr(tt, j)-sigma));
+                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
               }
                weight(tt, j) += lgtilYk - lgtilNk; //This takes into account both cont and cat vars
              }
@@ -1475,7 +1478,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                  weight(tt, j) = log(alpha) - log(CC);
                }
                if(cohesion == 2){
-                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));//*(nj_curr(tt, j)-sigma);
+                 weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt), idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                }
                weight(tt, j) += lgtilNk;
              }
