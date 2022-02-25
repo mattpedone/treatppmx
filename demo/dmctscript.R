@@ -1,7 +1,7 @@
 devtools::load_all()
 
 k=1 #sample(1:30, 1)
-load("~/Dropbox/PHD/study-treatppmx/data/scenario3.rda")
+load("~/Dropbox/PHD/study-treatppmx/data/scenario1.rda")
 print(k)
 X <- data.frame(mydata)
 Z <- data.frame(cbind(myz2, myz3))
@@ -27,28 +27,33 @@ nobs <- nrow(Y)
 optrt <- as.numeric(myprob[[2]][idx,]%*%wk > myprob[[1]][idx,]%*%wk)+1; optrt
 
 modelpriors <- list()
-modelpriors$hP0_m0 <- rep(0, ncol(Y))
-modelpriors$hP0_L0 <- diag(10, ncol(Y))
-modelpriors$hP0_nu0 <- ncol(Y) + 2
-modelpriors$hP0_V0 <- diag(.10, ncol(Y))
+modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(10, ncol(Y))
+modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1.0, ncol(Y))
 
-alpha_DP <- 10
 n_aux <- 5
-vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
+vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 15000#0#0000
-burnin <- 5000#00#0000
-thinning <- 1#0
+iterations <- 1000
+burnin <- 0
+thinning <- 1
 
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
   out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest, Z = Z, Zpred = Ztest,
-                     asstreat = trt, PPMx = 1, alpha = alpha_DP, sigma = .2,
+                     asstreat = trt, PPMx = 1, kappa = 5, sigma = 10,
                      CC = n_aux, cohesion = 2, similarity = 2, consim = 2,
                      calibration = 2, coardegree = 2, similparam = vec_par,
                      modelpriors = modelpriors, iter = iterations,
                      burn = burnin, thin = thinning, nclu_init = 10))
 time_ppmx/60
+
+hist(out_ppmx$sigmangg[1,], breaks = 10)
+hist(out_ppmx$sigmangg[2,], breaks = 10)
+plot(out_ppmx$sigmangg[1,], type ="l")
+plot(out_ppmx$sigmangg[2,], type ="l")
+table(out_ppmx$sigmangg[1,])
+table(out_ppmx$sigmangg[2,])
+
 
 # Posterior clustering ----
 num_treat <- table(trt)
@@ -151,3 +156,4 @@ abline(v = mymedian[1:3]%*%wk, col = "blue")
 hist(dpu[,2], breaks = 20)
 abline(v = mymean[4:6]%*%wk, col = "red")
 abline(v = mymedian[4:6]%*%wk, col = "blue")
+

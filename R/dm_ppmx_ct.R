@@ -11,7 +11,7 @@
 #'   1 - DirichletProcess-like cohesion (DP) cohesion
 #'   2 - Normalized Generalized Gamma Process (NGG) cohesion
 #' @param kappa value of \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)
-#' @param sigma value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)
+#' @param sigma number of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
@@ -49,7 +49,7 @@
 # se non funziona l output di myppmx deve essere una lista
 
 ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
-                          PPMx = 1, cohesion = 2, kappa=1.0, sigma = 0.2,
+                          PPMx = 1, cohesion = 2, kappa=1.0, sigma = 20,
                           similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,
                           #gowtot = 1, alphagow = 1,
                           modelpriors, update_hierarchy = 1, hsp = 1,
@@ -184,7 +184,9 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   treatments <- asstreat#treatments vec
   n_a <- table(treatments)#num_treat vec 2
   max_n_treat <- max(n_a)#num_treat.max
-  #print(max_n_treat)
+  #cat("max_n_treat", max_n_treat, "\n")
+  min_n_treat <- min(n_a)#num_treat.max
+  #cat("min_n_treat", min_n_treat, "\n")
 
   curr_cluster <- matrix(0, A, max_n_treat)
   card_cluster <- matrix(0, A, max_n_treat)
@@ -209,16 +211,23 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #   -cohesion
 
   #a <- kappa#*sigma
-  sigma <- sigma
+  nsigma <- sigma
+  sigmagrid <- seq(0.005, 1.0, length.out = nsigma)
+  sigmagrid <- sigmagrid
+  sigma <- c(0.25, 0.25)
+
+
   #a <- 1; sigma <- .1; max_n_treat <- 100
   #integrand <- function(u, n, sigma, a){
   #  u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
   #  }
-  Vwm <- matrix(NA, nrow = max_n_treat+1, ncol = max_n_treat+1)
-  Vwm[1, 1] <- 1
+  Vwm <- array(NA, dim = c(max_n_treat+1, max_n_treat+1, nsigma))
+  Vwm[1, 1,] <- 1
 
-  for(n in 2:(max_n_treat+1)){
-    Vwm[n, (1:n)] <- vweights::computev(n, sigma, kappa)
+  for(l in 1:nsigma){
+    for(n in (min_n_treat-1):(max_n_treat+1)){
+      Vwm[n, (1:n), l] <- vweights::computev(n, sigmagrid[l], kappa)
+    }
   }
 
   #for(n in 1:(max_n_treat)){
@@ -244,7 +253,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),
-                 as.vector(catvec), as.double(kappa), as.double(sigma), as.matrix(Vwm), as.integer(cohesion),
+                 as.vector(catvec), as.double(kappa), as.vector(sigmagrid), as.array(Vwm), as.integer(cohesion),
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), #as.integer(gowtot),
                  #as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
@@ -323,6 +332,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   res$isypred <- out$yispred
   res$WAIC <- out$WAIC
   res$lpml <- out$lpml
+  res$sigmangg <- out$sigma_ngg
 
   #posterior predictive
   ypred <- array(0, dim = c(npred, ncol(y), A, nout))
