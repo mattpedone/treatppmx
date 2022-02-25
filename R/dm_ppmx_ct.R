@@ -212,8 +212,8 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
 
   #a <- kappa#*sigma
   nsigma <- sigma
-  sigmagrid <- seq(0.0, 1.0, length.out = nsigma+1)
-  sigmagrid <- sigmagrid[-1]
+  sigmagrid <- seq(0.005, 1.0, length.out = nsigma)
+  sigmagrid <- sigmagrid
   sigma <- c(0.25, 0.25)
 
 
@@ -253,7 +253,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),
-                 as.vector(catvec), as.double(kappa), as.vector(sigma), as.array(Vwm), as.integer(cohesion),
+                 as.vector(catvec), as.double(kappa), as.vector(sigmagrid), as.array(Vwm), as.integer(cohesion),
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), #as.integer(gowtot),
                  #as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
@@ -332,6 +332,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   res$isypred <- out$yispred
   res$WAIC <- out$WAIC
   res$lpml <- out$lpml
+  res$sigmangg <- out$sigma_ngg
 
   #posterior predictive
   ypred <- array(0, dim = c(npred, ncol(y), A, nout))

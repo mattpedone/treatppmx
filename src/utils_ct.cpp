@@ -2,6 +2,9 @@
 #include <math.h>
 #include <R.h>
 #include <Rmath.h>
+#include <iostream>
+#include <cmath>
+#include <cfloat>
 
 /*
  * functions quform, inner_product and squared norm are adapted from
@@ -163,7 +166,7 @@ double dinvgamma(double y, double alpha, double beta, int logout){
   double ldens, out;
 
   ldens = alpha*log(beta) - lgamma(alpha) - (alpha + 1)*log(y) - (beta/y);
-
+  
   if(logout){
     out = ldens;
   } else{
