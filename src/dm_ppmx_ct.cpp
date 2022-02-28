@@ -9,7 +9,7 @@
 // [[Rcpp::export]]
 Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments,
                       int PPMx, int ncon, int ncat, arma::vec catvec, double alpha,
-                      arma::vec sigmagrid, arma::cube Vwm, int cohesion, int CC, int reuse,
+                      arma::mat grid, arma::cube Vwm, int cohesion, int CC, int reuse,
                       int consim, int similarity,
                       int calibration, int coardegree,
                       arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon,
@@ -47,11 +47,16 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
   idxs = 1;
   arma::vec sigma(A, arma::fill::zeros);
+  arma::vec kappa(A, arma::fill::zeros);
   for(tt = 0; tt < A; tt++){
-    sigma(tt) = sigmagrid(idxs);
+    sigma(tt) = grid(0,idxs);
+    kappa(tt) = grid(1,idxs);
   }
-  int nv = sigmagrid.size();
-  double rs = 0.0;
+  int nv = grid.n_cols;
+
+  arma::uword K = nv;
+
+  arma::uvec opts;
 
   int nout = (iter - burn)/(thin); //number of saved iterations
 
@@ -401,6 +406,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //arma::cube ppred_out(npred, dim, nout, arma::fill::zeros);
   arma::field<arma::cube> ppred_out(nout, 1);
   arma::mat sigma_ngg_out(nT, nout, arma::fill::zeros);
+  arma::mat kappa_ngg_out(nT, nout, arma::fill::zeros);
   ll = 0;
 
   ////////////////////////////////////////
@@ -1111,7 +1117,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     //////////////////////////////////////////////////
     // update (\sigma, \kappa)
     //////////////////////////////////////////////////
-
     if(cohesion == 2){
       for(tt = 0; tt < nT; tt++){
           for(j = 0; j < nclu_curr(tt); j++){
@@ -1180,7 +1185,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
           // cohesion part
           for(int idxst = 0; idxst < nv; idxst++){
-            sigma_temp = sigmagrid(idxst);
+            sigma_temp = grid(0,idxst);
             os(tt, idxst) = 0;
           for(j = 0; j < nclu_curr(tt); j++){
             os(tt, idxst) += omegasigma(tt, j);
@@ -1205,14 +1210,13 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             pos(tt, idxst) = os(tt, idxst)/denwei;
           }
 
-          arma::uword K = sigmagrid.n_elem;
-
-          arma::uvec opts = arma::linspace<arma::uvec>(0L, K - 1L, K);
+          opts = arma::linspace<arma::uvec>(0L, K - 1L, K);
 
           idxs = arma::conv_to<arma::uword>::from(
             Rcpp::RcppArmadillo::sample(opts, 1L, false, os.row(tt).t())
           );
-          sigma(tt) = sigmagrid(idxs);
+          sigma(tt) = grid(0,idxs);
+          kappa(tt) = grid(1,idxs);
         }
       }
 
@@ -1662,6 +1666,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
          }//this closes the loop on npred subjects
        }//this closes the if for the draws after burnin and thinned
 
+
        //////////////////////
        // Save MCMC iterates
        //////////////////////
@@ -1674,6 +1679,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
          }
          for(tt = 0; tt < nT; tt++){
            sigma_ngg_out(tt,ll) = sigma(tt);
+           kappa_ngg_out(tt,ll) = kappa(tt);
            nclus(tt, ll) = nclu_curr(tt);
            for(i = 0; i < num_treat(tt); i++){
              Clui(tt, i, ll) = curr_clu(tt, i);
@@ -1733,6 +1739,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     Rcpp::Named("eta") = eta_out,
     Rcpp::Named("beta") = beta_out,
     Rcpp::Named("sigma_ngg") = sigma_ngg_out,
+    Rcpp::Named("kappa_ngg") = kappa_ngg_out,
     Rcpp::Named("eta_acc") = eta_flag,///sumtotclu,
     Rcpp::Named("beta_acc") = beta_flag,
     Rcpp::Named("cl_lab") = Clui,//output sistemato

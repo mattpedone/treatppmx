@@ -49,12 +49,11 @@
 # se non funziona l output di myppmx deve essere una lista
 
 ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
-                          PPMx = 1, cohesion = 2, kappa=1.0, sigma = 20,
-                          similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,
-                          #gowtot = 1, alphagow = 1,
-                          modelpriors, update_hierarchy = 1, hsp = 1,
-                          iter=1100, burn=100, thin=1, mhtunepar = c(.05, .05),
-                          CC = 3, reuse = 1, nclu_init = 5){
+                   PPMx = 1, cohesion = 2, kappa = c(1.0, 30.0, 10, 1),
+                   sigma = c(0.005, 1.0, 10), similarity = 1, consim=1,
+                   similparam, calibration=0, coardegree = 1, modelpriors,
+                   update_hierarchy = 1, hsp = 1, iter=1100, burn=100, thin=1,
+                   mhtunepar = c(.05, .05), CC = 3, reuse = 1, nclu_init = 5){
 
   # X - data.frame whose columns are
   # gcontype - similarity function (1 - Auxilliary, 2 - double dipper)
@@ -63,7 +62,6 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   # modelPriors = (mu0, s^2, a1, m)
   # simParms = (m0, s20, v2, k0, nu0, dir, kappa)
   # mh - tuning parameters for MCMC updates of sig2 and sig20
-
 
   out <- NULL
 
@@ -211,22 +209,27 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #   -cohesion
 
   #a <- kappa#*sigma
-  nsigma <- sigma
-  sigmagrid <- seq(0.005, 1.0, length.out = nsigma)
-  sigmagrid <- sigmagrid
-  sigma <- c(0.25, 0.25)
+  kappadp <- kappa[4]
+  nsigma <- sigma[3]
+  nkappa <- kappa[3]
+  sigmagrid <- seq(sigma[1], sigma[2], length.out = nsigma)
+  kappagrid <- seq(kappa[1], kappa[2], length.out = nkappa)
+  grid <- t(expand.grid(kappagrid, sigmagrid))[c(2,1),]
+  ngrid <- ncol(grid)
+  #sigma <- c(0.25, 0.25)
+  #kappa <- c(1.0, 1.0)
 
 
   #a <- 1; sigma <- .1; max_n_treat <- 100
   #integrand <- function(u, n, sigma, a){
   #  u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
   #  }
-  Vwm <- array(NA, dim = c(max_n_treat+1, max_n_treat+1, nsigma))
+  Vwm <- array(NA, dim = c(max_n_treat+1, max_n_treat+1, ngrid))
   Vwm[1, 1,] <- 1
 
-  for(l in 1:nsigma){
+  for(l in 1:ngrid){
     for(n in (min_n_treat-1):(max_n_treat+1)){
-      Vwm[n, (1:n), l] <- vweights::computev(n, sigmagrid[l], kappa)
+      Vwm[n, (1:n), l] <- vweights::computev(n, grid[1, l], grid[2, l])
     }
   }
 
@@ -253,7 +256,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
                  as.integer(nobs), as.vector(treatments), as.integer(PPMx),
                  as.integer(ncon), as.integer(ncat),
-                 as.vector(catvec), as.double(kappa), as.vector(sigmagrid), as.array(Vwm), as.integer(cohesion),
+                 as.vector(catvec), as.double(kappadp), as.matrix(grid), as.array(Vwm), as.integer(cohesion),
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity), #as.integer(gowtot),
                  #as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
@@ -333,6 +336,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   res$WAIC <- out$WAIC
   res$lpml <- out$lpml
   res$sigmangg <- out$sigma_ngg
+  res$kappangg <- out$kappa_ngg
 
   #posterior predictive
   ypred <- array(0, dim = c(npred, ncol(y), A, nout))

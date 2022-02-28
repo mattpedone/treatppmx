@@ -1,7 +1,7 @@
 devtools::load_all()
 
 k=1 #sample(1:30, 1)
-load("~/Dropbox/PHD/study-treatppmx/data/scenario1.rda")
+load("~/Dropbox/PHD/study-treatppmx/data/scenario3.rda")
 print(k)
 X <- data.frame(mydata)
 Z <- data.frame(cbind(myz2, myz3))
@@ -33,27 +33,19 @@ modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1.0, ncol(Y))
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 1000
+iterations <- 2000
 burnin <- 0
 thinning <- 1
 
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
   out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest, Z = Z, Zpred = Ztest,
-                     asstreat = trt, PPMx = 1, kappa = 5, sigma = 10,
+                     asstreat = trt, PPMx = 1, kappa = c(1, 5, 10, 1), sigma = c(0.005, .5, 20),
                      CC = n_aux, cohesion = 2, similarity = 2, consim = 2,
                      calibration = 2, coardegree = 2, similparam = vec_par,
                      modelpriors = modelpriors, iter = iterations,
                      burn = burnin, thin = thinning, nclu_init = 10))
 time_ppmx/60
-
-hist(out_ppmx$sigmangg[1,], breaks = 10)
-hist(out_ppmx$sigmangg[2,], breaks = 10)
-plot(out_ppmx$sigmangg[1,], type ="l")
-plot(out_ppmx$sigmangg[2,], type ="l")
-table(out_ppmx$sigmangg[1,])
-table(out_ppmx$sigmangg[2,])
-
 
 # Posterior clustering ----
 num_treat <- table(trt)
@@ -106,6 +98,33 @@ colnames(df) <- c("t1", "t2")
 df <- cbind(Index = as.numeric(row.names(df)), df)
 df <- reshape2::melt(df, id.vars="Index")
 ggplot2::ggplot(df, aes(x = Index, y = value, col = variable)) + geom_line() + theme_classic()
+
+# Posterior frequency for (\kappa, \sigma) ----
+
+par(mfrow=c(2,1))
+hist(out_ppmx$sigmangg[1,], breaks = 10)
+hist(out_ppmx$sigmangg[2,], breaks = 10)
+plot(out_ppmx$sigmangg[1,], type ="l")
+plot(out_ppmx$sigmangg[2,], type ="l")
+table(out_ppmx$sigmangg[1,])
+table(out_ppmx$sigmangg[2,])
+
+hist(out_ppmx$kappangg[1,], breaks = 10)
+hist(out_ppmx$kappangg[2,], breaks = 10)
+plot(out_ppmx$kappangg[1,], type ="l")
+plot(out_ppmx$kappangg[2,], type ="l")
+table(out_ppmx$kappangg[1,])
+table(out_ppmx$kappangg[2,])
+
+P <- table(out_ppmx$sigmangg[1,], out_ppmx$kappangg[1,])
+Pm <- reshape::melt(P)
+ggplot2::ggplot(Pm, aes(Var.1, Var.2, fill=value)) + geom_tile() +
+  ggplot2::geom_text(aes(label=value),colour="white")
+
+P <- table(out_ppmx$sigmangg[2,], out_ppmx$kappangg[2,])
+Pm <- reshape::melt(P)
+ggplot2::ggplot(Pm, aes(Var.1, Var.2, fill=value)) + geom_tile() +
+  ggplot2::geom_text(aes(label=value),colour="white")
 
 # A posteriori mean of prognostic covariates and some traceplots ----
 #apply(out_ppmx$beta, c(1, 2), mean)
