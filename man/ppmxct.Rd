@@ -13,8 +13,8 @@ ppmxct(
   asstreat = NULL,
   PPMx = 1,
   cohesion = 2,
-  kappa = 1,
-  sigma = 0.2,
+  kappa = c(1, 30, 10, 1),
+  sigma = c(0.005, 1, 10),
   similarity = 1,
   consim = 1,
   similparam,
@@ -53,7 +53,7 @@ ppmxct(
 
 \item{kappa}{value of \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)}
 
-\item{sigma}{value of \eqn{\sigma} for cohesion function (reinforcement parameter in NGG)}
+\item{sigma}{number of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)}
 
 \item{similarity}{type of similarity function that is employed for the PPMx prior on partitions. Options are
 1 - Auxiliary similarity

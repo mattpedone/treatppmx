@@ -1,2 +1,3 @@
-dmctscript                 simple example script on simulated data
+dmctscript                 simple example script on simulated data. LOOCV strategy
 lggscript                  script for some checks
+tt_script_prova            example script on simulated data. Train&Test strategy
