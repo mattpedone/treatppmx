@@ -224,15 +224,20 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #integrand <- function(u, n, sigma, a){
   #  u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
   #  }
-  Vwm <- array(NA, dim = c(max_n_treat+1, max_n_treat+1, ngrid))
-  Vwm[1, 1,] <- 1
 
-  for(l in 1:ngrid){
-    for(n in (min_n_treat-1):(max_n_treat+1)){
-      Vwm[n, (1:n), l] <- vweights::computev(n, grid[1, l], grid[2, l])
+  if(cohesion == 2){
+    Vwm <- array(NA, dim = c(max_n_treat+1, max_n_treat+1, ngrid))
+    Vwm[1, 1,] <- 1
+    for(l in 1:ngrid){
+      for(n in (min_n_treat-1):(max_n_treat+1)){
+        Vwm[n, (1:n), l] <- vweights::computev(n, grid[1, l], grid[2, l])
+      }
     }
+    Vwm <- log(Vwm)
+  } else {
+    Vwm <- array(NA, dim = c(2,2,2))
   }
-
+#print(Sys.time())
   #for(n in 1:(max_n_treat)){
   #  #cat("n: ", n, "\n")
   #  for(k in 1:n){
@@ -244,7 +249,6 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   #}
 
   #Vwm[25,]
-  Vwm <- log(Vwm)
 
   kappa <- kappa#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)

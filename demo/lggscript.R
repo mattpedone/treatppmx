@@ -33,14 +33,14 @@ for(i in 1:nrow(Y)){
 }
 
 modelpriors <- list()
-modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(100, ncol(Y))
-modelpriors$hP0_nu0 <- ncol(Y) + 20; modelpriors$hP0_V0 <- diag(100, ncol(Y))
+modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(1, ncol(Y))
+modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1, ncol(Y))
 
 n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
-vec_par <- c(0.0, 10.0, .5, 1.0, 2.0, 2.0, 0.1)
+vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 5000#0
-burnin <- 1000#0
+iterations <- 500#0
+burnin <- 0#0
 thinning <- 1#0
 
 nout <- (iterations-burnin)/thinning
@@ -51,7 +51,7 @@ myres <- foreach(sub = 1:npat, .combine = rbind) %dopar%
     out_ppmx <- tryCatch(expr = ppmxct(y = data.matrix(Y[-sub,]), X = data.frame(X[-sub,]),
                                        Xpred = data.frame(X[sub,]), Z = data.frame(Z[-sub,]),
                                        Zpred = data.frame(Z[sub,]), asstreat = trtsgn[-sub], #treatment,
-                                       PPMx = 1, cohesion = 2, alpha = 1, sigma = 0.25,
+                                       PPMx = 1, cohesion = 2,  kappa = c(1, 10, 5, 1), sigma = c(0.005, .995, 5),
                                        similarity = 2, consim = 1, similparam = vec_par,
                                        calibration = 2, coardegree = 2, modelpriors,
                                        update_hierarchy = T,
@@ -228,14 +228,14 @@ for(i in 1:nrow(Y)){
 }
 
 modelpriors <- list()
-modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(100, ncol(Y))
-modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1000, ncol(Y))
+modelpriors$hP0_m0 <- rep(0, ncol(Y)); modelpriors$hP0_L0 <- diag(1, ncol(Y))
+modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1, ncol(Y))
 
 n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
 iterations <- 1500
-burnin <- 1000
+burnin <- 0
 thinning <- 1
 
 nout <- (iterations-burnin)/thinning
@@ -243,7 +243,7 @@ sub <- 112#sample(1:npat, 1); sub #59 well separated
 out_ppmx <- ppmxct(y = data.matrix(Y[-sub,]), X = data.frame(X[-sub,]),
                    Xpred = data.frame(X[sub,]), Z = data.frame(Z[-sub,]),
                    Zpred = data.frame(Z[sub,]), asstreat = trtsgn[-sub], #treatment,
-                   PPMx = 1, cohesion = 2, alpha = 1, sigma = 0.25,
+                   PPMx = 1, cohesion = 2, kappa = c(1, 5, 3, 1), sigma = c(0.005, .5, 3),
                    similarity = 2, consim = 1, similparam = vec_par,
                    calibration = 2, coardegree = 2, modelpriors,
                    update_hierarchy = T,
