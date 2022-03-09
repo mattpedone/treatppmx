@@ -328,7 +328,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   }
 
   res$beta <- beta
-  res$acc_rate_beta <- out$beta_acc/(prod(dim(beta)))#out$beta_acc#/sum(out$nclu)
+  res$acc_beta <- out$beta_acc#/(prod(dim(beta)))#out$beta_acc#/sum(out$nclu)
   #pi (dirichlet parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out
