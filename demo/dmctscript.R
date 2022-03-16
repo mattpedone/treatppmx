@@ -40,7 +40,7 @@ thinning <- 1
 nout <- (iterations-burnin)/thinning
 time_ppmx <- system.time(
   out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest, Z = Z, Zpred = Ztest,
-                     asstreat = trt, PPMx = 1, kappa = c(1, 10, 5, 1), sigma = c(0.005, .995, 5),
+                     asstreat = trt, PPMx = 1, kappa = c(.1, 10, 5, 1), sigma = c(0.005, .995, 5),
                      CC = n_aux, cohesion = 2, similarity = 2, consim = 2,
                      calibration = 2, coardegree = 2, similparam = vec_par,
                      modelpriors = modelpriors, iter = iterations,
