@@ -1,7 +1,7 @@
 devtools::load_all()
 
 k=1 #sample(1:30, 1)
-load("~/Dropbox/PHD/study-treatppmx/data/scenario3.rda")
+load("~/Dropbox/PHD/study-treatppmx/data/scenario1.rda")
 print(k)
 X <- data.frame(mydata)
 Z <- data.frame(cbind(myz2, myz3))
@@ -33,15 +33,15 @@ modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1.0, ncol(Y))
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 120
-burnin <- 20
-thinning <- 5
+iterations <- 2000
+burnin <- 0
+thinning <- 1
 
 nout <- (iterations-burnin)/thinning
 
 time_ppmx <- system.time(
   out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest, Z = Z, Zpred = Ztest,
-                     asstreat = trt, PPMx = 1, kappa = c(.25, 30, 5, 1), sigma = c(0.001, .99, 5),
+                     asstreat = trt, PPMx = 1, kappa = c(.25, 5, 5, 1), sigma = c(0.1, .99, 5),
                      CC = n_aux, cohesion = 2, similarity = 2, consim = 2,
                      calibration = 2, coardegree = 2, similparam = vec_par,
                      modelpriors = modelpriors, iter = iterations,

@@ -1201,12 +1201,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           for(j = 0; j < nclu_curr(tt); j++){
             os(tt, idxst) += omegasigma(tt, j);
             //os(tt, idxst) += log(1.0/K) + log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxst)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxst))+(nj_curr(tt, j)-sigma_temp));
-            os(tt, idxst) += log(1.0/K) + log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxst)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxst));
-            os(tt, idxst) += lgamma(nj_curr(tt, j) + 1 - sigma_temp) - lgamma(nj_curr(tt, j) - sigma_temp);
+            os(tt, idxst) += lgamma(nj_curr(tt, j) - sigma_temp) - lgamma(1 - sigma_temp);
             }
+            os(tt, idxst) += log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxst));
           }
 
-          //normalizzo prob
           maxwei = os(tt, 0);
           for(int idxst = 1; idxst < K; idxst++){
             if(maxwei < os(tt, idxst)) maxwei = os(tt, idxst);
@@ -1217,8 +1216,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             denwei += os(tt, idxst);
           }
 
-          //
-
           for(int idxst = 0; idxst < K; idxst++){
             pos(tt, idxst) = os(tt, idxst)/denwei;
           }
@@ -1228,8 +1225,29 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           idxs = arma::conv_to<arma::uword>::from(
             Rcpp::RcppArmadillo::sample(opts, 1L, false, os.row(tt).t())
           );
+
           sigma(tt) = grid(0,idxs);
           kappa(tt) = grid(1,idxs);
+
+          // cohesion part
+          /*arma::vec res(K, arma::fill::zeros);
+          denwei = 0.0;
+          arma::vec prob_kappa(nclu_curr(tt)-1, arma::fill::zeros);
+          for(int idxst = 0; idxst < K; idxst++){
+            sigma_temp = grid(0,idxst);
+            arma::vec lrho(nclu_curr(tt)-1, arma::fill::zeros);
+            for(j = 0; j < (nclu_curr(tt)-1); j++){
+              lrho(j) = lgamma(nj_curr(tt, j) - sigma_temp) - lgamma(1 - sigma_temp);
+              }
+            res(idxst) = arma::sum(lrho) + log((double) Vwm(num_treat(tt)-1, (nclu_curr(tt)-1), idxst));
+            denwei += res(idxst);
+
+             for(j = 0; j < (nclu_curr(tt)-1); j++){
+               prob_kappa(j) = res(j)/denwei;
+             }
+             //os(tt, idxst) = arma::sum(lrho) + log((double) Vwm(num_treat(tt)-1, j, idxst));
+
+           }*/
         }
       }
 
