@@ -33,14 +33,15 @@ modelpriors$hP0_nu0 <- ncol(Y) + 2; modelpriors$hP0_V0 <- diag(1.0, ncol(Y))
 n_aux <- 5
 vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
 #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-iterations <- 2000
-burnin <- 0
-thinning <- 1
+iterations <- 120
+burnin <- 20
+thinning <- 5
 
 nout <- (iterations-burnin)/thinning
+
 time_ppmx <- system.time(
   out_ppmx <- ppmxct(y = Y, X = X, Xpred = Xtest, Z = Z, Zpred = Ztest,
-                     asstreat = trt, PPMx = 1, kappa = c(.1, 10, 5, 1), sigma = c(0.005, .995, 5),
+                     asstreat = trt, PPMx = 1, kappa = c(.25, 30, 5, 1), sigma = c(0.001, .99, 5),
                      CC = n_aux, cohesion = 2, similarity = 2, consim = 2,
                      calibration = 2, coardegree = 2, similparam = vec_par,
                      modelpriors = modelpriors, iter = iterations,
@@ -67,17 +68,15 @@ for(i in 1:max(mc_vi2$cl)){
   reord2 <- c(reord2, which(mc_vi2$cl == i))
 }
 
-# Similarity matrix ----
-
-melted_psm <- melt(psm)
-
-ggplot(data = melted_psm, aes(x=Var1, y=Var2, fill=value)) +
-  geom_tile()
-
-melted_psm2 <- melt(psm2)
-
-ggplot(data = melted_psm2, aes(x=Var1, y=Var2, fill=value)) +
-  geom_tile()
+## Similarity matrix ----
+#
+#melted_psm <- melt(psm)
+#ggplot(data = melted_psm, aes(x=Var1, y=Var2, fill=value)) +
+#  geom_tile()
+#
+#melted_psm2 <- melt(psm2)
+#ggplot(data = melted_psm2, aes(x=Var1, y=Var2, fill=value)) +
+#  geom_tile()
 
 # Co-occurence plot ----
 data <- t(out_ppmx$label[[1]])
