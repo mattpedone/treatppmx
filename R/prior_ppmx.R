@@ -106,7 +106,7 @@ prior_ppmx <- function(X=NULL, PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
       Vwm[n, (1:n)] <- vweights::computev(n, sigma, a)
     }
 
-    Vwm <- log(Vwm)
+    #Vwm <- log(Vwm)
   }
 
   alpha <- alpha
