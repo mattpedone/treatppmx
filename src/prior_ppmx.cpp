@@ -235,7 +235,10 @@ Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
             weight(j) = log((double) nj_curr(j));
           }
           if(cohesion == 2){
-            weight(j) = log((double) (Vwm(nobs-1, nclu_curr-1)/Vwm(nobs-2, nclu_curr-1))+(nj_curr(j)-sigma));
+            //weight(j) = log((double) (Vwm(nobs-1, nclu_curr-1)/Vwm(nobs-2, nclu_curr-1))+(nj_curr(j)-sigma));
+            weight(j) = log((double) Vwm(nobs-1, nclu_curr-1)) - log((double) Vwm(nobs-2, nclu_curr-1));
+            weight(j) += lgamma(nj_curr(j) + 1 - sigma) - lgamma(nj_curr(j) - sigma);
+
             //Rcpp::Rcout << "weight: " << weight(tt, j) << std::endl;
           }
           weight(j) += lgcatY - lgcatN + // Categorical part
@@ -249,7 +252,9 @@ Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
             weight(j) = log((double) nj_curr(j));
           }
           if(cohesion == 2){
-            weight(j) = log((double) (Vwm(nobs-1, nclu_curr-1)/Vwm(nobs-2, nclu_curr-1))+(nj_curr(j)-sigma));
+            //weight(j) = log((double) (Vwm(nobs-1, nclu_curr-1)/Vwm(nobs-2, nclu_curr-1))+(nj_curr(j)-sigma));
+            weight(j) = log((double) Vwm(nobs-1, nclu_curr-1)) - log((double) Vwm(nobs-2, nclu_curr-1));
+            weight(j) += lgamma(nj_curr(j) + 1 - sigma) - lgamma(nj_curr(j) - sigma);
           }
           if(coardegree == 1){
             weight(j) += (1/((double)ncon + (double)ncat))*(lgcatY + lgconY - lgcatN - lgconN);
@@ -300,7 +305,9 @@ Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
             weight(j) = log(alpha) - log(CC);
           }
           if(cohesion == 2){
-            weight(j) = log((double) (Vwm(nobs-1, nclu_curr)/Vwm(nobs-2, nclu_curr-1)));//*(nj_curr(tt, j)-sigma);
+            //weight(j) = log((double) (Vwm(nobs-1, nclu_curr)/Vwm(nobs-2, nclu_curr-1)));//*(nj_curr(tt, j)-sigma);
+            weight(j) = log((double) Vwm(nobs-1, nclu_curr-1)) - log((double) Vwm(nobs-2, nclu_curr-1));
+            //weight(j) += lgamma(nj_curr(j) + 1 - sigma) - lgamma(nj_curr(j) - sigma);
           }
           weight(j) += lgcondraw + // Continuous covariate part
             lgcatdraw; // categorical covariate part
@@ -312,7 +319,9 @@ Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
             weight(j) = log(alpha) - log(CC);
           }
           if(cohesion == 2){
-            weight(j) = log((double) (Vwm(nobs-1, nclu_curr)/Vwm(nobs-2, nclu_curr-1)));//*(nj_curr(tt, j)-sigma);
+            //weight(j) = log((double) (Vwm(nobs-1, nclu_curr)/Vwm(nobs-2, nclu_curr-1)));//*(nj_curr(tt, j)-sigma);
+            weight(j) = log((double) Vwm(nobs-1, nclu_curr-1)) - log((double) Vwm(nobs-2, nclu_curr-1));
+            //weight(j) += lgamma(nj_curr(j) + 1 - sigma) - lgamma(nj_curr(j) - sigma);
           }
           if(coardegree == 1){
             weight(j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
@@ -361,7 +370,9 @@ Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
             weight(j) = log((double) nj_curr(j));
           }
           if(cohesion == 2){
-            weight(j) = log((double) (Vwm(nobs-1, nclu_curr-1)/Vwm(nobs-2, nclu_curr-1))+(nj_curr(j)-sigma));
+            //weight(j) = log((double) (Vwm(nobs-1, nclu_curr-1)/Vwm(nobs-2, nclu_curr-1))+(nj_curr(j)-sigma));
+            weight(j) = log((double) Vwm(nobs-1, nclu_curr-1)) - log((double) Vwm(nobs-2, nclu_curr-1));
+            weight(j) += lgamma(nj_curr(j) + 1 - sigma) - lgamma(nj_curr(j) - sigma);
           }
           weight(j) += lgtilYk - lgtilNk; //cov cont and cat
         }
@@ -376,7 +387,9 @@ Rcpp::List prior_ppmx_core(int iter, int burn, int thin, int nobs,
             weight(j) = log(alpha) - log(CC);
           }
           if(cohesion == 2){
-            weight(j) = log((double) (Vwm(nobs-1, nclu_curr)/Vwm(nobs-2, nclu_curr-1)));//*(nj_curr(tt, j)-sigma);
+            //weight(j) = log((double) (Vwm(nobs-1, nclu_curr)/Vwm(nobs-2, nclu_curr-1)));//*(nj_curr(tt, j)-sigma);
+            weight(j) = log((double) Vwm(nobs-1, nclu_curr-1)) - log((double) Vwm(nobs-2, nclu_curr-1));
+            //weight(j) += lgamma(nj_curr(j) + 1 - sigma) - lgamma(nj_curr(j) - sigma);
           }
           weight(j) += lgtilNk;
         }
