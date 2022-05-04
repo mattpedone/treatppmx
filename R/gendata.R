@@ -497,7 +497,8 @@ genmech_clu <- function(npred = 3, n = 200, nnoise = 7, nset = 50){
       Y = myy,
       Yord = myoutot,
       treatment = trtsgn,
-      cov = biom,
+      pred = Xpredcov,
+      prog = Zprogcov,
       clu = U,
       prob = myprob)
     return(fulldata)
