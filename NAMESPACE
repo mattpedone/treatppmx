@@ -2,6 +2,7 @@
 
 export(genmech)
 export(genmech_alt)
+export(genmech_clu)
 export(npc)
 export(ppmxct)
 export(prior_ppmx)
