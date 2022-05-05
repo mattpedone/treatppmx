@@ -388,6 +388,10 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
 }
 
 #' genmech clustering
+#' @param npred number of predictive covariates used to generate the outcome
+#' @param n number of observations
+#' @param nnoise number of noisy variables
+#' @param nset number of replicated scenarios generated
 #' @export
 
 genmech_clu <- function(npred = 3, n = 200, nnoise = 7, nset = 50){
@@ -403,13 +407,13 @@ genmech_clu <- function(npred = 3, n = 200, nnoise = 7, nset = 50){
   #Sampling from the mixture
   for(i in 1:N){
     if(U[i] < .3){
-      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(1, 1, 3))
+      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(1, 1, 3), sigma = diag(.1, 3))
       U[i] <- 1
     } else if(U[i] < .8){
-      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(3, 3, 1))
+      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(3, 3, 1), sigma = diag(.1, 3))
       U[i] <- 2
     } else {
-      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(2, 4, 5))
+      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(2, 4, 5), sigma = diag(.1, 3))
       U[i] <- 3
     }
   }
