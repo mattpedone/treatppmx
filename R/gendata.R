@@ -345,15 +345,16 @@ genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupat
   }
   #for(i in 1:nset){
   genenorm <- scale(as.matrix(mydata))
-  genenorm <- genenorm[sample(nrow(genenorm)),]
+  #genenorm <- genenorm[sample(nrow(genenorm)),]
   if(EXT == 0){
     if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
     pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
-    z1 <- genenorm[,91]
-    z1 <- sign(z1)*(sign(z1)*z1)^(0.5)
-    z2 <- genenorm[,92]
-    z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
-    prog <- cbind(z1, z2)#restituisco questi, ma riordinati
+    #z1 <- genenorm[,91]
+    #z1 <- sign(z1)*(sign(z1)*z1)^(0.5)
+    #z2 <- genenorm[,92]
+    #z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
+    #prog <- cbind(z1, z2)#restituisco questi, ma riordinati
+    prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
   } else {
     if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
     pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
@@ -406,18 +407,30 @@ genmech_clu <- function(npred = 3, n = 200, nnoise = 7, nset = 50){
 
   #Sampling from the mixture
   for(i in 1:N){
-    if(U[i] < .3){
-      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(1, 1, 3), sigma = diag(.1, 3))
-      U[i] <- 1
-    } else if(U[i] < .8){
-      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(3, 3, 1), sigma = diag(.1, 3))
-      U[i] <- 2
+    if((i %% 2) == 0) {
+      if(U[i] < .2){
+        rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(1, 1, 3), sigma = diag(.5, 3))
+        U[i] <- 1
+      } else if(U[i] < .7){
+        rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(3, 3, 1), sigma = diag(.5, 3))
+        U[i] <- 2
+      } else {
+        rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(2, 4, 5), sigma = diag(.5, 3))
+        U[i] <- 3
+      }
     } else {
-      rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(2, 4, 5), sigma = diag(.1, 3))
-      U[i] <- 3
+      if(U[i] < .2){
+        rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(-1, -.1, -3), sigma = diag(.5, 3))
+        U[i] <- 1
+      } else if(U[i] < .7){
+        rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(-3, -3, -1), sigma = diag(.5, 3))
+        U[i] <- 2
+      } else {
+        rand_samples[i,] = mvtnorm::rmvnorm(n = 1, mean = c(-2, -4, -5), sigma = diag(.5, 3))
+        U[i] <- 3
+      }
     }
   }
-
   mydata <- rand_samples
   genenorm <- scale(as.matrix(mydata))
   mypca <- prcomp(genenorm[,c(1:npred)])
@@ -503,7 +516,8 @@ genmech_clu <- function(npred = 3, n = 200, nnoise = 7, nset = 50){
       treatment = trtsgn,
       pred = Xpredcov,
       prog = Zprogcov,
-      clu = U,
+      clu1 = U[which((1:length(U))%%2==0)],
+      clu2 = U[which((1:length(U))%%2==1)],
       prob = myprob)
     return(fulldata)
 }
