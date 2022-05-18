@@ -6,6 +6,15 @@
 \usage{
 genmech_clu(npred = 3, n = 200, nnoise = 7, nset = 50)
 }
+\arguments{
+\item{npred}{number of predictive covariates used to generate the outcome}
+
+\item{n}{number of observations}
+
+\item{nnoise}{number of noisy variables}
+
+\item{nset}{number of replicated scenarios generated}
+}
 \description{
 genmech clustering
 }
