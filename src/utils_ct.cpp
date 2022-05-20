@@ -166,7 +166,7 @@ double dinvgamma(double y, double alpha, double beta, int logout){
   double ldens, out;
 
   ldens = alpha*log(beta) - lgamma(alpha) - (alpha + 1)*log(y) - (beta/y);
-  
+
   if(logout){
     out = ldens;
   } else{
@@ -379,12 +379,26 @@ double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2,
   return out;
 }
 
-/* normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
- * I didn't carry out integration explicitly over m and v. I simply used the fact that
+/* I didn't carry out integration explicitly over m and v. I simply used the fact that
  * marginal likelihood (similarity) is equal to likelihood x prior / posterior.  This
  * requires inserting a value for m and v which I use 0 and 1.
  * The double dipper is included as an argument.
  */
+
+//' Similarity function
+//'
+//' Normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
+//' @param m0 location parameter
+//' @param k0 shape gamma parameter
+//' @param nu0 scale gamma parameter
+//' @param s20 variance parameter
+//' @param sumx cluster sum
+//' @param sumx2 cluster squared sum
+//' @param n number of observation in current cluster
+//' @param DD logical if 1 Double Dipper similarity is employed
+//' @param logout logical if 1 return log value
+//' @export
+// [[Rcpp::export]]
 double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, double sumx2,
                    int n, int DD, int logout){
 

@@ -17,3 +17,20 @@ ran_iwish <- function(nu, Sig, dim) {
     .Call('_treatppmx_ran_iwish', PACKAGE = 'treatppmx', nu, Sig, dim)
 }
 
+#' Similarity function
+#'
+#' Normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
+#' @param m0 location parameter
+#' @param k0 shape gamma parameter
+#' @param nu0 scale gamma parameter
+#' @param s20 variance parameter
+#' @param sumx cluster sum
+#' @param sumx2 cluster squared sum
+#' @param n number of observation in current cluster
+#' @param DD logical if 1 Double Dipper similarity is employed
+#' @param logout logical if 1 return log value
+#' @export
+gsimconNNIG <- function(m0, k0, nu0, s20, sumx, sumx2, n, DD, logout) {
+    .Call('_treatppmx_gsimconNNIG', PACKAGE = 'treatppmx', m0, k0, nu0, s20, sumx, sumx2, n, DD, logout)
+}
+

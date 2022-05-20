@@ -26,6 +26,7 @@
 #' @importFrom coda effectiveSize
 #' @importFrom stats runif
 #' @importFrom stats rnorm
+#' @importFrom stats rbinom
 #' @importFrom stats acf
 #' @importFrom graphics par
 #' @importFrom mvtnorm rmvnorm
@@ -48,4 +49,7 @@
 #' @importFrom stats rmultinom
 #' @importFrom utils data
 #' @importFrom stats setNames
+#' @importFrom stats lm
+#' @importFrom sn rsn
+#' @importFrom stats rt
 NULL
