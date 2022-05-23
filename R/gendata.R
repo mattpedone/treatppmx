@@ -320,54 +320,27 @@ tt <- function(pred, prog){
          trtsgn = trtsgn, myprob = myprob))
 }
 
-#' genmech alternative
+#' genmech_het
 #' @param npred number of predictive covariates used to generate the outcome
 #' @param nset number of replicated scenarios generated
 #' @param overlap proportion of predictors used to generate the response in
 #' both the train and the validation set
-#' @param dataset dataset to be used as input for predictive and prognostic
 #'
 #' @export
-genmech_alt <- function(npred = 10, nset = 30, overlap = 0.8, dataset = "simupats"){
+genmech_het <- function(npred = 10, nset = 30, overlap = 0.8){
   set.seed(121)
-  if(dataset == "simupats"){
-    EXT = 0
-  } else {
-    EXT = 1
-  }
+  mydata <- getdata("simupats")
 
-  if(EXT == 0){
-    mydata <- getdata("simupats")
-    #mydata <- data("simupats")
-  } else {
-    mydata <- getdata("simupats_ext")
-    #data <- data("simupats_ext")
-  }
   #for(i in 1:nset){
   genenorm <- scale(as.matrix(mydata))
   #genenorm <- genenorm[sample(nrow(genenorm)),]
-  if(EXT == 0){
-    if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
-    pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
-    #z1 <- genenorm[,91]
-    #z1 <- sign(z1)*(sign(z1)*z1)^(0.5)
-    #z2 <- genenorm[,92]
-    #z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
-    #prog <- cbind(z1, z2)#restituisco questi, ma riordinati
-    prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
-  } else {
-    if(npred > 50) stop("Using the simupats_ext dataset the maximum number of predictive covariates is 50.")
-    pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
-    prog <- genenorm[,c(51:52)]#restituisco questi, ma riordinati
-  }
+  if(npred > 90) stop("Using the simupats dataset the maximum number of predictive covariates is 90.")
+  pred <- genenorm[,c(1:npred)]#restituisco questi, ma riordinati
+  prog <- genenorm[,c(91:92)]#restituisco questi, ma riordinati
+
   groups <- pred_sample(p = npred, o = overlap)
-  if(EXT == 0){
-    id_train <- c(1:124)
-    id_test <- c(125:152)
-  } else {
-    id_train <- c(1:200)
-    id_test <- c(201:228)
-  }
+  id_train <- c(1:124)
+  id_test <- c(125:152)
 
   yord <- ymat <- predmk <- progmk <- trtsgn <- prob <- vector("list", length = nset)
 
