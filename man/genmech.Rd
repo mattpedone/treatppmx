@@ -15,50 +15,44 @@ genmech(
 )
 }
 \arguments{
-\item{npred}{number of predictive covariates used to generate the outcome
-variables on the columns. Covariates should not be scaled.}
+\item{npred}{number of \eqn{Q} predictive covariates used to generate the outcome}
 
 \item{progscen}{Prognostic covariates option:
-0 - No prognostic biomarkers.
-1 - Prognostic biomarkers are considered in the original scale (default).
-2 - Prognostic biomarkers are transformed.}
+0 - No prognostic biomarkers;
+1 - Prognostic biomarkers are considered in the original scale (default);
+2 - Prognostic biomarkers are transformed}
 
 \item{predscen}{Predictive covariates option:
-1 - \code{npred} Predictive biomarkers are considered to generate outcomes (default)
+1 - \code{npred} Predictive biomarkers are considered to generate outcomes (default);
 2 - \code{nnoise} noisy std normals are added to the design matrix of predictive
-covariates in addition to 10 the predictive biomarkers considered to
+covariates in addition to \code{npred} predictive biomarkers considered to
 generate outcomes}
 
 \item{nnoise}{number of noisy covariates added to predictive biomarkers}
 
 \item{nset}{number of replicated scenarios generated}
 
-\item{save}{logical. if TRUE the function save the results in a .rda file.
-Default is FALSE.}
+\item{save}{logical. if TRUE the function save the results in a \code{.rda} file.
+Default is FALSE}
 
-\item{filename}{Name given to the file is results are save in .rda file.
-Default is ``myscenario.rda''}
+\item{filename}{Name given to the file is results are saved in \code{.rda} file
+Default is \code{myscenario.rda}}
 }
 \value{
 a list of 5 elements.
 \itemize{
-\item 1 - List of \code{nset} outcome variables.
-\item 2 - List of \code{nset} outcome variables in ordinal notation.
-\item 3 - A vector of assigned treatments.
-\item 4 - A matrix of all biomarkers.
-\item 5 - A list of outcome probabilities (one element for each treatment).
+\item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
+\item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
+\item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
+\item \code{cov}: \eqn{n\times (Q+2)} matrix. It contains all the biomarkers. The last two columns are the two predictive biomarkers
+\item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
 }
 }
 \description{
-Generates the data for the different simulations scenarios. It follows the
-strategy designed by Ma et al. (2019). It is used to generate the data for all
-the simulation study scenarios we used. In particular, it has three benefit-incresing levels. Patients are assigned
-to two competing treatments.
-The ordinal outcome variable are generated using two separate
-continuation-ratio logistic functions. The information carried by many
-predictive features can be summarized via dimension reduction techniques.
-This implementation, in particular, considers thr first two principal
-components of a PCA.
+Generates the data for the simulations scenarios 1a and 1b reported in the paper.
+It follows the strategy designed by Ma et al. (2019).
+In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+Patients (\eqn{n=152}) are assigned to \eqn{T=2} competing treatments.
 }
 \references{
 Ma, J., Stingo, F. C., & Hobbs, B. P. (2016). Bayesian predictive modeling

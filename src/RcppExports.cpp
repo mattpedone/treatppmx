@@ -120,32 +120,12 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// gsimconNNIG
-double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, double sumx2, int n, int DD, int logout);
-RcppExport SEXP _treatppmx_gsimconNNIG(SEXP m0SEXP, SEXP k0SEXP, SEXP nu0SEXP, SEXP s20SEXP, SEXP sumxSEXP, SEXP sumx2SEXP, SEXP nSEXP, SEXP DDSEXP, SEXP logoutSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type m0(m0SEXP);
-    Rcpp::traits::input_parameter< double >::type k0(k0SEXP);
-    Rcpp::traits::input_parameter< double >::type nu0(nu0SEXP);
-    Rcpp::traits::input_parameter< double >::type s20(s20SEXP);
-    Rcpp::traits::input_parameter< double >::type sumx(sumxSEXP);
-    Rcpp::traits::input_parameter< double >::type sumx2(sumx2SEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type DD(DDSEXP);
-    Rcpp::traits::input_parameter< int >::type logout(logoutSEXP);
-    rcpp_result_gen = Rcpp::wrap(gsimconNNIG(m0, k0, nu0, s20, sumx, sumx2, n, DD, logout));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_dm_ppmx_ct", (DL_FUNC) &_treatppmx_dm_ppmx_ct, 42},
     {"_treatppmx_prior_ppmx_core", (DL_FUNC) &_treatppmx_prior_ppmx_core, 21},
     {"_treatppmx_ran_mvnorm", (DL_FUNC) &_treatppmx_ran_mvnorm, 3},
     {"_treatppmx_ran_iwish", (DL_FUNC) &_treatppmx_ran_iwish, 3},
-    {"_treatppmx_gsimconNNIG", (DL_FUNC) &_treatppmx_gsimconNNIG, 9},
     {NULL, NULL, 0}
 };
 

@@ -27,7 +27,7 @@
 #' @param thin thinning for MCMC
 #' @param nclu_init number of cluster used for partial correlation initialization for prognostic covariates coefficient (default)
 #' @return Number of cluster at each MCMC iteration
-#' @export
+# @export
 
 prior_ppmx <- function(X=NULL, PPMx = 1, cohesion = 2, alpha=1.0, sigma = 0.2,
                           similarity = 1, consim=1, similparam, calibration=0, coardegree = 1,

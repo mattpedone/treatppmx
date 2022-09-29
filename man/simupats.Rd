@@ -32,7 +32,5 @@ determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
 
 The Leukemia dataset containing gene expression levels for a total of
 5,000 genes across 38 patients.
-
-
 }
 \keyword{datasets}

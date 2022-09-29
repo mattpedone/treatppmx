@@ -385,20 +385,20 @@ double gsimconNN(double m0, double v2, double s20, double sumx, double sumx2,
  * The double dipper is included as an argument.
  */
 
-//' Similarity function
-//'
-//' Normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
-//' @param m0 location parameter
-//' @param k0 shape gamma parameter
-//' @param nu0 scale gamma parameter
-//' @param s20 variance parameter
-//' @param sumx cluster sum
-//' @param sumx2 cluster squared sum
-//' @param n number of observation in current cluster
-//' @param DD logical if 1 Double Dipper similarity is employed
-//' @param logout logical if 1 return log value
-//' @export
-// [[Rcpp::export]]
+// Similarity function
+//
+// Normal-normal-IG Similarity function with x following normal and m,v a normal-IG.
+// @param m0 location parameter
+// @param k0 shape gamma parameter
+// @param nu0 scale gamma parameter
+// @param s20 variance parameter
+// @param sumx cluster sum
+// @param sumx2 cluster squared sum
+// @param n number of observation in current cluster
+// @param DD logical if 1 Double Dipper similarity is employed
+// @param logout logical if 1 return log value
+// @export
+
 double gsimconNNIG(double m0, double k0, double nu0, double s20, double sumx, double sumx2,
                    int n, int DD, int logout){
 

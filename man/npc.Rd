@@ -27,3 +27,9 @@ Function to calculate the npc
 \details{
 See Ma et al. (2019) for all the details.
 }
+\references{
+Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+treatment selection strategies that integrate predictive with prognostic
+determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+\url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+}

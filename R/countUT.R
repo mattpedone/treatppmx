@@ -13,6 +13,13 @@
 #' 3 columns store the probabilities for treatment 2.
 #' @param trtsgn treatment assigned to the patients by design.
 #' @param myoutot List of \code{nset} outcome variables in ordinal notation
+#'
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
 #' @return a \code{nobs} vector storing the npc for each patient,
 #' @export
 

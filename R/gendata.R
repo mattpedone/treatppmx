@@ -70,15 +70,10 @@ getdata <- function(...)
 
 #' genmech
 #'
-#' Generates the data for the different simulations scenarios. It follows the
-#' strategy designed by Ma et al. (2019). It is used to generate the data for all
-#' the simulation study scenarios we used. In particular, it has three benefit-incresing levels. Patients are assigned
-#' to two competing treatments.
-#' The ordinal outcome variable are generated using two separate
-#' continuation-ratio logistic functions. The information carried by many
-#' predictive features can be summarized via dimension reduction techniques.
-#' This implementation, in particular, considers thr first two principal
-#' components of a PCA.
+#' Generates the data for the simulations scenarios 1a and 1b reported in the paper.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' Patients (\eqn{n=152}) are assigned to \eqn{T=2} competing treatments.
 #'
 #' @references
 #' Ma, J., Stingo, F. C., & Hobbs, B. P. (2016). Bayesian predictive modeling
@@ -91,31 +86,29 @@ getdata <- function(...)
 #' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
 #' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
 #'
-#' @param npred number of predictive covariates used to generate the outcome
-# @param mydata input dataset file. It must be a dataset with observation on the rows and
-#' variables on the columns. Covariates should not be scaled.
+#' @param npred number of \eqn{Q} predictive covariates used to generate the outcome
 #' @param progscen Prognostic covariates option:
-#'   0 - No prognostic biomarkers.
-#'   1 - Prognostic biomarkers are considered in the original scale (default).
-#'   2 - Prognostic biomarkers are transformed.
+#'   0 - No prognostic biomarkers;
+#'   1 - Prognostic biomarkers are considered in the original scale (default);
+#'   2 - Prognostic biomarkers are transformed
 #' @param predscen Predictive covariates option:
-#'   1 - \code{npred} Predictive biomarkers are considered to generate outcomes (default)
+#'   1 - \code{npred} Predictive biomarkers are considered to generate outcomes (default);
 #'   2 - \code{nnoise} noisy std normals are added to the design matrix of predictive
-#'   covariates in addition to 10 the predictive biomarkers considered to
+#'   covariates in addition to \code{npred} predictive biomarkers considered to
 #'   generate outcomes
 #' @param nnoise number of noisy covariates added to predictive biomarkers
 #' @param nset number of replicated scenarios generated
-#' @param save logical. if TRUE the function save the results in a .rda file.
-#' Default is FALSE.
-#' @param filename Name given to the file is results are save in .rda file.
-#' Default is ``myscenario.rda''
+#' @param save logical. if TRUE the function save the results in a \code{.rda} file.
+#' Default is FALSE
+#' @param filename Name given to the file is results are saved in \code{.rda} file
+#' Default is \code{myscenario.rda}
 #' @return a list of 5 elements.
 #'   \itemize{
-#'   \item 1 - List of \code{nset} outcome variables.
-#'   \item 2 - List of \code{nset} outcome variables in ordinal notation.
-#'   \item 3 - A vector of assigned treatments.
-#'   \item 4 - A matrix of all biomarkers.
-#'   \item 5 - A list of outcome probabilities (one element for each treatment).
+#'   \item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
+#'   \item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
+#'   \item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
+#'   \item \code{cov}: \eqn{n\times (Q+2)} matrix. It contains all the biomarkers. The last two columns are the two predictive biomarkers
+#'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
 #' }
 #' @export
 
@@ -220,7 +213,7 @@ genmech <- function(npred = 10, progscen = 1,
   # RETURN
   if(save == FALSE){
     fulldata <- list(
-    Y = myy,
+    Y = mytot,
     Yord = myoutot,
     treatment = trtsgn,
     cov = biom,
@@ -320,13 +313,40 @@ tt <- function(pred, prog){
          trtsgn = trtsgn, myprob = myprob))
 }
 
+
 #' genmech_het
-#' @param npred number of predictive covariates used to generate the outcome
+#'
+#' Generates the data for the simulations scenarios reported in the paper.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' Patients (\eqn{n=152}) are assigned to \eqn{T=2} competing treatments.
+#' @param npred number of \eqn{Q} predictive covariates used to generate the outcome
 #' @param nset number of replicated scenarios generated
 #' @param overlap proportion of predictors used to generate the response in
 #' both the train and the validation set
 #'
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2016). Bayesian predictive modeling
+#' for genomic based personalized treatment selection. \emph{Biometrics},
+#' \strong{72}(2), 575-583.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1111/biom.12448}
+#'
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
+#' @return a list of 6 elements.
+#'   \itemize{
+#'   \item \code{yord}: List of \code{nset}. Each element is a \code{n-}dimensional vector of the ordinal outcome
+#'   \item \code{ymat}: List of \code{nset}. Each element is a \eqn{n\times K} matrix containing the ordinal outcome in the form of a Multinomial experiment
+#'   \item \code{pred}: List of \code{nset}. Each element is a \eqn{n\times Q} matrix containing the predictive biomarkers
+#'   \item \code{pred}: List of \code{nset}. Each element is a \eqn{n\times 2} matrix containing the prognostic biomarkers
+#'   \item \code{trtsgn}: List of \code{nset}. Each element is a \code{n-}dimensional vector of the treatment assigned
+#'   \item \code{prob}: List of \code{nset}. Each element of the list is a list of \eqn{T} \eqn{n\times K} matrices containing the response probabilities
+#' }
 #' @export
+
 genmech_het <- function(npred = 10, nset = 30, overlap = 0.8){
   set.seed(121)
   mydata <- getdata("simupats")
@@ -362,10 +382,39 @@ genmech_het <- function(npred = 10, nset = 30, overlap = 0.8){
 }
 
 #' genmech clustering
-#' @param npred number of predictive covariates used to generate the outcome
+#'
+#' Generates the data for the simulations scenarios S1 reported in the Supplementary Material.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' Patients (\eqn{n}) are assigned to \eqn{T=2} competing treatments.
+#' Moreover, the clustering is known and fixed. We generate predictive biomarkers as in Argiento et al. (2022).
+#'
+#' @param npred number of \eqn{Q} predictive covariates used to generate the outcome
 #' @param n number of observations
 #' @param nnoise number of noisy variables
 #' @param nset number of replicated scenarios generated
+#'
+#' @references
+#' Argiento, R., Corradin, R., and Guglielmi, A. (2022). A Bayesian nonparametric model
+#' for covariate driven clustering: improved insights of blood donors data. \emph{Unpublished
+#' Manuscript}.
+#'
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
+#' @return a list of 8 elements.
+#'   \itemize{
+#'   \item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
+#'   \item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
+#'   \item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
+#'   \item \code{pred}: \eqn{n\times}\eqn{(}\code{npred}\eqn{+}\code{nnoise}\eqn{)} matrix. It contains the predictive biomarkers (only the first \code{npred} are effectively used to generate the response)
+#'   \item \code{pred}: \eqn{n\times 2} matrix. It contains the prognostic biomarkers
+#'   \item \code{clu1}: contains the cluster label for patients assigned to Treatment 1
+#'   \item \code{clu2}: contains the cluster label for patients assigned to Treatment 2
+#'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
+#' }
 #' @export
 
 genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
@@ -479,7 +528,7 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
 
   # RETURN
   fulldata <- list(
-      Y = myy,
+      Y = mytot,
       Yord = myoutot,
       treatment = trtsgn,
       pred = Xpredcov,
@@ -492,7 +541,36 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
 
 
 #' genmech clustering 2
+#'
+#' Generates the data for the simulations scenarios S2 reported in the Supplementary Material.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' \eqn{n} patients are assigned to \eqn{T=2} competing treatments.
+#' Moreover, the clustering is known and fixed. We generate predictive biomarkers as Scenarion 4 in Page and Quintana (2018)
+#'
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
+#' Page, G. L. and Quintana, F. A. (2018). Calibrating covariate informed
+#' product partition models. \emph{Statistics and Computing}, \strong{28}(5), 1009–1031.
+#'
 #' @param nset number of replicated scenarios generated
+#'
+#' @return a list of 8 elements.
+#'   \itemize{
+#'   \item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
+#'   \item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
+#'   \item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
+#'   \item \code{pred}: \eqn{n\times}\eqn{(}\code{npred}\eqn{+}\code{nnoise}\eqn{)} matrix. It contains the predictive biomarkers (only the first \code{npred} are effectively used to generate the response)
+#'   \item \code{pred}: \eqn{n\times 2} matrix. It contains the prognostic biomarkers
+#'   \item \code{clu1}: contains the cluster label for patients assigned to Treatment 1
+#'   \item \code{clu2}: contains the cluster label for patients assigned to Treatment 2
+#'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
+#' }
+#'
 #' @export
 
 genmech_clu2 <- function(nset = 50){
@@ -610,7 +688,7 @@ genmech_clu2 <- function(nset = 50){
 
   # RETURN
   fulldata <- list(
-    Y = myy,
+    Y = mytot,
     Yord = myoutot,
     treatment = trtsgn,
     pred = Xpredcov,
@@ -623,8 +701,35 @@ genmech_clu2 <- function(nset = 50){
 
 
 #' genmech clustering 3
+#'
+#' Generates the data for the simulations scenarios S3 reported in the Supplementary Material.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' Patients (\eqn{n}) are assigned to \eqn{T=2} competing treatments.
+#' Moreover, the clustering is known and fixed. We generate predictive biomarkers as Scenarion 4 in Page and Quintana (2018)
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
+#' Page, G. L. and Quintana, F. A. (2018). Calibrating covariate informed
+#' product partition models. \emph{Statistics and Computing}, \strong{28}(5), 1009–1031.
+#'
 #' @param npred number of predictive covariates used to generate the outcome
 #' @param nset number of replicated scenarios generated
+#'
+#' @return a list of 8 elements.
+#'   \itemize{
+#'   \item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
+#'   \item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
+#'   \item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
+#'   \item \code{pred}: \eqn{n\times}\eqn{(}\code{npred}\eqn{+}\code{nnoise}\eqn{)} matrix. It contains the predictive biomarkers (only the first \code{npred} are effectively used to generate the response)
+#'   \item \code{pred}: \eqn{n\times 2} matrix. It contains the prognostic biomarkers
+#'   \item \code{clu1}: contains the cluster label for patients assigned to Treatment 1
+#'   \item \code{clu2}: contains the cluster label for patients assigned to Treatment 2
+#'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
+#' }
 #' @export
 
 genmech_clu3 <- function(npred = 10, nset = 1){
@@ -747,7 +852,7 @@ genmech_clu3 <- function(npred = 10, nset = 1){
 
   # RETURN
   fulldata <- list(
-    Y = myy,
+    Y = mytot,
     Yord = myoutot,
     treatment = trtsgn,
     pred = Xpredcov,

@@ -1,17 +1,23 @@
 #' ppmxct
 #'
-#' @param y ordinal-valued response variable
-#' @param X predictive biomarkers
-#' @param Xpred predictive covariates for new untreated patient
-#' @param Z prognostic covariates
-#' @param Zpred prognostic covariates for new untreated patient
-#' @param asstreat treatment for patients in training set. vector of integers
-#' @param PPMx option for the use of product partition model with covariates. (default is yes)
+#' Function to predict personalized treatment for \eqn{n_{test}} new untreated patients, given their biomarkers.
+#' It leverages response to treatment, \eqn{P} prognostic, \eqn{Q} predictive biomarkers
+#' of \eqn{n_{train}} historical patients.
+#' It accounts for \eqn{K} ordinal response level and \eqn{T} competing treatments.
+# For any methodological detail refer to Pedone M., Argiento R., and Stingo F.
+#'
+#' @param y \eqn{n_{train} \times K} matrix of ordinal-valued response variable
+#' @param X \eqn{n_{train} \times Q} dataframe of predictive biomarkers
+#' @param Xpred \eqn{n_{test} \times Q} dataframe of predictive covariates of new untreated patient
+#' @param Z \eqn{n_{train} \times P} dataframe of prognostic covariates
+#' @param Zpred \eqn{n_{test} \times P} dataframe of prognostic covariates of new untreated patient
+#' @param asstreat \eqn{n_test} vector of integers encoding treatment received by historical patients
+#' @param PPMx logical. option for the use of product partition model with covariates. (default is yes)
 #' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
 #'   1 - DirichletProcess-like cohesion (DP) cohesion
 #'   2 - Normalized Generalized Gamma Process (NGG) cohesion
-#' @param kappa value of \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)
-#' @param sigma number of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)
+#' @param kappa vector of possible values for \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)
+#' @param sigma vector of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
@@ -37,16 +43,48 @@
 #' @param burn MCMC iteration discarded due to burnin
 #' @param thin thinning for MCMC
 #' @param mhtunepar vector containing tuning parameters for MCMC updates
-#' @param CC number of auxiliary parameters for algorithm 8 by Neal
-#' @param reuse option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
+#' @param CC number of auxiliary parameters for Algorithm 8 by Neal (2000)
+#' @param reuse option for the reuse algorithm by Favaro and Teh (2013). integer 0 or 1.
 #'   0 - reuse algorithm is not adopted
 #'   1 - reuse algorithm is adopted
 #' @param nclu_init number of cluster used for partial correlation initialization for prognostic covariates coefficient (default)
-#' @return List
+#'
+#' @references
+#'
+#' Page, G. L. and Quintana, F. A. (2016). Calibrating covariate informed
+#' product partition models. \emph{Statistics and Computing}, \strong{28}(5), 1009–1031.
+#'
+#' Neal, R. M. (2000). Markov chain sampling methods for Dirichlet process mixture
+#' models. \emph{Journal of Computational and Graphical Statistics}, \strong{9}(2): 249–265.
+#'
+#' Favaro, S., Teh, Y. W., et al. (2013). MCMC for normalized random measure mixture
+#' models. \emph{Statistical Science}, \strong{28}(3): 335–359.
+
+#' @return a list of 16 elements.
+#'   \itemize{
+#'   \item \code{label}: List of \eqn{T} matrices. Each element is a \eqn{n_{test}^{a}\times}\code{nout} matrix.
+#'   \code{nout} is the number of MCMC iterations after burnin and thinning
+#'   The row of each matrix contains the vector of cluster labels of the historical
+#'   patient assigned to given treatment
+#'   \item \code{asstreat}: Vector of \eqn{n_{test}} treatment assignment
+#'   \item \code{num_treat}: Vector of dimension \eqn{T}. Contains the number
+#'   of patients assigned to each treatment \eqn{n^a}, for \eqn{a=1, \dots, T}.
+#'   \item \code{nclu}: \eqn{T\times}\code{nout} matrix of total number of cluster at each MCMC iteration for each treatment
+#'   \item \code{eta}: \code{nout}\eqn{\times T} List of matrices. Each matrix has dimension \eqn{K\times n^a}.
+#'   Each element of the list is the linear predictor matrix for treatment \eqn{a} at each MCMC iteration.
+#'   \item \code{beta}: Array of dimensions \eqn{P\times K \times}\code{nout}. It contains the matrix of prognostic factors at each MCMC iteration
+#'   \item \code{acc_beta}: \eqn{P\times K} matrix containing the counts each prognostic coefficient has been accepted in the MH step. Note that these counts should be divided by \code{iter}
+#'   Each element of the list is a list of 2 matrices (one for each treatment).
+#'   \item \code{pi_out}: \eqn{n\times K \times}\code{nout} array. It contains the Multinomial parameters for each patients at each MCMC iteration
+#'   \item \code{isypred}: \eqn{n\times K \times}\code{nout} array. It contains the outcome in-sample-prediction for each patients at each MCMC iteration
+#'   \item \code{WAIC}: scalar. It is the average WAIC
+#'   \item \code{lpml}: scalar. It is the average lpml
+#'   \item \code{sigmangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\sigma} parameter of NGGP for each treatment at each MCMC iteration
+#'   \item \code{kappangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\kappa} parameter of NGGP for each treatment at each MCMC iteration
+#'   \item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the predicted outcome for each untreated patients, under all the competing for each treatment at each MCMC iteration
+#'   \item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the Multinomial parameters for each untreated patients, under all the competing for each treatment at each MCMC iteration
+#' }
 #' @export
-# mancano come input tutti gli storage per l output che inizializzo in R e passo come input qui
-# poi in R li metto in una lista
-# se non funziona l output di myppmx deve essere una lista
 
 ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
                    PPMx = 1, cohesion = 2, kappa = c(1.0, 30.0, 10, 1),
@@ -94,15 +132,14 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
     classes <- sapply(Xall, class)
     catvars <- classes %in% c("factor","character")
 
-    # standardize continuous covariates
     if(nxobs > 0){
       if(sum(!catvars) > 0){
-        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)#
-        xcon <- Xconstd[1:nobs,,drop=FALSE];
+        Xconstd <- Xall[,!catvars, drop=FALSE]
+        xcon <- Xconstd[1:nobs,,drop=FALSE]
         #print(xcon)
         ncon <- ncol(xcon)
       }else{
-        xcon <- cbind(rep(0,nobs));
+        xcon <- cbind(rep(0,nobs))
         ncon <- 0
       }
 
@@ -113,7 +150,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
         catvec <- apply(xcat,2,function(x)length(unique(x)))
         ncat <- ncol(xcat)
       }else{
-        xcat <- cbind(rep(0,nobs));
+        xcat <- cbind(rep(0,nobs))
         catvec <- 0
         ncat <- 0
       }
@@ -121,7 +158,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
     # Now consider the case when number of covariates for prediction are greater than zero
     if(npred > 0){
       if(sum(!catvars) > 0){
-        Xconstd <- Xall[,!catvars, drop=FALSE]#apply(Xall[,!catvars, drop=FALSE], 2, scale)#
+        Xconstd <- Xall[,!catvars, drop=FALSE]
         xconp <- Xconstd[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
         #print(xconp)
         ncon <- ncol(xconp)
@@ -142,15 +179,6 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
       }
     }
   }
-
-  #if(similarity == 3){
-  #  dissim <- as.matrix(daisy(Xall, metric="gower"))
-  #  dissimtn <- dissim[1:nobs, 1:nobs]
-  #  dissimtt <- dissim[-c(1:nobs), 1:nobs]
-  #}else{
-  #  dissimtn <- 0
-  #  dissimtt <- 0
-  #}
 
   pmat = matrix(0, ncol(y), ncol(Z))
   noprog <- 0
@@ -182,9 +210,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   treatments <- asstreat#treatments vec
   n_a <- table(treatments)#num_treat vec 2
   max_n_treat <- max(n_a)#num_treat.max
-  #cat("max_n_treat", max_n_treat, "\n")
   min_n_treat <- min(n_a)#num_treat.max
-  #cat("min_n_treat", min_n_treat, "\n")
 
   curr_cluster <- matrix(0, A, max_n_treat)
   card_cluster <- matrix(0, A, max_n_treat)
@@ -201,14 +227,6 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
 
   treatments <- treatments - 1
 
-  #calcola 1 colonna V
-  #calcola resto matrice
-  #passa a funzione cpp
-  #   -V
-  #   -sigma
-  #   -cohesion
-
-  #a <- kappa#*sigma
   kappadp <- kappa[4]
   nsigma <- sigma[3]
   nkappa <- kappa[3]
@@ -216,15 +234,7 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
   kappagrid <- seq(kappa[1], kappa[2], length.out = nkappa)
   grid <- t(expand.grid(kappagrid, sigmagrid))[c(2,1),]
   ngrid <- ncol(grid)
-  #sigma <- c(0.25, 0.25)
-  #kappa <- c(1.0, 1.0)
 
-
-  #a <- 1; sigma <- .1; max_n_treat <- 100
-  #integrand <- function(u, n, sigma, a){
-  #  u^(n-1)*exp(-(a/sigma)*(((1+u)^sigma)-1))*(1+u)^(sigma-n)
-  #  }
-  print(Sys.time())
   if(cohesion == 2){
     Vwm <- array(NA, dim = c(max_n_treat+1, max_n_treat+1, ngrid))
     Vwm[1, 1,] <- 1
@@ -233,23 +243,11 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
         Vwm[n, (1:n), l] <- vweights::computev(n, grid[1, l], grid[2, l])
       }
     }
-    #Vwm <- log(Vwm)
   } else {
     Vwm <- array(NA, dim = c(2,2,2))
   }
-print(Sys.time())
-Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
-  #for(n in 1:(max_n_treat)){
-  #  #cat("n: ", n, "\n")
-  #  for(k in 1:n){
-  #    #Vwm[n+1, k+1] <- Vwm[n, k] -((n-(sigma*k))*Vwm[n+1, k])
-  #    #Vwm[n+1, k+1] <- exp(log(Vwm[n+1, k]) + log(exp(log(Vwm[n, k])- log(Vwm[n+1, k]))-(n-sigma*k)))
-  #    Vwm[n+1, k+1] <- exp(log(n-sigma*k)+log(Vwm[n+1, k]) + log(exp(log(Vwm[n, k])- (log(n-sigma*k)+log(Vwm[n+1,k])))-1))#chiude exp
-  #    #Vwm[n+1, k+1] <- exp(log(Vwm[n,k])+log(1-exp(log(n-(sigma*k))+log(Vwm[n+1, k])-log(Vwm[n,k]))))
-  #  }
-  #}
 
-  #Vwm[25,]
+  Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
 
   kappa <- kappa#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
@@ -263,8 +261,7 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
                  as.integer(ncon), as.integer(ncat),
                  as.vector(catvec), as.double(kappadp), as.matrix(grid), as.array(Vwm), as.integer(cohesion),
                  as.integer(CC), as.integer(reuse),
-                 as.integer(consim), as.integer(similarity), #as.integer(gowtot),
-                 #as.integer(alphagow), as.vector((dissimtn)), as.vector((dissimtt)),
+                 as.integer(consim), as.integer(similarity),
                  as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(Z),
                  as.matrix(Zpred), as.integer(noprog),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
@@ -283,11 +280,9 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
     label[[t]] <- out$cl_lab[t,,]
   }
 
-  #names(label) <- treatnames
   res$label <- label
   res$asstreat <- asstreat
   num_treat <- out$num_treat
-  #names(num_treat) <- treatnames
   res$num_treat <- num_treat
 
   #number of cluster
@@ -297,25 +292,11 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
   nclu_cs <- apply(nclu, 1, cumsum)#(nt x nout matrix)
 
 
-  #intercept (and its acceptance rate)
-  eta_out <- out$eta#matrix(out$mu, nrow=nout*nobs, byrow=TRUE)
-  #print(eta_out)
-  #eta_ar <- array(0, dim = c(max(nclu), ncol(y), nout, nT))
-  #for(t in 1:nT){
-  #  for(l in 1:nout){
-  #    for(i in 1:nclu[l, t]){
-  #      eta_ar[i, ,1, t] <- eta_out[i, ,t]
-  #      if(l > 1){
-  #        eta_ar[i, ,l, t] <- eta_out[i+nclu_cs[l-1], , t]
-  #      }
-  #    }
-  #  }
-  #}
+  #linear predictor
+  eta_out <- out$eta
   res$eta <- eta_out
-  #res$acc_rate_eta <- eta$acc#sum(out$eta_acc)#/sum(out$nclu)
 
   #prognostic covariates
-  #print((Ytest))
   beta <- array(0, dim = c(ncol(Z), ncol(y), nout))
 
   beta0 <- out$beta
@@ -329,14 +310,11 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
   }
 
   res$beta <- beta
-  res$acc_beta <- out$beta_acc#/(prod(dim(beta)))#out$beta_acc#/sum(out$nclu)
-  #pi (dirichlet parameter)
+  res$acc_beta <- out$beta_acc
+  #pi (multinomial parameter)
   pi_out <- out$pi
   res$pi_out <- pi_out
-  #res$pipred <- out$pipred
 
-  #in sample prediction & model fit
-  #yispred <- array(0, dim = c(nobs, ncol(y), nout))
   res$isypred <- out$yispred
   res$WAIC <- out$WAIC
   res$lpml <- out$lpml
@@ -350,7 +328,7 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
       ypred[,,a,i] <- out$ypred[i,1][[1]][,,a]
     }
   }
-  res$ypred <- ypred#out$ypred
+  res$ypred <- ypred
 
   pipred <- array(0, dim = c(npred, ncol(y), A, nout))
   for(i in 1:nout){
@@ -358,7 +336,7 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
       pipred[,,a,i] <- out$pipred[i,1][[1]][,,a]
     }
   }
-  res$pipred <- pipred#out$ypred
+  res$pipred <- pipred
   if(any(is.nan(unlist(pipred)))){
     cat("some NaN occurred", "\n")
   }
@@ -379,7 +357,3 @@ Vwm <- ifelse(is.infinite(Vwm), 0, Vwm)
   return(res)
 }
 
-#likelihood e lpml in cpp
-
-#funzione x gen dati
-#script

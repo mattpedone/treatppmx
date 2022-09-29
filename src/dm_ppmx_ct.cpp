@@ -40,7 +40,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   // it - observation in cluster tt index
   // idxs - index for sigma grid
 
-  //Gower dissimilarity has been commented
   int l, ll, i, ii, iii, c, p, pp, j, jj, mm, zi, k, q, h, tt, it, idxs;
   int dim = y.n_cols;
   int Q = z.n_cols;
@@ -93,10 +92,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   ////Multiple Treatments stuff
   //////////////////////////
   int nT = A;
-  //numero di trattamenti +1 perché il primo trattamento è codificato come 0
 
   arma::vec num_treat(nT, arma::fill::zeros);
-  // numerosità x trattamento (table(tratments))
 
   num_treat = n_a;
 
@@ -110,10 +107,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   //////////////////////////
   ////Cluster-related stuff
   //////////////////////////
-
-  /* inizializzo il vec delle label dei cluster, il vettore delle cardinalità
-   * di ciascun cluster e l'int che mi dice il numero di cluster correnti
-   */
 
   arma::mat curr_clu = curr_cluster;
   arma::mat nj_curr = card_cluster;
@@ -159,7 +152,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   arma::vec lambda(Q*dim, arma::fill::ones);
   double tau = 1.0;
 
-  // the linear predictor matrix, is in the log scale
+  // the linear predictor matrix is in the log scale
   // log-linear function on the prognostic marker n x K
   int clu_lg;
 
@@ -217,12 +210,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   ////////////////////////////////////////
   // Stuff needed for similarities
   ////////////////////////////////////////
-
-  //int njtmp;
-
-  //needed for Gower dissimilarity
-  //double npdN, npdY, npd;
-
   double lgconN, lgconY, lgcatN, lgcatY, tmp;
   double lgcont, lgcatt;
 
@@ -236,7 +223,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   double v = similparam(2);
   double k0 = similparam(3);
   double nu0 = similparam(4);
-  //double n0 = similparam(5);
 
   arma::vec gtilN(num_treat.max() + CC);
   gtilN.fill(0.0);
@@ -285,52 +271,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     }
   }
 
-  /*arma::vec emme0(dim, arma::fill::zeros); //prior mean for mu0
-   arma::vec sigma0(dim * dim, arma::fill::zeros); //prior variance for mu0
-
-   int idx = 0;
-   for(i = 0; i < dim; i++){
-   sigma0(idx) = 1;
-   idx += (dim + 1);
-   }
-
-   arma::mat sigma0_mat(dim, dim, arma::fill::zeros);
-
-   for(i = 0; i < dim; i++){
-   for(j = 0; j < dim; j++){
-   sigma0_mat(i, j) = sigma0(i*dim + j);
-   }
-   }
-
-   arma::mat Psi0_mat(dim, dim, arma::fill::zeros);
-
-   for(i = 0; i < dim; i++){
-   for(j = 0; j < dim; j++){
-   Psi0_mat(i, j) = Psi0(i*dim + j);
-   }
-   }
-
-   arma::mat Vwork(dim, dim, arma::fill::zeros); //working matrix for hyperparameters update
-   idx = 0;
-   for(i = 0; i < dim; i++){
-   Vwork(idx) = 1;
-   idx += (dim + 1);
-   }
-
-   arma::vec Vvecwork(dim*dim);
-   for(i = 0; i < dim; i++){
-   for(j = 0; j < dim; j++){
-   Vvecwork(i*dim + j) = Vwork(i, j);
-   }
-   }
-
-   arma::mat Swork(dim, dim, arma::fill::zeros); //work
-   arma::vec Rwork(dim, arma::fill::zeros); //work
-   arma::mat Bwork(dim, dim, arma::fill::zeros);
-   arma::vec Bvecwork(dim*dim, arma::fill::zeros);
-   arma::mat Awork(dim, dim, arma::fill::zeros);
-   arma::vec Avecwork(dim*dim, arma::fill::zeros);*/
-
   arma::cube Theta(dim, num_treat.max(), nT, arma::fill::zeros);
   arma::cube Sigma(dim * dim, num_treat.max(), nT, arma::fill::zeros);
 
@@ -340,7 +280,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       idx = 0;
       for(i = 0; i < dim; i++){
         Sigma.slice(tt).col(j).row(idx) = 1;
-        //Sigma(idx, j, tt) = 1.0;
         idx += (dim + 1);
       }
     }
@@ -391,18 +330,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   Rcpp::List l_beta_out(3);
 
   arma::mat nclus(nT, nout, arma::fill::ones);
-  //arma::mat sigma_out(1, dim*dim);
-  //arma::cube eta_out(nout, dim, nT);
   arma::field<arma::mat> eta_out(nout, nT);
   arma::mat beta_out(Q * dim, nout, arma::fill::zeros);
   arma::cube Clui(nT, num_treat.max(), nout, arma::fill::zeros);
   arma::mat predclass_out(nout * npred, nT, arma::fill::zeros);
   arma::vec like(nout * nobs, arma::fill::ones);
   arma::cube pigreco(nobs, dim, nout, arma::fill::zeros);
-  //arma::cube pigreco_pred(npred, dim, nout, arma::fill::zeros);
   arma::field<arma::cube> pigreco_pred(nout, 1);
   arma::cube ispred_out(nobs, dim, nout, arma::fill::ones);
-  //arma::cube ppred_out(npred, dim, nout, arma::fill::zeros);
   arma::field<arma::cube> ppred_out(nout, 1);
   arma::mat sigma_ngg_out(nT, nout, arma::fill::zeros);
   arma::mat kappa_ngg_out(nT, nout, arma::fill::zeros);
@@ -419,8 +354,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     for(tt = 0; tt < (nT); tt++){
 
       if(reuse == 1){
-        /* inizializzo latent variables per empty components da P0
-         * per il Reuse algorithm (CC vettori di lunghezza dim)
+        /* initilize latent variables for empty components from P0
+         * for Reuse algorithm (CC dim-dimensional vectors)
          */
         for(mm = 0; mm < CC; mm++){
           eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0, L0v, dim);
@@ -433,7 +368,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
           /////////////////////////////////////////
           // update the cluster labels with NEAL 8
           /////////////////////////////////////////
-          zi = curr_clu(tt, it)-1; //sottraggo 1 perché C conta da 0
+          zi = curr_clu(tt, it)-1; //C counts from 0
 
           if(nj_curr(tt, zi) > 1){// Case where the nj corresponding to zi is such that nj>1
             nj_curr(tt, zi) -= 1;
@@ -507,7 +442,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
             nclu_curr(tt) -= 1;
 
-            //CONYROLLA BENE
             iii = 0;
             for(ii = 0; ii < nobs; ii++){
               if(ii != i){
@@ -583,7 +517,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                     lgconY += lgcont;
                   }
                 }
-              }//chiude ciclo su p covariate continue
+              }//close cicle on p continuous covariate
 
               // Categorical Covariates
               for(p = 0; p < ncat; p++){
@@ -604,7 +538,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 }
 
                 njctmp(xcat(i*(ncat)+p)) += 1;
-                //njtmp += 1;
 
                 // Auxiliary - Dirichlet-Multinomial
                 if(similarity==1){
@@ -616,57 +549,12 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                   lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 1, 1);
                   lgcatY += lgcatt;
                 }
-              }//chiude ciclo su p covariate discrete
+              }//close cicle on p discrete covariate
 
               gtilY(j) = lgconY + lgcatY;
               gtilN(j) = lgconN + lgcatN;
-
-              // Gower dissimilarity
-              /*
-               * if(similarity == 3){
-               npd = 0.0;
-               lgconY = 0.0;
-               lgconN = 0.0;
-               int iiv = 0;
-               int iv = 0;
-               for(ii = 0; ii < nobs; ii++){
-               if(treatments(ii) == tt){
-               if((curr_clu(tt, iiv) == (j + 1)) & (ii != i)){
-               lgconY += dissimtn(ii * nobs + i);
-               iv = 0;
-               for(iii = 0; iii < ii; iii++){
-               if(treatments(iii) == tt){
-               if((curr_clu(tt, iv) == (j + 1)) & (iii != i)){
-               lgconN += dissimtn(ii*nobs+iii);
-               lgconY += dissimtn(ii*nobs+iii);
-               npd+= 1;
-               }
-               iv += 1;
-               }
-               }
-               }
-               iiv += 1;
-               }
-
-               }
-               npdN = nj_curr(tt, j) * (nj_curr(tt, j) - 1)/2.0;
-               if(npdN == 0){
-               npdN = 1.0;
-               }
-               npdY = (nj_curr(tt, j) + 1) * (nj_curr(tt, j))/2.0;
-               if(gowtot == 0){
-               lgconN = -(alphagow)*lgconN/(npdN);
-               lgconY = -(alphagow)*lgconY/(npdY);
-               } else {
-               lgconN = -(alphagow)*lgconN;
-               lgconY = -(alphagow)*lgconY;
-               }
-               }
-               */
             }// this closes PPMx
 
-            //ast: qui ci metto l'if per coehesion (dentro ciclo sui cluster perchè dipende da j)
-            // cef1
             //compute PLAIN cluster probabilities
 
             if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
@@ -675,15 +563,13 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                //weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                 weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
                 weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
-                //Rcpp::Rcout << "weight: " << weight(tt, j) << std::endl;
               }
               weight(tt, j) += lgcatY - lgcatN + // Categorical part
                 lgconY - lgconN;  // Continuous;
-              //le similarità le scrivo così invece che con gtilY(j) e gtilN(j), così quando ho PPM valgono 0 ed è corretto
-              //al contrario se è un PPMx lgcatY, lgcatN, lgconY, lgconN hanno i valori del j-esimo cluster
+              //similarities are written in this way instead of gtilY(j) and gtilN(j), when i set PPM the value is 0 and it is fine
+              //on the contrary if I have PPMx lgcatY, lgcatN, lgconY, lgconN have j-th cluster's values
               for(k = 0; k < dim; k++){
                 wo = calculate_gamma(eta_star_curr.slice(tt), z, beta, j, k, i, 0);
                 weight(tt, j) += wo * log(JJ(i, k)) - lgamma(wo) - JJ(i, k) * (ss(i) + 1.0);
@@ -694,13 +580,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
 
             if((calibration == 2) & (PPMx == 1)){
-              //ast: qui ci metto l'if per coehesion
               // cohesion part
               if(cohesion == 1){
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                //weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                 weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
                 weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
               }
@@ -718,12 +602,12 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 }
               }
             }
-          } //chiude la similarity & calibration for current clusters
+          } //close similarity & calibration for current clusters
 
           //SIMILARITY & CALIBRATION EMPTY CLUSTERS
           if(reuse == 0){
             for(mm = 0; mm < CC; mm++){
-              eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0, L0v, dim);//ran_mvnorm(Theta.slice(tt).col(j), Sigma.slice(tt).col(j), dim);
+              eta_empty.slice(tt).col(mm) = ran_mvnorm(mu0, L0v, dim);
             }
           }
 
@@ -755,7 +639,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                     lgcondraw += lgcont;
                   }
                 }
-              }//chiude ciclo su p covariate continue
+              }//close cicle on p continuous covariate
 
               /*if(similarity == 3){
                lgcondraw = 0.0;
@@ -779,14 +663,14 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                   lgcatt = gsimcatDM(njctmp, dirweights, catvec(p), 1, 1);
                   lgcatdraw += lgcatt;
                 }
-              }//chiude ciclo su covariate discrete
+              }//close cicle on p discrete covariate
 
               /*if(similarity == 3){
                lgcatdraw = 0.0;
               }*/
 
               gtilY(j) = lgcondraw + lgcatdraw;
-              gtilN(j) = lgcondraw + lgcatdraw;//ATTENZIONE
+              gtilN(j) = lgcondraw + lgcatdraw;
             }//closes PPMx
 
             if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
@@ -795,9 +679,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                //weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                 weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
-                //weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
               }
               weight(tt, j) += lgcondraw + // Continuous covariate part
                 lgcatdraw; // categorical covariate part
@@ -816,9 +698,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                //weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                 weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
-                //weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
               }
               if(coardegree == 1){
                 weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
@@ -857,24 +737,22 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
               lgtilN(j) = gtilN(j) - maxgtilN;
               sgN = sgN + exp(lgtilN(j));
 
-              if(j < nclu_curr(tt)){// se è in un cluster non è un signoletto
+              if(j < nclu_curr(tt)){// if it is in a cluster it is not a singleton
                 lgtilY(j) = gtilY(j) - maxgtilY;
                 sgY += exp(lgtilY(j));
               }
             }
 
-            // Calibrazione prob di cluster esistenti
+            // Calibration of prob for existent clusters
             for(j = 0; j < nclu_curr(tt); j++){
               lgtilNk = lgtilN(j) - log(sgN);
               lgtilYk = lgtilY(j) - log(sgY);
 
-              //ast: qui ci metto if per cohesion (dentro perché dipende da j)
               // cohesion part
               if(cohesion == 1){
                 weight(tt, j) = log((double) nj_curr(tt, j));
               }
               if(cohesion == 2){
-                //weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                 weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
                 weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
               }
@@ -898,9 +776,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                 weight(tt, j) = log(alpha) - log(CC);
               }
               if(cohesion == 2){
-                //weight(tt, j) = log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxs)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                 weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
-                //weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
               }
               weight(tt, j) += lgtilNk;
               for(k = 0; k < dim; k++){
@@ -962,12 +838,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             nj_curr(tt, nclu_curr(tt)-1) = 1;
             eta_star_curr.slice(tt).col(nclu_curr(tt)-1) = eta_empty.slice(tt).col(id_empty);
             //NEED TO UPDATE GAMMA TOO
-            //for(ii = 0; ii < nobs; ii++){
             for(k = 0; k < dim; k++){
               loggamma(i, k) = calculate_gamma(eta_star_curr.slice(tt),
                        z, beta, curr_clu(tt, it)-1, k, i, 1);
             }
-            //}
             eta_empty.slice(tt).col(id_empty) = ran_mvnorm(mu0, L0v, dim);
           }
 
@@ -992,8 +866,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
     for(tt = 0; tt < (nT); tt++){
       for(j = 0; j < nclu_curr(tt); j++){
-        //Rcpp::Rcout << "mu: " << mu0.col(tt) << std::endl;
-        //Rcpp::Rcout << "L0: " << L0v.col(tt) << std::endl;
         l_eta_out = eta_update(JJ, loggamma, curr_clu.row(tt).t(),
                                treatments, tt, eta_star_curr.slice(tt).col(j),
                                eta_flag.row(tt).t(),
@@ -1006,71 +878,18 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       sumtotclu(tt) += nclu_curr(tt);
     } //this closes the loop on tt
 
-    /*if(upd_hier == 1){
-     for(tt = 0; tt < nT; tt++){
-     for(j = 0; j < (dim*dim); j++){
-     Swork(j) = 0.0;
-     }
-
-     for(j = 0; j < nclu_curr(tt); j++){
-     Swork += (eta_star_curr.slice(tt).col(j) - mu0.col(tt)) * (eta_star_curr.slice(tt).col(j) - mu0.col(tt)).t();
-     }
-     Bwork = nuiw*Psi0_mat + Swork;
-     Bwork = arma::inv(Bwork);
-     for(i = 0; i < dim; i++){
-     for(j = 0; j < dim; j++){
-     Bvecwork(i*dim + j) = Bwork(i, j);
-     }
-     }
-
-     L0v.col(tt) = ran_iwish(nclu_curr(tt) + nuiw, Bvecwork, dim);
-
-     for(i = 0; i < dim; i++){
-     for(j = 0; j < dim; j++){
-     L0_mat(i, j) = L0v(i*dim + j);
-     }
-     }
-
-     Vwork = arma::inv(sigma0_mat) + nclu_curr(tt)*L0_mat;
-     Vwork = arma::inv(Vwork);
-
-     for(j = 0; j < dim; j++){
-     Rwork(j) = 0;
-     }
-     for(j = 0; j < nclu_curr(tt); j++){
-     Rwork += eta_star_curr.slice(tt).col(j);
-     }
-
-     Awork = Vwork*((arma::inv(sigma0_mat)*emme0) + L0_mat*Rwork);
-
-     for(i = 0; i < dim; i++){
-     for(j = 0; j < dim; j++){
-     Vvecwork(i*dim + j) = Vwork(i, j);
-     }
-     }
-
-     mu0.col(tt) = ran_mvnorm(Awork, Vvecwork, dim);
-     }
-    }*/
-
     if(upd_hier == 1){
-      //Rcpp::Rcout << "begin uh" << std::endl;
       for(tt = 0; tt < nT; tt++){
-        //Rcpp::Rcout << "begin uh -- tt" << std::endl;
         for(j = 0; j < nclu_curr(tt); j++){
-          //Rcpp::Rcout << "begin uh -- tt -- j" << std::endl;
           for(i = 0; i < dim; i++){
             for(jj = 0; jj < dim; jj++){
               Sigma_work(i, jj) = Sigma.slice(tt).col(jj)(i*dim + jj);
             }
           }
-          //Rcpp::Rcout << "begin uh -- tt -- j -- Sigma Work" << std::endl;
 
           lambda_n = nj_curr(tt, j) * arma::inv(Sigma_work);
           lambda_n = arma::inv(Lambda0) + lambda_n;
           lambda_n = arma::inv(lambda_n);
-
-          //Rcpp::Rcout << "begin uh -- tt -- j -- Lambda_n" << std::endl;
 
           for(i = 0; i < dim; i++){
             for(jj = 0; jj < dim; jj++){
@@ -1078,37 +897,20 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
           }
 
-          //Rcpp::Rcout << "begin uh -- tt -- j -- Lambda_n vec" << std::endl;
-
           mu_n = lambda_n * (arma::inv(Lambda0) * mu0 + nj_curr(tt, j) * arma::inv(Sigma_work) * eta_star_curr.slice(tt).col(j));
-
-          //Rcpp::Rcout << "begin uh -- tt -- j -- mu_n" << std::endl;
 
           Theta.slice(tt).col(j) = ran_mvnorm(mu_n, lambda_n_vec, dim);
 
-          //Rcpp::Rcout << "begin uh -- tt -- j -- theta" << std::endl;
-
-          for(j = 0; j < (dim*dim); j++){
-            Stheta(j) = 0.0;
+          for(jj = 0; jj < (dim*dim); jj++){
+            Stheta(jj) = 0.0;
           }
 
-          //Rcpp::Rcout << "begin uh -- tt -- j -- Stheta -- intermediate" << std::endl;
-
-          //Rcpp::Rcout << "# clu: " << nclu_curr(tt) << std::endl;
-
-          for(j = 0; j < nclu_curr(tt); j++){
-            Stheta += (eta_star_curr.slice(tt).col(j) - Theta.slice(tt).col(j)) *
-              (eta_star_curr.slice(tt).col(j) - Theta.slice(tt).col(j)).t();
-            //Rcpp::Rcout << "begin uh -- tt -- j -- Stheta -- each Stheta_j" << std::endl;
-            //Rcpp::Rcout << "j: " << j << std::endl;
-            //Rcpp::Rcout << Stheta << std::endl;
+          for(jj = 0; jj < nclu_curr(tt); j++){
+            Stheta += (eta_star_curr.slice(tt).col(jj) - Theta.slice(tt).col(jj)) *
+              (eta_star_curr.slice(tt).col(jj) - Theta.slice(tt).col(jj)).t();
           }
-
-          //Rcpp::Rcout << "begin uh -- tt -- j -- Stheta" << std::endl;
 
           S_n = arma::inv(S0 + Stheta);
-
-          //Rcpp::Rcout << "begin uh -- tt -- j -- S_n" << std::endl;
 
           for(i = 0; i < dim; i++){
             for(jj = 0; jj < dim; jj++){
@@ -1116,11 +918,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
             }
           }
 
-          //Rcpp::Rcout << "begin uh -- tt -- j -- S_n_vec" << std::endl;
-
           Sigma.slice(tt).col(j) = ran_iwish(nuiw + nj_curr(tt, j), S_n_vec, dim);
-
-          //Rcpp::Rcout << "begin uh -- tt -- j -- Sigma" << Sigma.slice(tt).col(j).t() << std::endl;
         }
       }
     }
@@ -1130,133 +928,111 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     //////////////////////////////////////////////////
     if(cohesion == 2){
       for(tt = 0; tt < nT; tt++){
-          for(j = 0; j < nclu_curr(tt); j++){
-            lgconY = 0.0;
-            lgcatY = 0.0;
+        for(j = 0; j < nclu_curr(tt); j++){
+          lgconY = 0.0;
+          lgcatY = 0.0;
 
-            if(PPMx == 1){
-              // Continuous Covariates
-              for(p = 0; p < (ncon); p++){
-                if(similarity==1){ // Auxilliary
-                  if(consim==1){//normal normal
-                    lgcont = gsimconNN(m0, v, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 0, 1);
-                    lgconY += lgcont;
-                  }
-                  if(consim==2){//normal normal inverse gamma
-                    lgcont = gsimconNNIG(m0, k0, nu0, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 0, 1);
-                    lgconY += lgcont;
-                  }
+          if(PPMx == 1){
+            // Continuous Covariates
+            for(p = 0; p < (ncon); p++){
+              if(similarity==1){ // Auxilliary
+                if(consim==1){//normal normal
+                  lgcont = gsimconNN(m0, v, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 0, 1);
+                  lgconY += lgcont;
                 }
-                if(similarity==2){ //Double Dipper
-                  if(consim==1){//normal normal
-                    lgcont = gsimconNN(m0, v, s20, sumx(tt, j), sumx2(tt, j * ncon + p), nj_curr(tt, j * ncon + p), 1, 1);
-                    lgconY += lgcont;
-                  }
-                  if(consim==2){//normal normal inverse gamma
-                    lgcont = gsimconNNIG(m0, k0, nu0, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 1, 1);
-                    lgconY += lgcont;
-                    //Rcpp::Rcout << "lgcont: " << lgcont << std::endl;
-                  }
+                if(consim==2){//normal normal inverse gamma
+                  lgcont = gsimconNNIG(m0, k0, nu0, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 0, 1);
+                  lgconY += lgcont;
                 }
-              }//chiude ciclo su p covariate continue
-
-              // Categorical Covariates
-              for(p = 0; p < ncat; p++){
-                // Auxiliary - Dirichlet-Multinomial
-                if(similarity==1){
-                  lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
-                  lgcatY += lgcatt;
-                }
-                // Double dipper - Dirichlet-Multinomial
-                if(similarity==2){
-                  lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
-                  lgcatY += lgcatt;
-                }
-              }//chiude ciclo su p covariate discrete
-
-              gtilY(j) = lgconY + lgcatY;
-            }// this closes PPMx
-
-            if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
-              // calibration part
-              omegasigma(tt, j) = gtilY(j);
-            }
-
-            if((calibration == 2) & (PPMx == 1)){
-              // calibration part
-              omegasigma(tt, j) = 0.0;
-              if(coardegree == 1){
-                omegasigma(tt, j) += (1/((double)ncon + (double)ncat))*gtilY(j);
               }
-              if(coardegree == 2){
-                omegasigma(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*gtilY(j);
+              if(similarity==2){ //Double Dipper
+                if(consim==1){//normal normal
+                  lgcont = gsimconNN(m0, v, s20, sumx(tt, j), sumx2(tt, j * ncon + p), nj_curr(tt, j * ncon + p), 1, 1);
+                  lgconY += lgcont;
+                }
+                if(consim==2){//normal normal inverse gamma
+                  lgcont = gsimconNNIG(m0, k0, nu0, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 1, 1);
+                  lgconY += lgcont;
+                }
               }
-            }
-          } //chiude la similarity
+            }//close cicle on p continuous covariate
 
-          // cohesion part
-          for(int idxst = 0; idxst < K; idxst++){
-            sigma_temp = grid(0,idxst);
-            os(tt, idxst) = 0;
+            // Categorical Covariates
+            for(p = 0; p < ncat; p++){
+              // Auxiliary - Dirichlet-Multinomial
+              if(similarity==1){
+                lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
+                lgcatY += lgcatt;
+              }
+              // Double dipper - Dirichlet-Multinomial
+              if(similarity==2){
+                lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
+                lgcatY += lgcatt;
+              }
+            }//close cicle on p discrete covariate
+
+            gtilY(j) = lgconY + lgcatY;
+          }// this closes PPMx
+
+          if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
+            // calibration part
+            omegasigma(tt, j) = gtilY(j);
+          }
+
+          if((calibration == 2) & (PPMx == 1)){
+            // calibration part
+            omegasigma(tt, j) = 0.0;
+            if(coardegree == 1){
+              omegasigma(tt, j) += (1/((double)ncon + (double)ncat))*gtilY(j);
+            }
+            if(coardegree == 2){
+              omegasigma(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*gtilY(j);
+            }
+          }
+        } //chiude la similarity
+
+        // cohesion part
+        for(int idxst = 0; idxst < K; idxst++){
+          sigma_temp = grid(0,idxst);
+          os(tt, idxst) = 0;
           for(j = 0; j < nclu_curr(tt); j++){
             os(tt, idxst) += omegasigma(tt, j);
             //os(tt, idxst) += log(1.0/K) + log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxst)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxst))+(nj_curr(tt, j)-sigma_temp));
             os(tt, idxst) += lgamma(nj_curr(tt, j) - sigma_temp) - lgamma(1 - sigma_temp);
-            }
-            os(tt, idxst) += log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxst));
           }
-
-          maxwei = os(tt, 0);
-          for(int idxst = 1; idxst < K; idxst++){
-            if(maxwei < os(tt, idxst)) maxwei = os(tt, idxst);
-          }
-          denwei = 0.0;
-          for(int idxst = 0; idxst < K; idxst++){
-            os(tt, idxst) = exp(os(tt, idxst) - maxwei);
-            denwei += os(tt, idxst);
-          }
-
-          for(int idxst = 0; idxst < K; idxst++){
-            pos(tt, idxst) = os(tt, idxst)/denwei;
-          }
-
-          opts = arma::linspace<arma::uvec>(0L, K2 - 1L, K2);
-
-          idxs = arma::conv_to<arma::uword>::from(
-            Rcpp::RcppArmadillo::sample(opts, 1L, false, os.row(tt).t())
-          );
-
-          sigma(tt) = grid(0,idxs);
-          kappa(tt) = grid(1,idxs);
-
-          // cohesion part
-          /*arma::vec res(K, arma::fill::zeros);
-          denwei = 0.0;
-          arma::vec prob_kappa(nclu_curr(tt)-1, arma::fill::zeros);
-          for(int idxst = 0; idxst < K; idxst++){
-            sigma_temp = grid(0,idxst);
-            arma::vec lrho(nclu_curr(tt)-1, arma::fill::zeros);
-            for(j = 0; j < (nclu_curr(tt)-1); j++){
-              lrho(j) = lgamma(nj_curr(tt, j) - sigma_temp) - lgamma(1 - sigma_temp);
-              }
-            res(idxst) = arma::sum(lrho) + log((double) Vwm(num_treat(tt)-1, (nclu_curr(tt)-1), idxst));
-            denwei += res(idxst);
-
-             for(j = 0; j < (nclu_curr(tt)-1); j++){
-               prob_kappa(j) = res(j)/denwei;
-             }
-             //os(tt, idxst) = arma::sum(lrho) + log((double) Vwm(num_treat(tt)-1, j, idxst));
-
-           }*/
+          os(tt, idxst) += log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxst));
         }
+
+        maxwei = os(tt, 0);
+        for(int idxst = 1; idxst < K; idxst++){
+          if(maxwei < os(tt, idxst)) maxwei = os(tt, idxst);
+        }
+        denwei = 0.0;
+        for(int idxst = 0; idxst < K; idxst++){
+          os(tt, idxst) = exp(os(tt, idxst) - maxwei);
+          denwei += os(tt, idxst);
+        }
+
+        for(int idxst = 0; idxst < K; idxst++){
+          pos(tt, idxst) = os(tt, idxst)/denwei;
+        }
+
+        opts = arma::linspace<arma::uvec>(0L, K2 - 1L, K2);
+
+        idxs = arma::conv_to<arma::uword>::from(
+          Rcpp::RcppArmadillo::sample(opts, 1L, false, os.row(tt).t())
+        );
+
+        sigma(tt) = grid(0,idxs);
+        kappa(tt) = grid(1,idxs);
       }
+    }
 
     if(noprog != 1){
       //UPDATE PROGNOSTIC COVARIATES' COEFFICIENTS
 
       for(k = 0; k < dim; k++){
         for(q = 0; q < Q; q++){
-          //h = q + k * Q;
           h = k + q * dim;
           beta_temp(q) = beta(h);
         }
@@ -1264,7 +1040,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                                  mu_beta, sigma_beta, k, mhtunepar(1));
         beta_temp = Rcpp::as<arma::vec>(l_beta_out[0]);
         for(q = 0; q < Q; q++){
-          //h = q + k * Q;
           h = k + q * dim;
           beta(h) = beta_temp(q);
         }
@@ -1332,8 +1107,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                lgcatN=0.0, lgcatY=0.0;
 
                if(PPMx == 1){
-
-                 //if(similarity != 3){
                  for(p = 0; p < ncon; p++){
                    sumxtmp = sumx(tt, j * ncon + p);
                    sumx2tmp = sumx2(tt, j * ncon + p);
@@ -1344,14 +1117,12 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                      }
                      if(consim==2){//normal normal inverse gamma
                        lgcont = gsimconNNIG(m0, k0, nu0, s20, sumxtmp, sumx2tmp, nj_curr(tt, j), 0, 1);
-                       //sufficient statistics da controllare: in Page "sballate"
                        lgconN += lgcont;
                      }
                    }
                    if(similarity==2){ //Double Dipper
                      if(consim==1){//normal normal
                        lgcont = gsimconNN(m0, v, s20, sumxtmp, sumx2tmp, nj_curr(tt, j), 1, 1);
-                       //sufficient statistics da controllare: in Page "sballate"
                        lgconN += lgcont;
                      }
                      if(consim==2){//normal normal inverse gamma
@@ -1377,7 +1148,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    if(similarity==2){ //Double Dipper
                      if(consim==1){//normal normal
                        lgcont = gsimconNN(m0, v, s20, sumxtmp, sumx2tmp, (nj_curr(tt, j) + 1), 1, 1);
-                       //sufficient statistics da controllare: in Page "sballate"
                        lgconY += lgcont;
                      }
                      if(consim==2){//normal normal inverse gamma
@@ -1405,7 +1175,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    }
 
                    njctmp(xcat(pp*(ncat)+p)) += 1;
-                   //njtmp += 1;
 
                    // Auxiliary - Dirichlet-Multinomial
                    if(similarity==1){
@@ -1421,46 +1190,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
                  gtilY(j) = lgconY + lgcatY;
                  gtilN(j) = lgconN + lgcatN;
-
-                 // Gower dissimilarity
-                 /*if(similarity == 3){
-                  npd = 0.0;
-                  lgconY = 0.0;
-                  lgconN = 0.0;
-                  int iiv = 0;
-                  int iv = 0;
-                  for(ii = 0; ii < nobs; ii++){
-                  if(treatments(ii) == tt){
-                  if(curr_clu(tt, iiv) == (j + 1)){
-                  lgconY += dissimtt(pp * nobs + ii);
-                  iv = 0;
-                  for(iii = 0; iii < ii; iii++){
-                  if(treatments(iii) == tt){
-                  if(curr_clu(tt, iv) == (j + 1)){
-                  lgconN += dissimtn(ii*nobs+iii);
-                  lgconY += dissimtn(ii*nobs+iii);
-                  npd+= 1;
-                  }
-                  iv += 1;
-                  }
-                  }
-                  }
-                  iiv += 1;
-                  }
-                  }
-                  npdN = nj_curr(tt, j) * (nj_curr(tt, j) - 1)/2.0;
-                  if(npdN == 0){
-                  npdN = 1.0;
-                  }
-                  npdY = (nj_curr(tt, j) + 1) * (nj_curr(tt, j))/2.0;
-                  if(gowtot == 0){
-                  lgconN = -(alphagow)*lgconN/(npdN);
-                  lgconY = -(alphagow)*lgconY/(npdY);
-                  } else {
-                  lgconN = -(alphagow)*lgconN;
-                  lgconY = -(alphagow)*lgconY;
-                  }
-                 }*/
                }//this closes the if on PPMx
 
                if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
@@ -1469,7 +1198,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    weight(tt, j) = log((double) nj_curr(tt, j));
                  }
                  if(cohesion == 2){
-                   //weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs))+((nj_curr(tt, j))-sigma(tt)));
                    weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
                    weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
                  }
@@ -1478,13 +1206,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }
 
                if((calibration == 2) & (PPMx == 1)){
-                 //ast: qui ci metto if per cohesion
                  // cohesion part
                  if(cohesion == 1){
                    weight(tt, j) = log((double) nj_curr(tt, j));
                  }
                  if(cohesion == 2){
-                   //weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                    weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
                    weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
                  }
@@ -1497,7 +1223,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                }
              }//this closes the loop on existing clusters
 
-             //probabilità che la predittiva metta l'osservazione in un cluster tutto suo
+             //probability that the posterior predictive selects a complete new cluster for the patient
              for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
                jj = j - nclu_curr(tt);
                lgcondraw = 0.0;
@@ -1522,7 +1248,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                        lgcondraw += gsimconNNIG(m0, k0, nu0, s20, tmp, tmp*tmp, 1, 1, 1);
                      }
                    }
-                 }//chiude ciclo su p covariate continue
+                 }//close cicle on p continuous covariate
 
                  // Categorical Covariates
                  for(p = 0; p < (ncat); p++){
@@ -1539,7 +1265,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    if(similarity==2){
                      lgcatdraw += gsimcatDM(njctmp, dirweights, catvec(p), 1, 1);
                    }
-                 }//chiude ciclo su covariate discrete
+                 }//close cicle on p discrete covariate
                  gtilY(j) = lgcondraw + lgcatdraw;
                  gtilN(j) = lgcondraw + lgcatdraw;
                }//closes PPMx
@@ -1549,37 +1275,20 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                    weight(tt, j) = log(alpha) - log(CC);
                  }
                  if(cohesion == 2){
-                   //weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt), idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                    weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
-                   //weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
                  }
                  weight(tt, j) += lgcondraw + // Continuous covariate part
                    lgcatdraw; // categorical covariate part
                }
 
-               // Gower dissimilarity
-               /*if(similarity == 3){
-                //ast: qui ci metto if per cohesion
-                // cohesion part
-                if(cohesion == 1){
-                weight(tt, j) = log(alpha) - log(CC);
-                }
-                if(cohesion == 2){
-                weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt))/Vwm(num_treat(tt)-1, nclu_curr(tt)-1)));quicivacommento*(nj_curr(tt, j)-sigma);
-                }
-               }*/
-
                // Coarsening
                if((calibration == 2) & (PPMx == 1)){
-                 //ast: qui ci metto if per cohesion
                  // cohesion part
                  if(cohesion == 1){
                    weight(tt, j) = log(alpha) - log(CC);
                  }
                  if(cohesion == 2){
-                   //weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt), idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                    weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
-                   //weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
                  }
                  if(coardegree == 1){
                    weight(tt, j) += (1/((double)ncon + (double)ncat))*(lgcondraw + lgcatdraw);
@@ -1620,13 +1329,11 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                for(j = 0; j < nclu_curr(tt); j++){
                  lgtilNk = lgtilN(j) - log(sgN);
                  lgtilYk = lgtilY(j) - log(sgY);
-                 //ast: qui ci metto if per cohesion (dipende da j)
                  // cohesion part
                  if(cohesion == 1){
                    weight(tt, j) = log((double) nj_curr(tt, j));
                  }
                  if(cohesion == 2){
-                   //weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt)-1, idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs))+(nj_curr(tt, j)-sigma(tt)));
                    weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
                    weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
                  }
@@ -1636,19 +1343,15 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
                for(j = nclu_curr(tt); j < (nclu_curr(tt) + CC); j++){
                  jj = j - nclu_curr(tt);
                  lgtilNk = lgtilN(j) - log(sgN);
-                 //lgtilYk = lgtilY(j) - log(sgY);
-                 //ast: qui ci metto if per cohesion
                  if(cohesion == 1){
                    weight(tt, j) = log(alpha) - log(CC);
                  }
                  if(cohesion == 2){
-                   //weight(tt, j) = log((double) (Vwm(num_treat(tt), nclu_curr(tt), idxs)/Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)));//*(nj_curr(tt, j)-sigma);
                    weight(tt, j) = log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxs)) - log((double) Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxs));
-                   //weight(tt, j) += lgamma(nj_curr(tt, j) + 1 - sigma(tt)) - lgamma(nj_curr(tt, j) - sigma(tt));
                  }
                  weight(tt, j) += lgtilNk;
                }
-             }//chiude calibrazione 1
+             }//close calibration
 
              //AVOID ZERO IN WEIGHTS
              maxwei = weight(tt, 0);
@@ -1667,7 +1370,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              //sample the new cluster for i-th observation
              uu = R::runif(0.0,1.0);
              cweight = 0.0;
-             //newci = id_empty;
              for(j = 0; j < (nclu_curr(tt) + CC); j++){
                cweight += pweight(tt, j);
 
@@ -1695,15 +1397,8 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              thisrow = exp(loggamma_pred);
 
              pii_pred.slice(tt).row(pp) = (thisrow/arma::sum(thisrow)).t();
-             /*Rcpp::Rcout << "theta: " << Theta.slice(tt).col(j).t() << std::endl;
-              Rcpp::Rcout << "sigma: " << Sigma.slice(tt).col(j).t() << std::endl;
-              Rcpp::Rcout << "eta_pred: " << eta_pred << std::endl;
-              Rcpp::Rcout << "pipred: " << pii_pred.slice(tt).row(pp) << std::endl;*/
 
              ppred.slice(tt).row(pp) = rmultinom_rcpp(1, 1, pii_pred.slice(tt).row(pp).t());
-             /*if(sum(ppred.slice(tt).row(pp)) < 1.0){
-              Rcpp::Rcout << "pipred: " << ppred.slice(tt).row(pp) << std::endl;
-             }*/
              predclass(pp, tt) = newci;
            }//this closesthe loop for each treatment
          }//this closes the loop on npred subjects
@@ -1732,7 +1427,6 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
          beta_out.col(ll) = beta;
          ppred_out(ll, 0) = ppred;
          pigreco_pred(ll, 0) = pii_pred;
-         //Rcpp::Rcout << "check?2 " << pigreco_pred(ll, 0).slice(1).row(0) << std::endl;
 
          for(pp = 0; pp < npred; pp++){
            for(tt = 0; tt < nT; tt++){
@@ -1742,13 +1436,9 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
 
 
          arma::mat mymat(dim, num_treat.max(), arma::fill::zeros);
-         //Rcpp::Rcout << "here " << std::endl;
          for(tt = 0; tt < nT; tt++){
            for(j = 0; j < nclu_curr(tt); j++){
-             //mu_out.insert_rows(lll, mu_star_curr.col(j).t());
-             //sigma_out.insert_rows(lll, sigma_star_curr.col(j).t());
              mymat.col(j) = eta_star_curr.slice(tt).col(j);
-             //lll += 1;
            }
            eta_out(ll, tt) = mymat;
          }
@@ -1777,23 +1467,21 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
   WAIC = -2*elppdWAIC;
 
   //RETURN
-  //Rcpp::Rcout << "eta_flag: " << eta_flag.t() << std::endl;
-  return Rcpp::List::create(//Rcpp::Named("mu") = mu_out,
+  return Rcpp::List::create(
     Rcpp::Named("eta") = eta_out,
     Rcpp::Named("beta") = beta_out,
     Rcpp::Named("sigma_ngg") = sigma_ngg_out,
     Rcpp::Named("kappa_ngg") = kappa_ngg_out,
-    Rcpp::Named("eta_acc") = eta_flag,///sumtotclu,
+    Rcpp::Named("eta_acc") = eta_flag,
     Rcpp::Named("beta_acc") = beta_flag,
-    Rcpp::Named("cl_lab") = Clui,//output sistemato
-    Rcpp::Named("num_treat") = num_treat,//output sistemato
+    Rcpp::Named("cl_lab") = Clui,
+    Rcpp::Named("num_treat") = num_treat,
     Rcpp::Named("pi") = pigreco,
     Rcpp::Named("pipred") = pigreco_pred,
     Rcpp::Named("yispred") = ispred_out,
     Rcpp::Named("ypred") = ppred_out,
     Rcpp::Named("clupred") = predclass_out,
-    //Rcpp::Named("like") = like,
-    Rcpp::Named("nclus") = nclus,//ouput sistemato
+    Rcpp::Named("nclus") = nclus,
     Rcpp::Named("WAIC") = WAIC,
     Rcpp::Named("lpml") = lpml);
 }

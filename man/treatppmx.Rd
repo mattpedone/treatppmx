@@ -5,11 +5,17 @@
 \alias{treatppmx}
 \title{Treatment PPMx}
 \description{
-This package implements the method developed by Pedone, Argiento, Stingo to
-perform personalized treatment selection for oncological patients.
-Both prognostic and predictive biomarkers are taken into accounto to
-select the optimal treatment. In particular, redictive biomarkers are
-exploited to inform a random partition model to obtain homogeneous clusters.
+This package implements the treatment selection rule at a single
+decision point proposed by Pedone M., Argiento R., and Stingo F. It is a
+Bayesian predictive model for personalized treatment selection for new
+untreated patients, which leverages known predictive and prognostic biomarkers.
+The method assumes that the data come from historical patients that received
+two or more treatments. After a clinically relevant period, a response to
+treatment is measured. The clinical outcome must be a categorical variable.
+Biomarkers are assumed to be measured at baseline. The user must specify which biomarkers
+are prognostic and which are predictive. In particular, predictive biomarkers are
+exploited to inform a product partition model with covariates (PPMx) to
+obtain homogeneous clusters.
 The implementation has been done in \code{C++} through the use of
 \code{Rcpp} and \code{RcppArmadillo}.
 }

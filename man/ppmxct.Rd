@@ -33,27 +33,27 @@ ppmxct(
 )
 }
 \arguments{
-\item{y}{ordinal-valued response variable}
+\item{y}{\eqn{n_{train} \times K} matrix of ordinal-valued response variable}
 
-\item{X}{predictive biomarkers}
+\item{X}{\eqn{n_{train} \times Q} dataframe of predictive biomarkers}
 
-\item{Xpred}{predictive covariates for new untreated patient}
+\item{Xpred}{\eqn{n_{test} \times Q} dataframe of predictive covariates of new untreated patient}
 
-\item{Z}{prognostic covariates}
+\item{Z}{\eqn{n_{train} \times P} dataframe of prognostic covariates}
 
-\item{Zpred}{prognostic covariates for new untreated patient}
+\item{Zpred}{\eqn{n_{test} \times P} dataframe of prognostic covariates of new untreated patient}
 
-\item{asstreat}{treatment for patients in training set. vector of integers}
+\item{asstreat}{\eqn{n_test} vector of integers encoding treatment received by historical patients}
 
-\item{PPMx}{option for the use of product partition model with covariates. (default is yes)}
+\item{PPMx}{logical. option for the use of product partition model with covariates. (default is yes)}
 
 \item{cohesion}{type of cohesion function that is employed for the PPMx prior on partitions. Options are
 1 - DirichletProcess-like cohesion (DP) cohesion
 2 - Normalized Generalized Gamma Process (NGG) cohesion}
 
-\item{kappa}{value of \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)}
+\item{kappa}{vector of possible values for \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)}
 
-\item{sigma}{number of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)}
+\item{sigma}{vector of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)}
 
 \item{similarity}{type of similarity function that is employed for the PPMx prior on partitions. Options are
 1 - Auxiliary similarity
@@ -87,17 +87,53 @@ can be calibrated. Options are
 
 \item{mhtunepar}{vector containing tuning parameters for MCMC updates}
 
-\item{CC}{number of auxiliary parameters for algorithm 8 by Neal}
+\item{CC}{number of auxiliary parameters for Algorithm 8 by Neal (2000)}
 
-\item{reuse}{option for the reuse algorithm by Favaro&Teh. integer 0 or 1.
+\item{reuse}{option for the reuse algorithm by Favaro and Teh (2013). integer 0 or 1.
 0 - reuse algorithm is not adopted
 1 - reuse algorithm is adopted}
 
 \item{nclu_init}{number of cluster used for partial correlation initialization for prognostic covariates coefficient (default)}
 }
 \value{
-List
+a list of 16 elements.
+\itemize{
+\item \code{label}: List of \eqn{T} matrices. Each element is a \eqn{n_{test}^{a}\times}\code{nout} matrix.
+\code{nout} is the number of MCMC iterations after burnin and thinning
+The row of each matrix contains the vector of cluster labels of the historical
+patient assigned to given treatment
+\item \code{asstreat}: Vector of \eqn{n_{test}} treatment assignment
+\item \code{num_treat}: Vector of dimension \eqn{T}. Contains the number
+of patients assigned to each treatment \eqn{n^a}, for \eqn{a=1, \dots, T}.
+\item \code{nclu}: \eqn{T\times}\code{nout} matrix of total number of cluster at each MCMC iteration for each treatment
+\item \code{eta}: \code{nout}\eqn{\times T} List of matrices. Each matrix has dimension \eqn{K\times n^a}.
+Each element of the list is the linear predictor matrix for treatment \eqn{a} at each MCMC iteration.
+\item \code{beta}: Array of dimensions \eqn{P\times K \times}\code{nout}. It contains the matrix of prognostic factors at each MCMC iteration
+\item \code{acc_beta}: \eqn{P\times K} matrix containing the counts each prognostic coefficient has been accepted in the MH step. Note that these counts should be divided by \code{iter}
+Each element of the list is a list of 2 matrices (one for each treatment).
+\item \code{pi_out}: \eqn{n\times K \times}\code{nout} array. It contains the Multinomial parameters for each patients at each MCMC iteration
+\item \code{isypred}: \eqn{n\times K \times}\code{nout} array. It contains the outcome in-sample-prediction for each patients at each MCMC iteration
+\item \code{WAIC}: scalar. It is the average WAIC
+\item \code{lpml}: scalar. It is the average lpml
+\item \code{sigmangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\sigma} parameter of NGGP for each treatment at each MCMC iteration
+\item \code{kappangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\kappa} parameter of NGGP for each treatment at each MCMC iteration
+\item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the predicted outcome for each untreated patients, under all the competing for each treatment at each MCMC iteration
+\item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the Multinomial parameters for each untreated patients, under all the competing for each treatment at each MCMC iteration
+}
 }
 \description{
-ppmxct
+Function to predict personalized treatment for \eqn{n_{test}} new untreated patients, given their biomarkers.
+It leverages response to treatment, \eqn{P} prognostic, \eqn{Q} predictive biomarkers
+of \eqn{n_{train}} historical patients.
+It accounts for \eqn{K} ordinal response level and \eqn{T} competing treatments.
+}
+\references{
+Page, G. L. and Quintana, F. A. (2016). Calibrating covariate informed
+product partition models. \emph{Statistics and Computing}, \strong{28}(5), 1009–1031.
+
+Neal, R. M. (2000). Markov chain sampling methods for Dirichlet process mixture
+models. \emph{Journal of Computational and Graphical Statistics}, \strong{9}(2): 249–265.
+
+Favaro, S., Teh, Y. W., et al. (2013). MCMC for normalized random measure mixture
+models. \emph{Statistical Science}, \strong{28}(3): 335–359.
 }

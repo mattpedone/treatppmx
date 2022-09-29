@@ -1,18 +1,16 @@
-# Selezione Trattamento 
-## Pacchetto treatppmx
+# treatppmx
 
-## NGG
+An R package for personalized treatment selection at a single decision point.
 
-NGG is now implemented. Need to perform a simulation study to choose parameters sigma and alpha. 
-Run some comparison agains Ma and DP-like cohesion function.
+Bayesian predictive model for personalized treatment selection for new
+untreated patients, which leverages known predictive and prognostic biomarkers.
+In particular, predictive biomarkers are exploited to inform a product partition model with covariates (PPMx) to obtain homogeneous clusters.
 
-### check
+The implementation has been done in C++ through the use of Rcpp and RcppArmadillo.
 
-* Warning: devo documentare dati: fai dopo aver sistemato funzione x meccanismi generatori
-* Note: sub-directories of 1Mb or more:
-      libs   5.7Mb
-      
- https://www.r-bloggers.com/2016/04/cran-check-note-sub-directories-of-1mb-or-more-libs/
+Authors: Matteo Pedone, Raffaele Argiento, Francesco Stingo
+
+Maintainer: Matteo Pedone.
 
 ## Installation
 
@@ -26,13 +24,6 @@ devtools::install_github("mattpedone/treatppmx")
 
 It has only been tested on a PC running Ubuntu 20.04.2 LTS.
 
+## References
 
-# to-do-list
-
-- [ ] [References in the documentation](https://cran.r-project.org/web/packages/Rdpack/vignettes/Inserting_bibtex_references.pdf)
-- [ ] sistema demo
-- [x] in `genmech` sistema notazione prognostiche
-- [ ] sistema per bene tutta la documentazione (references)
-- [ ] descrivi nel readme 
-
-
+TBA
