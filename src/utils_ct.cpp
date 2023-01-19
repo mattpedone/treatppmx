@@ -238,6 +238,31 @@ double dmvnorm(arma::vec y, arma::vec mu, arma::vec Sig, int dim, double ld,
   return exp(out);
 }
 
+// [[Rcpp::export]]
+arma::vec dmvnrm(arma::mat x,
+                 arma::rowvec mean,
+                 arma::mat sigma,
+                 bool logd = false) {
+  using arma::uword;
+  double log2pi = std::log(2.0 * M_PI);
+  //x = x.t();
+  uword const n = x.n_rows,
+    xdim = x.n_cols;
+  arma::vec out(n);
+  arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sigma))));
+  double rootisum = arma::sum(log(rooti.diag()));
+  double constants = -(double)xdim/2.0 * log2pi;
+
+  for (uword i = 0; i < n; i++) {
+    arma::vec z = rooti * arma::trans( x.row(i) - mean) ;
+    out(i)      = constants - 0.5 * arma::sum(z%z) + rootisum;
+  }
+
+  if (logd)
+    return out;
+  return exp(out);
+}
+
 /* Sampling Multivariate Normal
  * m vector of dimension dim storing the mean
  * Sig vector for VARIANCE MATRIX
@@ -555,7 +580,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
                       arma::vec curr_clu, //arma::vec nj_curr,
                       arma::vec treatments, int t,
                       arma::vec eta, arma::vec eta_flag,
-                      arma::vec mu_star, arma::vec sigma_star, int jj, double mhtune){
+                      arma::vec mu_star, arma::mat sigma_star, int jj, double mhtune){
   /*
    * JJ: matrix of independent gamma variables
    * loggamma: matrix of log-linear predictor
@@ -607,8 +632,12 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
     }
   }
 
-  ld = logdet(sigma_star, dim);
-  log_den += dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
+  //ld = logdet(sigma_star, dim);
+  //log_den += dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
+  //Rcpp::Rcout << "here 636" << std::endl;
+  log_den += dmvnrm(Rcpp::as<arma::mat>(Rcpp::wrap(eta)).t(),
+                    Rcpp::as<arma::rowvec>(Rcpp::wrap(mu_star)), sigma_star, true).eval()(0);
+  //Rcpp::Rcout << "not here 639" << std::endl;
 
   /*
    * propose new value for eta
@@ -642,7 +671,9 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
       it += 1;
     }
   }
-  log_num += dmvnorm(eta_p, mu_star, sigma_star, dim, ld, 1);
+  //log_num += dmvnorm(eta_p, mu_star, sigma_star, dim, ld, 1);
+  log_den += dmvnrm(Rcpp::as<arma::mat>(Rcpp::wrap(eta_p)).t(),
+                    Rcpp::as<arma::rowvec>(Rcpp::wrap(mu_star)), sigma_star, true).eval()(0);
 
   ln_acp = log_num - log_den;
 
@@ -673,6 +704,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
   eta_up[2] = eta_flag;
   return eta_up;
 }
+
 
 /*
  * the following function updates the coefficients for prognostic covariates

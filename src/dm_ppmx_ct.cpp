@@ -271,17 +271,26 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
     }
   }
 
-  arma::cube Theta(dim, num_treat.max(), nT, arma::fill::zeros);
-  arma::cube Sigma(dim * dim, num_treat.max(), nT, arma::fill::zeros);
+  //arma::cube Theta(dim, num_treat.max(), nT, arma::fill::zeros);
+  //arma::cube Sigma(dim * dim, num_treat.max(), nT, arma::fill::zeros);
 
-  int idx = 0;
+  //int idx = 0;
+  //for(tt = 0; tt < nT; tt++){
+  //  for(j = 0; j < num_treat.max(); j++){
+  //    idx = 0;
+  //    for(i = 0; i < dim; i++){
+  //      Sigma.slice(tt).col(j).row(idx) = 1;
+  //      idx += (dim + 1);
+  //    }
+  //  }
+  //}
+
+  arma::mat Theta(dim, nT, arma::fill::zeros);
+  arma::cube Sigma(dim, dim, nT, arma::fill::zeros);
+
   for(tt = 0; tt < nT; tt++){
-    for(j = 0; j < num_treat.max(); j++){
-      idx = 0;
-      for(i = 0; i < dim; i++){
-        Sigma.slice(tt).col(j).row(idx) = 1;
-        idx += (dim + 1);
-      }
+    for(k = 0; k < dim; k++){
+      Sigma.slice(tt).col(k).row(k) = 1.0;
     }
   }
 
@@ -869,7 +878,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         l_eta_out = eta_update(JJ, loggamma, curr_clu.row(tt).t(),
                                treatments, tt, eta_star_curr.slice(tt).col(j),
                                eta_flag.row(tt).t(),
-                               Theta.slice(tt).col(j), Sigma.slice(tt).col(j), j, mhtunepar(0));
+                               Theta.col(tt), Sigma.slice(tt), j, mhtunepar(0));
 
         eta_star_curr.slice(tt).col(j) = Rcpp::as<arma::vec>(l_eta_out[0]);
         loggamma = Rcpp::as<arma::mat>(l_eta_out[1]);
@@ -877,7 +886,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
       }
       sumtotclu(tt) += nclu_curr(tt);
     } //this closes the loop on tt
-
+/*
     if(upd_hier == 1){
       for(tt = 0; tt < nT; tt++){
         for(j = 0; j < nclu_curr(tt); j++){
@@ -922,7 +931,7 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
         }
       }
     }
-
+*/
     //////////////////////////////////////////////////
     // update (\sigma, \kappa)
     //////////////////////////////////////////////////
@@ -1386,7 +1395,10 @@ Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatmen
              if((newci) <= (nclu_curr(tt))){
                eta_pred = eta_star_curr.slice(tt).col(newci - 1);
              }else{
-               eta_pred = ran_mvnorm(Theta.slice(tt).col(j), Sigma.slice(tt).col(j), dim);
+               //eta_pred = ran_mvnorm(Theta.slice(tt).col(j), Sigma.slice(tt).col(j), dim);
+               //Rcpp::Rcout << "here " << std::endl;
+               eta_pred = arma::mvnrnd(Theta.col(tt), Sigma.slice(tt));
+               //Rcpp::Rcout << " but not here " << std::endl;
              }
 
              //NEED TO UPDATE GAMMA TOO

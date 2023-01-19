@@ -94,6 +94,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dmvnrm
+arma::vec dmvnrm(arma::mat x, arma::rowvec mean, arma::mat sigma, bool logd);
+RcppExport SEXP _treatppmx_dmvnrm(SEXP xSEXP, SEXP meanSEXP, SEXP sigmaSEXP, SEXP logdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< bool >::type logd(logdSEXP);
+    rcpp_result_gen = Rcpp::wrap(dmvnrm(x, mean, sigma, logd));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ran_mvnorm
 arma::vec ran_mvnorm(arma::vec m, arma::vec Sig, int dim);
 RcppExport SEXP _treatppmx_ran_mvnorm(SEXP mSEXP, SEXP SigSEXP, SEXP dimSEXP) {
@@ -124,6 +138,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_dm_ppmx_ct", (DL_FUNC) &_treatppmx_dm_ppmx_ct, 42},
     {"_treatppmx_prior_ppmx_core", (DL_FUNC) &_treatppmx_prior_ppmx_core, 21},
+    {"_treatppmx_dmvnrm", (DL_FUNC) &_treatppmx_dmvnrm, 4},
     {"_treatppmx_ran_mvnorm", (DL_FUNC) &_treatppmx_ran_mvnorm, 3},
     {"_treatppmx_ran_iwish", (DL_FUNC) &_treatppmx_ran_iwish, 3},
     {NULL, NULL, 0}

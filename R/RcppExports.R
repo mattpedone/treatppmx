@@ -9,6 +9,10 @@ prior_ppmx_core <- function(iter, burn, thin, nobs, PPMx, ncon, ncat, alpha, sig
     .Call(`_treatppmx_prior_ppmx_core`, iter, burn, thin, nobs, PPMx, ncon, ncat, alpha, sigma, Vwm, cohesion, CC, consim, similarity, calibration, coardegree, xcon, similparam, curr_cluster, card_cluster, ncluster_curr)
 }
 
+dmvnrm <- function(x, mean, sigma, logd = FALSE) {
+    .Call(`_treatppmx_dmvnrm`, x, mean, sigma, logd)
+}
+
 ran_mvnorm <- function(m, Sig, dim) {
     .Call(`_treatppmx_ran_mvnorm`, m, Sig, dim)
 }
