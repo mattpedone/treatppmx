@@ -251,9 +251,10 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
 
   kappa <- kappa#similparam[7]
   hP0_m0 <- as.vector(modelpriors$hP0_m0)
-  hP0_L0 <- as.vector(modelpriors$hP0_L0)
   hP0_nu0 <- as.double(modelpriors$hP0_nu0)
-  hP0_V0 <- as.vector(modelpriors$hP0_V0)
+  hP0_s0 <- as.double(modelpriors$hP0_s0)
+  hP0_Lambda0 <- as.double(modelpriors$hP0_Lambda0)
+
   treatments <- c(as.vector(treatments))
 
   out <- dm_ppmx_ct(as.integer(iter), as.integer(burn), as.integer(thin),
@@ -266,8 +267,8 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
                  as.matrix(Zpred), as.integer(noprog),
                  as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
                  as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
-                 as.vector(hP0_m0), as.vector(hP0_L0), as.double(hP0_nu0),
-                 as.vector(hP0_V0), as.integer(update_hierarchy), as.vector(t(beta)),
+                 as.vector(hP0_m0), as.double(hP0_nu0), as.double(hP0_s0),
+                 as.double(hP0_Lambda0), as.integer(update_hierarchy), as.vector(t(beta)),
                  as.integer(hsp), as.vector(mhtunepar), as.integer(A), as.vector(n_a),
                  as.matrix(curr_cluster), as.matrix(card_cluster), as.vector(nclu_curr))
 
@@ -341,6 +342,8 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
     cat("some NaN occurred", "\n")
   }
 
+  res$theta_prior <- out$theta_prior
+  res$sigma_prior <- out$sigma_prior
   #cluster classification prediction (unsupervised clustering)
   clupred <- matrix(0, nout, npred)
 

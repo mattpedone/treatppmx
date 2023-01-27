@@ -27,6 +27,7 @@ Rcpp::List eta_update(arma::mat, arma::mat, arma::vec, arma::vec, int,
 Rcpp::List beta_update(arma::mat, arma::mat, arma::mat, arma::vec, arma::mat,
                        double, arma::vec, int, double);
 double log_mult(arma::mat, arma::mat);
+Rcpp::IntegerVector rmultinom_1(int, Rcpp::NumericVector, int);
 arma::mat rmultinom_rcpp(int, int, arma::vec);
 double dmultinom_rcpp(arma::vec, int, arma::vec, int);
 double myround(double);

@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // dm_ppmx_ct
-Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, arma::mat grid, arma::cube Vwm, int cohesion, int CC, int reuse, int consim, int similarity, int calibration, int coardegree, arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_mu0, arma::vec hP0_L0, double hP0_nu0, arma::vec hP0_S0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar, int A, arma::vec n_a, arma::mat curr_cluster, arma::mat card_cluster, arma::vec ncluster_curr);
-RcppExport SEXP _treatppmx_dm_ppmx_ct(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP treatmentsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP gridSEXP, SEXP VwmSEXP, SEXP cohesionSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP ySEXP, SEXP zSEXP, SEXP zpredSEXP, SEXP noprogSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP npredSEXP, SEXP similparamSEXP, SEXP hP0_mu0SEXP, SEXP hP0_L0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_S0SEXP, SEXP upd_hierSEXP, SEXP initbetaSEXP, SEXP hspSEXP, SEXP mhtuneparSEXP, SEXP ASEXP, SEXP n_aSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {
+Rcpp::List dm_ppmx_ct(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, arma::mat grid, arma::cube Vwm, int cohesion, int CC, int reuse, int consim, int similarity, int calibration, int coardegree, arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_mu0, double hP0_nu0, double hP0_s0, double hP0_Lambda0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar, int A, arma::vec n_a, arma::mat curr_cluster, arma::mat card_cluster, arma::vec ncluster_curr);
+RcppExport SEXP _treatppmx_dm_ppmx_ct(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP treatmentsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP gridSEXP, SEXP VwmSEXP, SEXP cohesionSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP ySEXP, SEXP zSEXP, SEXP zpredSEXP, SEXP noprogSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP npredSEXP, SEXP similparamSEXP, SEXP hP0_mu0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_s0SEXP, SEXP hP0_Lambda0SEXP, SEXP upd_hierSEXP, SEXP initbetaSEXP, SEXP hspSEXP, SEXP mhtuneparSEXP, SEXP ASEXP, SEXP n_aSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -47,9 +47,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type npred(npredSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type similparam(similparamSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type hP0_mu0(hP0_mu0SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type hP0_L0(hP0_L0SEXP);
     Rcpp::traits::input_parameter< double >::type hP0_nu0(hP0_nu0SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type hP0_S0(hP0_S0SEXP);
+    Rcpp::traits::input_parameter< double >::type hP0_s0(hP0_s0SEXP);
+    Rcpp::traits::input_parameter< double >::type hP0_Lambda0(hP0_Lambda0SEXP);
     Rcpp::traits::input_parameter< int >::type upd_hier(upd_hierSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type initbeta(initbetaSEXP);
     Rcpp::traits::input_parameter< int >::type hsp(hspSEXP);
@@ -59,7 +59,59 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type curr_cluster(curr_clusterSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type card_cluster(card_clusterSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type ncluster_curr(ncluster_currSEXP);
-    rcpp_result_gen = Rcpp::wrap(dm_ppmx_ct(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, zpred, noprog, xcon, xcat, xconp, xcatp, npred, similparam, hP0_mu0, hP0_L0, hP0_nu0, hP0_S0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr));
+    rcpp_result_gen = Rcpp::wrap(dm_ppmx_ct(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, zpred, noprog, xcon, xcat, xconp, xcatp, npred, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dm_ppmx_ct_fix
+Rcpp::List dm_ppmx_ct_fix(int iter, int burn, int thin, int nobs, arma::vec treatments, int PPMx, int ncon, int ncat, arma::vec catvec, double alpha, arma::mat grid, arma::cube Vwm, int cohesion, int CC, int reuse, int consim, int similarity, int calibration, int coardegree, arma::mat y, arma::mat z, arma::mat zpred, int noprog, arma::vec xcon, arma::vec xcat, arma::vec xconp, arma::vec xcatp, int npred, arma::vec similparam, arma::vec hP0_mu0, double hP0_nu0, double hP0_s0, double hP0_Lambda0, int upd_hier, arma::vec initbeta, int hsp, arma::vec mhtunepar, int A, arma::vec n_a, arma::mat curr_cluster, arma::mat card_cluster, arma::vec ncluster_curr);
+RcppExport SEXP _treatppmx_dm_ppmx_ct_fix(SEXP iterSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nobsSEXP, SEXP treatmentsSEXP, SEXP PPMxSEXP, SEXP nconSEXP, SEXP ncatSEXP, SEXP catvecSEXP, SEXP alphaSEXP, SEXP gridSEXP, SEXP VwmSEXP, SEXP cohesionSEXP, SEXP CCSEXP, SEXP reuseSEXP, SEXP consimSEXP, SEXP similaritySEXP, SEXP calibrationSEXP, SEXP coardegreeSEXP, SEXP ySEXP, SEXP zSEXP, SEXP zpredSEXP, SEXP noprogSEXP, SEXP xconSEXP, SEXP xcatSEXP, SEXP xconpSEXP, SEXP xcatpSEXP, SEXP npredSEXP, SEXP similparamSEXP, SEXP hP0_mu0SEXP, SEXP hP0_nu0SEXP, SEXP hP0_s0SEXP, SEXP hP0_Lambda0SEXP, SEXP upd_hierSEXP, SEXP initbetaSEXP, SEXP hspSEXP, SEXP mhtuneparSEXP, SEXP ASEXP, SEXP n_aSEXP, SEXP curr_clusterSEXP, SEXP card_clusterSEXP, SEXP ncluster_currSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type treatments(treatmentsSEXP);
+    Rcpp::traits::input_parameter< int >::type PPMx(PPMxSEXP);
+    Rcpp::traits::input_parameter< int >::type ncon(nconSEXP);
+    Rcpp::traits::input_parameter< int >::type ncat(ncatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type catvec(catvecSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type grid(gridSEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type Vwm(VwmSEXP);
+    Rcpp::traits::input_parameter< int >::type cohesion(cohesionSEXP);
+    Rcpp::traits::input_parameter< int >::type CC(CCSEXP);
+    Rcpp::traits::input_parameter< int >::type reuse(reuseSEXP);
+    Rcpp::traits::input_parameter< int >::type consim(consimSEXP);
+    Rcpp::traits::input_parameter< int >::type similarity(similaritySEXP);
+    Rcpp::traits::input_parameter< int >::type calibration(calibrationSEXP);
+    Rcpp::traits::input_parameter< int >::type coardegree(coardegreeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type zpred(zpredSEXP);
+    Rcpp::traits::input_parameter< int >::type noprog(noprogSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcon(xconSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcat(xcatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xconp(xconpSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type xcatp(xcatpSEXP);
+    Rcpp::traits::input_parameter< int >::type npred(npredSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type similparam(similparamSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type hP0_mu0(hP0_mu0SEXP);
+    Rcpp::traits::input_parameter< double >::type hP0_nu0(hP0_nu0SEXP);
+    Rcpp::traits::input_parameter< double >::type hP0_s0(hP0_s0SEXP);
+    Rcpp::traits::input_parameter< double >::type hP0_Lambda0(hP0_Lambda0SEXP);
+    Rcpp::traits::input_parameter< int >::type upd_hier(upd_hierSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type initbeta(initbetaSEXP);
+    Rcpp::traits::input_parameter< int >::type hsp(hspSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mhtunepar(mhtuneparSEXP);
+    Rcpp::traits::input_parameter< int >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type n_a(n_aSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type curr_cluster(curr_clusterSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type card_cluster(card_clusterSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ncluster_curr(ncluster_currSEXP);
+    rcpp_result_gen = Rcpp::wrap(dm_ppmx_ct_fix(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, zpred, noprog, xcon, xcat, xconp, xcatp, npred, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -137,6 +189,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_treatppmx_dm_ppmx_ct", (DL_FUNC) &_treatppmx_dm_ppmx_ct, 42},
+    {"_treatppmx_dm_ppmx_ct_fix", (DL_FUNC) &_treatppmx_dm_ppmx_ct_fix, 42},
     {"_treatppmx_prior_ppmx_core", (DL_FUNC) &_treatppmx_prior_ppmx_core, 21},
     {"_treatppmx_dmvnrm", (DL_FUNC) &_treatppmx_dmvnrm, 4},
     {"_treatppmx_ran_mvnorm", (DL_FUNC) &_treatppmx_ran_mvnorm, 3},

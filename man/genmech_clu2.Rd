@@ -4,10 +4,10 @@
 \alias{genmech_clu2}
 \title{genmech clustering 2}
 \usage{
-genmech_clu2(nset = 50)
+genmech_clu2(npred = 10)
 }
 \arguments{
-\item{nset}{number of replicated scenarios generated}
+\item{npred}{number of predictive covariates used to generate the outcome}
 }
 \value{
 a list of 8 elements.
@@ -23,10 +23,10 @@ a list of 8 elements.
 }
 }
 \description{
-Generates the data for the simulations scenarios S2 reported in the Supplementary Material.
+Generates the data for the simulations scenarios S3 reported in the Supplementary Material.
 It follows the strategy designed by Ma et al. (2019).
 In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
-\eqn{n} patients are assigned to \eqn{T=2} competing treatments.
+Patients (\eqn{n}) are assigned to \eqn{T=2} competing treatments.
 Moreover, the clustering is known and fixed. We generate predictive biomarkers as Scenarion 4 in Page and Quintana (2018)
 }
 \references{

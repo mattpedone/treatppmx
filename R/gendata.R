@@ -392,7 +392,7 @@ genmech_het <- function(npred = 10, nset = 30, overlap = 0.8){
 #' @param npred number of \eqn{Q} predictive covariates used to generate the outcome
 #' @param n number of observations
 #' @param nnoise number of noisy variables
-#' @param nset number of replicated scenarios generated
+# @param nset number of replicated scenarios generated
 #'
 #' @references
 #' Argiento, R., Corradin, R., and Guglielmi, A. (2022). A Bayesian nonparametric model
@@ -417,7 +417,7 @@ genmech_het <- function(npred = 10, nset = 30, overlap = 0.8){
 #' }
 #' @export
 
-genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
+genmech_clu <- function(npred = 4, n = 200, nnoise = 7){#, nset = 50){
 
   N <- nobs <- n
 
@@ -493,9 +493,9 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
   myprob <- list(myprob1, myprob2)
   trtsgn <- rep(c(1,2), nobs/2)
 
-  mytot <- array(0, dim = c(nobs, 3, nset))
-  myoutot <- matrix(0, nrow = nobs, ncol = nset)
-  for(i in 1:nset){
+  #mytot <- matrix(0, nobs, 3)
+  #myoutot <- rep(0, nobs)
+  #for(i in 1:nset){
     myy <- matrix(0, nrow = nobs, ncol = 3)
     myyout <- matrix(0, nrow = nobs, ncol = 1)
     for(k in 1:nobs){
@@ -509,9 +509,9 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
       myyout[k] <- match(1,myy[k,])
       trtemp <- NULL
     }
-    mytot[,,i] <- myy
-    myoutot[,i] <- myyout
-  }
+    #mytot[k,] <- myy
+    #myoutot[,i] <- myyout
+  #}
 
   # Aggregate biomarkers
   Xpredcov <- genenorm[,c(1:npred)]
@@ -528,8 +528,8 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
 
   # RETURN
   fulldata <- list(
-      Y = mytot,
-      Yord = myoutot,
+      Y = myy, #mytot,
+      Yord = myyout, #myoutot,
       treatment = trtsgn,
       pred = Xpredcov,
       prog = Zprogcov,
@@ -539,8 +539,169 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
     return(fulldata)
 }
 
-
 #' genmech clustering 2
+#'
+#' Generates the data for the simulations scenarios S3 reported in the Supplementary Material.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' Patients (\eqn{n}) are assigned to \eqn{T=2} competing treatments.
+#' Moreover, the clustering is known and fixed. We generate predictive biomarkers as Scenarion 4 in Page and Quintana (2018)
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
+#' Page, G. L. and Quintana, F. A. (2018). Calibrating covariate informed
+#' product partition models. \emph{Statistics and Computing}, \strong{28}(5), 1009–1031.
+#'
+#' @param npred number of predictive covariates used to generate the outcome
+#'
+#' @return a list of 8 elements.
+#'   \itemize{
+#'   \item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
+#'   \item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
+#'   \item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
+#'   \item \code{pred}: \eqn{n\times}\eqn{(}\code{npred}\eqn{+}\code{nnoise}\eqn{)} matrix. It contains the predictive biomarkers (only the first \code{npred} are effectively used to generate the response)
+#'   \item \code{pred}: \eqn{n\times 2} matrix. It contains the prognostic biomarkers
+#'   \item \code{clu1}: contains the cluster label for patients assigned to Treatment 1
+#'   \item \code{clu2}: contains the cluster label for patients assigned to Treatment 2
+#'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
+#' }
+#' @export
+
+genmech_clu2 <- function(npred = 10){
+
+  N <- nobs <- n <- 200
+
+  ##Variable to store the samples from the mixture distribution
+  mydata <- matrix(NA, N, npred)
+
+  nc <- npred/5
+
+  M <- matrix(0, N, nc)
+
+  No <- matrix(rnorm(N*nc), N, nc)
+  UN <- matrix(runif(N*nc, 0, 10), N, nc)
+  TS <- matrix(rt(N*nc, df = 4), N, nc)
+  SN <- matrix(sn::rsn(n=N*nc, xi=10, omega=1, alpha=10, tau=0,  dp=NULL), N, nc)
+  pp <- runif(N)
+  for(i in 1:N){
+    if(pp[i]<.4){
+      M[i, 1] <- rnorm(1)
+      M[i, 2] <- rnorm(1)
+    } else {
+      M[i, 1] <- rnorm(1, 10, 2)
+      M[i, 2] <- rnorm(1, 10, 2)
+    }
+  }
+
+  U <- c(rep(1, 50), rep(2, 50), rep(3, 50), rep(4, 50))
+  #U <- U[sample(1:N, N, replace = TRUE)]
+  for(i in 1:N){
+    if(U[i]==1){
+      No[i, 1:nc] <- rnorm(nc, 3, 1)
+      UN[i, 1:nc] <- runif(nc, -5, 0)
+    }
+    if(U[i]==2){
+      TS[i, 1:nc] <- rt(1, df = 4) - 5
+      SN[i, 1:nc] <- sn::rsn(n=nc, xi=10, omega=10, alpha=10, tau=0,  dp=NULL)
+    }
+    if(U[i]==3){
+      for(i in 1:N){
+        if(pp[i]>.4){
+          M[i, 1:nc] <- rnorm(nc, -10, 2)
+          #M[i, 2:nc] <- rnorm(nc, -10, 2)
+        }
+      }
+    }
+  }
+
+  mydata <- scale(cbind(No, UN, TS, SN, M))
+
+  #genenorm <- cbind(scale(as.matrix(mydata[,1:2])), mydata[,3:4])
+  genenorm <- mydata
+  mypca <- prcomp(genenorm[,c(1:npred)])
+
+  # Predictive Markers
+  ## use the combination of the pca to generate the exponential
+  metx1 <- scale(mypca$x[,1]) + scale(mypca$x[,2]) + 0.50
+  metx <- sign(metx1)*(sign(metx1)*metx1)^(0.2) * 0.45
+  ## for the noisy scenario
+
+  # Prognostic Markers
+  z2 <- rnorm(nobs)
+  z3 <- rnorm(nobs)
+
+  z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
+  z3 <- sign(z3)*(sign(z3)*z3)^(0.2)
+
+  # pmts probabilities for treatment 1
+  alpha1 <- c(-0.5, -1)
+  beta11 <- c(2, 2.6)
+  # pmts probabilities for treatment 2
+  alpha2 <- c(0.7, -1)
+  beta21 <- c(-1, -3)
+  # pmts probabilities with prognostic only
+  alpha3 <- c(1, -0.5)
+  beta2 <- c(1, 0.5)
+  beta3 <- c(0.7,1)
+
+  #probabilities for treatment 1
+  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, z2, z3)
+  #probabilities for treatment 2
+  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, z2, z3)
+  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, z2, z3)
+  Zprogcov <- cbind(z2, z3)
+
+  # Now we construct prob with both prog and pred features
+  myprob1 <- myprob2 <- matrix( 0, nrow = nobs, ncol = 3)
+
+  for (i in 1:nobs){
+    myprob1[i,] <- prob1[i,2:4]*probprog[i,2:4]/sum(prob1[i,2:4]*probprog[i,2:4])
+    myprob2[i,] <- prob2[i,2:4]*probprog[i,2:4]/sum(prob2[i,2:4]*probprog[i,2:4])
+  }
+
+  myprob <- list(myprob1, myprob2)
+  trtsgn <- rep(c(1,2), nobs/2)
+
+  #mytot <- array(0, dim = c(nobs, 3, nset))
+  #myoutot <- matrix(0, nrow = nobs, ncol = nset)
+  #for(i in 1:nset){
+    myy <- matrix(0, nrow = nobs, ncol = 3)
+    myyout <- matrix(0, nrow = nobs, ncol = 1)
+    for(k in 1:nobs){
+      trtemp <- trtsgn[k];
+      if(trtemp == 1){
+        myy[k,1:3] <- t(rmultinom(n = 1, size = 1, prob = myprob[[1]][k,]))
+      }
+      if(trtemp == 2){
+        myy[k,1:3] <- t(rmultinom(n = 1, size = 1, prob = myprob[[2]][k,]))
+      }
+      myyout[k] <- match(1,myy[k,])
+      trtemp <- NULL
+    }
+  #  mytot[,,i] <- myy
+  #  myoutot[,i] <- myyout
+  #}
+
+  # Aggregate biomarkers
+  Xpredcov <- genenorm[,c(1:npred)]
+
+  # RETURN
+  fulldata <- list(
+    Y = myy, #mytot,
+    Yord = myyout, #myoutot,
+    treatment = trtsgn,
+    pred = Xpredcov,
+    prog = Zprogcov,
+    clu1 = U[which((1:length(U))%%2==1)],
+    clu2 = U[which((1:length(U))%%2==0)],
+    prob = myprob)
+  return(fulldata)
+}
+
+#' genmech clustering 3
 #'
 #' Generates the data for the simulations scenarios S2 reported in the Supplementary Material.
 #' It follows the strategy designed by Ma et al. (2019).
@@ -571,9 +732,9 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7, nset = 50){
 #'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
 #' }
 #'
-#' @export
+# @export
 
-genmech_clu2 <- function(nset = 50){
+genmech_clu3 <- function(nset = 50){
 
   N <- nobs <- 200
 
@@ -685,170 +846,6 @@ genmech_clu2 <- function(nset = 50){
 
   # Aggregate biomarkers
   Xpredcov <- cbind(x1, x2, x3, x4)
-
-  # RETURN
-  fulldata <- list(
-    Y = mytot,
-    Yord = myoutot,
-    treatment = trtsgn,
-    pred = Xpredcov,
-    prog = Zprogcov,
-    clu1 = U[which((1:length(U))%%2==1)],
-    clu2 = U[which((1:length(U))%%2==0)],
-    prob = myprob)
-  return(fulldata)
-}
-
-
-#' genmech clustering 3
-#'
-#' Generates the data for the simulations scenarios S3 reported in the Supplementary Material.
-#' It follows the strategy designed by Ma et al. (2019).
-#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
-#' Patients (\eqn{n}) are assigned to \eqn{T=2} competing treatments.
-#' Moreover, the clustering is known and fixed. We generate predictive biomarkers as Scenarion 4 in Page and Quintana (2018)
-#' @references
-#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
-#' treatment selection strategies that integrate predictive with prognostic
-#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
-#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
-#'
-#' Page, G. L. and Quintana, F. A. (2018). Calibrating covariate informed
-#' product partition models. \emph{Statistics and Computing}, \strong{28}(5), 1009–1031.
-#'
-#' @param npred number of predictive covariates used to generate the outcome
-#' @param nset number of replicated scenarios generated
-#'
-#' @return a list of 8 elements.
-#'   \itemize{
-#'   \item \code{Y}: \eqn{n\times K \times}\code{nset} array. It contains \code{nset} matrices that store the outcome in the form of a multinomial experiment
-#'   \item \code{Yord}: \eqn{n\times}\code{nset} matrix. It contains the ordinal outcome for each replicated dataset
-#'   \item \code{treatment}: \eqn{n-}dimensional vector. It contains the treatment assigned
-#'   \item \code{pred}: \eqn{n\times}\eqn{(}\code{npred}\eqn{+}\code{nnoise}\eqn{)} matrix. It contains the predictive biomarkers (only the first \code{npred} are effectively used to generate the response)
-#'   \item \code{pred}: \eqn{n\times 2} matrix. It contains the prognostic biomarkers
-#'   \item \code{clu1}: contains the cluster label for patients assigned to Treatment 1
-#'   \item \code{clu2}: contains the cluster label for patients assigned to Treatment 2
-#'   \item \code{prob}: List of \eqn{T}. Each element is a \eqn{n\times K} matrix containing the response probabilities
-#' }
-#' @export
-
-genmech_clu3 <- function(npred = 10, nset = 1){
-
-  N <- nobs <- n <- 200
-
-  ##Variable to store the samples from the mixture distribution
-  mydata <- matrix(NA, N, npred)
-
-  nc <- npred/5
-
-  M <- matrix(0, N, nc)
-
-  No <- matrix(rnorm(N*nc), N, nc)
-  UN <- matrix(runif(N*nc, 0, 10), N, nc)
-  TS <- matrix(rt(N*nc, df = 4), N, nc)
-  SN <- matrix(sn::rsn(n=N*nc, xi=10, omega=1, alpha=10, tau=0,  dp=NULL), N, nc)
-  pp <- runif(N)
-  for(i in 1:N){
-    if(pp[i]<.4){
-      M[i, 1] <- rnorm(1)
-      M[i, 2] <- rnorm(1)
-    } else {
-      M[i, 1] <- rnorm(1, 10, 2)
-      M[i, 2] <- rnorm(1, 10, 2)
-    }
-  }
-
-  U <- c(rep(1, 50), rep(2, 50), rep(3, 50), rep(4, 50))
-  #U <- U[sample(1:N, N, replace = TRUE)]
-  for(i in 1:N){
-    if(U[i]==1){
-      No[i, 1:nc] <- rnorm(nc, 3, 1)
-      UN[i, 1:nc] <- runif(nc, -5, 0)
-    }
-    if(U[i]==2){
-      TS[i, 1:nc] <- rt(1, df = 4) - 5
-      SN[i, 1:nc] <- sn::rsn(n=nc, xi=10, omega=10, alpha=10, tau=0,  dp=NULL)
-    }
-    if(U[i]==3){
-      for(i in 1:N){
-        if(pp[i]>.4){
-          M[i, 1:nc] <- rnorm(nc, -10, 2)
-          #M[i, 2:nc] <- rnorm(nc, -10, 2)
-        }
-      }
-    }
-  }
-
-  mydata <- scale(cbind(No, UN, TS, SN, M))
-
-  #genenorm <- cbind(scale(as.matrix(mydata[,1:2])), mydata[,3:4])
-  genenorm <- mydata
-  mypca <- prcomp(genenorm[,c(1:npred)])
-
-  # Predictive Markers
-  ## use the combination of the pca to generate the exponential
-  metx1 <- scale(mypca$x[,1]) + scale(mypca$x[,2]) + 0.50
-  metx <- sign(metx1)*(sign(metx1)*metx1)^(0.2) * 0.45
-  ## for the noisy scenario
-
-  # Prognostic Markers
-  z2 <- rnorm(nobs)
-  z3 <- rnorm(nobs)
-
-  z2 <- sign(z2)*(sign(z2)*z2)^(0.5)
-  z3 <- sign(z3)*(sign(z3)*z3)^(0.2)
-
-  # pmts probabilities for treatment 1
-  alpha1 <- c(-0.5, -1)
-  beta11 <- c(2, 2.6)
-  # pmts probabilities for treatment 2
-  alpha2 <- c(0.7, -1)
-  beta21 <- c(-1, -3)
-  # pmts probabilities with prognostic only
-  alpha3 <- c(1, -0.5)
-  beta2 <- c(1, 0.5)
-  beta3 <- c(0.7,1)
-
-  #probabilities for treatment 1
-  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, z2, z3)
-  #probabilities for treatment 2
-  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, z2, z3)
-  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, z2, z3)
-  Zprogcov <- cbind(z2, z3)
-
-  # Now we construct prob with both prog and pred features
-  myprob1 <- myprob2 <- matrix( 0, nrow = nobs, ncol = 3)
-
-  for (i in 1:nobs){
-    myprob1[i,] <- prob1[i,2:4]*probprog[i,2:4]/sum(prob1[i,2:4]*probprog[i,2:4])
-    myprob2[i,] <- prob2[i,2:4]*probprog[i,2:4]/sum(prob2[i,2:4]*probprog[i,2:4])
-  }
-
-  myprob <- list(myprob1, myprob2)
-  trtsgn <- rep(c(1,2), nobs/2)
-
-  mytot <- array(0, dim = c(nobs, 3, nset))
-  myoutot <- matrix(0, nrow = nobs, ncol = nset)
-  for(i in 1:nset){
-    myy <- matrix(0, nrow = nobs, ncol = 3)
-    myyout <- matrix(0, nrow = nobs, ncol = 1)
-    for(k in 1:nobs){
-      trtemp <- trtsgn[k];
-      if(trtemp == 1){
-        myy[k,1:3] <- t(rmultinom(n = 1, size = 1, prob = myprob[[1]][k,]))
-      }
-      if(trtemp == 2){
-        myy[k,1:3] <- t(rmultinom(n = 1, size = 1, prob = myprob[[2]][k,]))
-      }
-      myyout[k] <- match(1,myy[k,])
-      trtemp <- NULL
-    }
-    mytot[,,i] <- myy
-    myoutot[,i] <- myyout
-  }
-
-  # Aggregate biomarkers
-  Xpredcov <- genenorm[,c(1:npred)]
 
   # RETURN
   fulldata <- list(

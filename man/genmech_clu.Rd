@@ -4,7 +4,7 @@
 \alias{genmech_clu}
 \title{genmech clustering}
 \usage{
-genmech_clu(npred = 4, n = 200, nnoise = 7, nset = 50)
+genmech_clu(npred = 4, n = 200, nnoise = 7)
 }
 \arguments{
 \item{npred}{number of \eqn{Q} predictive covariates used to generate the outcome}
@@ -12,8 +12,6 @@ genmech_clu(npred = 4, n = 200, nnoise = 7, nset = 50)
 \item{n}{number of observations}
 
 \item{nnoise}{number of noisy variables}
-
-\item{nset}{number of replicated scenarios generated}
 }
 \value{
 a list of 8 elements.

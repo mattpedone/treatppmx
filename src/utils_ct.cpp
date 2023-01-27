@@ -605,7 +605,7 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
    */
 
 
-  double log_num, log_den, ln_acp, lnu, ld;
+  double log_num, log_den, ln_acp, lnu; //, ld;
   /*
    * log_num: numerator for MH ratio
    * log_den: denumerator for MH ratio
@@ -632,12 +632,8 @@ Rcpp::List eta_update(arma::mat JJ, arma::mat loggamma,
     }
   }
 
-  //ld = logdet(sigma_star, dim);
-  //log_den += dmvnorm(eta, mu_star, sigma_star, dim, ld, 1);
-  //Rcpp::Rcout << "here 636" << std::endl;
   log_den += dmvnrm(Rcpp::as<arma::mat>(Rcpp::wrap(eta)).t(),
                     Rcpp::as<arma::rowvec>(Rcpp::wrap(mu_star)), sigma_star, true).eval()(0);
-  //Rcpp::Rcout << "not here 639" << std::endl;
 
   /*
    * propose new value for eta
