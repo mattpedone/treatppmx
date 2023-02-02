@@ -5,8 +5,8 @@ dm_ppmx_ct <- function(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, cat
     .Call(`_treatppmx_dm_ppmx_ct`, iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, zpred, noprog, xcon, xcat, xconp, xcatp, npred, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr)
 }
 
-dm_ppmx_ct_fix <- function(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, zpred, noprog, xcon, xcat, xconp, xcatp, npred, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr) {
-    .Call(`_treatppmx_dm_ppmx_ct_fix`, iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, zpred, noprog, xcon, xcat, xconp, xcatp, npred, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr)
+dm_ppmx_ct_fix <- function(iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, noprog, xcon, xcat, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr) {
+    .Call(`_treatppmx_dm_ppmx_ct_fix`, iter, burn, thin, nobs, treatments, PPMx, ncon, ncat, catvec, alpha, grid, Vwm, cohesion, CC, reuse, consim, similarity, calibration, coardegree, y, z, noprog, xcon, xcat, similparam, hP0_mu0, hP0_nu0, hP0_s0, hP0_Lambda0, upd_hier, initbeta, hsp, mhtunepar, A, n_a, curr_cluster, card_cluster, ncluster_curr)
 }
 
 prior_ppmx_core <- function(iter, burn, thin, nobs, PPMx, ncon, ncat, alpha, sigma, Vwm, cohesion, CC, consim, similarity, calibration, coardegree, xcon, similparam, curr_cluster, card_cluster, ncluster_curr) {

@@ -7,9 +7,7 @@
 ppmxct_fixed(
   y,
   X = NULL,
-  Xpred = NULL,
   Z = NULL,
-  Zpred = NULL,
   asstreat = NULL,
   PPMx = 1,
   cohesion = 2,
@@ -37,11 +35,7 @@ ppmxct_fixed(
 
 \item{X}{\eqn{n_{train} \times Q} dataframe of predictive biomarkers}
 
-\item{Xpred}{\eqn{n_{test} \times Q} dataframe of predictive covariates of new untreated patient}
-
 \item{Z}{\eqn{n_{train} \times P} dataframe of prognostic covariates}
-
-\item{Zpred}{\eqn{n_{test} \times P} dataframe of prognostic covariates of new untreated patient}
 
 \item{asstreat}{\eqn{n_test} vector of integers encoding treatment received by historical patients}
 

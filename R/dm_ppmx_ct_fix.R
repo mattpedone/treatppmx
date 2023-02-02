@@ -8,9 +8,9 @@
 #'
 #' @param y \eqn{n_{train} \times K} matrix of ordinal-valued response variable
 #' @param X \eqn{n_{train} \times Q} dataframe of predictive biomarkers
-#' @param Xpred \eqn{n_{test} \times Q} dataframe of predictive covariates of new untreated patient
+# @param Xpred \eqn{n_{test} \times Q} dataframe of predictive covariates of new untreated patient
 #' @param Z \eqn{n_{train} \times P} dataframe of prognostic covariates
-#' @param Zpred \eqn{n_{test} \times P} dataframe of prognostic covariates of new untreated patient
+# @param Zpred \eqn{n_{test} \times P} dataframe of prognostic covariates of new untreated patient
 #' @param asstreat \eqn{n_test} vector of integers encoding treatment received by historical patients
 #' @param PPMx logical. option for the use of product partition model with covariates. (default is yes)
 #' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
@@ -86,7 +86,7 @@
 #' }
 #' @export
 
-ppmxct_fixed <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
+ppmxct_fixed <- function(y, X=NULL, Z=NULL, asstreat = NULL,
                    PPMx = 1, cohesion = 2, kappa = c(1.0, 30.0, 10, 1),
                    sigma = c(0.005, 1.0, 10), similarity = 1, consim=1,
                    similparam, calibration=0, coardegree = 1, modelpriors,
@@ -276,9 +276,8 @@ ppmxct_fixed <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat =
                  as.integer(CC), as.integer(reuse),
                  as.integer(consim), as.integer(similarity),
                  as.integer(calibration), as.integer(coardegree), as.matrix(y), as.matrix(Z),
-                 as.matrix(Zpred), as.integer(noprog),
-                 as.vector(t(xcon)), as.vector(t(xcat)), as.vector(t(xconp)),
-                 as.vector(t(xcatp)), as.integer(npred), as.vector(similparam),
+                 as.integer(noprog),
+                 as.vector(t(xcon)), as.vector(t(xcat)), as.vector(similparam),
                  as.vector(hP0_m0), as.double(hP0_nu0), as.double(hP0_s0),
                  as.double(hP0_Lambda0), as.integer(update_hierarchy), as.vector(t(beta)),
                  as.integer(hsp), as.vector(mhtunepar), as.integer(A), as.vector(n_a),
