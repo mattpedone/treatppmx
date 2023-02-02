@@ -38,11 +38,11 @@ devtools::install_github("mattpedone/treatppmx")
 ```
 
 **NOTE** that this package depends on
-[vweights](https://github.com/mattpedone/vweights) and
-[mcclust.ext](https://github.com/sarawade/mcclust.ext).
+[vweights](https://github.com/mattpedone/vweights).
+
+``` r
+# install.packages("devtools")
+devtools::install_github("mattpedone/vweights")
+```
 
 It has only been tested on a PC running Ubuntu 20.04.2 LTS.
-
-## References 
-
-We describe the method implemented in treatppmx in a preprint available at [arxive](https://arxiv.org/pdf/2210.06030.pdf).
