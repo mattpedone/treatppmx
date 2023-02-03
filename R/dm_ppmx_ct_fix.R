@@ -81,8 +81,8 @@
 #'   \item \code{lpml}: scalar. It is the average lpml
 #'   \item \code{sigmangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\sigma} parameter of NGGP for each treatment at each MCMC iteration
 #'   \item \code{kappangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\kappa} parameter of NGGP for each treatment at each MCMC iteration
-#'   \item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the predicted outcome for each untreated patients, under all the competing for each treatment at each MCMC iteration
-#'   \item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the Multinomial parameters for each untreated patients, under all the competing for each treatment at each MCMC iteration
+#   \item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the predicted outcome for each untreated patients, under all the competing for each treatment at each MCMC iteration
+#   \item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the Multinomial parameters for each untreated patients, under all the competing for each treatment at each MCMC iteration
 #' }
 #' @export
 
@@ -104,29 +104,25 @@ ppmxct_fixed <- function(y, X=NULL, Z=NULL, asstreat = NULL,
   out <- NULL
 
   if(!is.data.frame(X) & !is.null(X)) X <- data.frame(X)
-  if(!is.data.frame(Xpred) & !is.null(Xpred)){
-    Xpred <- data.frame(Xpred);
-    colnames(Xpred) <- colnames(X)
-  }
+
   cnames <- colnames(X)
 
   nout <- (iter-burn)/thin
   nobs <- dim(y)[1]
 
-  if(is.null(X) & is.null(Xpred)){
+  if(is.null(X)){
     xcon <- cbind(rep(0,1));
     xconp <- cbind(rep(0,1));
     xcat <- cbind(rep(0,1));
     xcatp <- cbind(rep(0,1));
     ncon <- 0
     ncat <- 0
-    npred <- 0
   }
 
-  if(!(is.null(X) & is.null(Xpred))){
+  if(!(is.null(X))){
     nxobs <- ifelse(is.null(X), 0, nrow(X))
-    npred <- ifelse(is.null(Xpred), 0, nrow(Xpred))
-    Xall <- rbind(X, Xpred)
+    #npred <- ifelse(is.null(Xpred), 0, nrow(Xpred))
+    Xall <- X
     # Function that relabels categorical variables to begin with 0
     relab <- function(x) as.numeric(as.factor(as.character(x))) - 1
     classes <- sapply(Xall, class)
@@ -155,37 +151,14 @@ ppmxct_fixed <- function(y, X=NULL, Z=NULL, asstreat = NULL,
         ncat <- 0
       }
     }
-    # Now consider the case when number of covariates for prediction are greater than zero
-    if(npred > 0){
-      if(sum(!catvars) > 0){
-        Xconstd <- Xall[,!catvars, drop=FALSE]
-        xconp <- Xconstd[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
-        #print(xconp)
-        ncon <- ncol(xconp)
-      } else {
-        xconp <- cbind(rep(0,npred));
-        ncon <- 0
-      }
-
-      if(sum(catvars) > 0){
-        Xcatall <- apply(Xall[, catvars,drop=FALSE], 2, relab)
-        xcatp <- Xcatall[(nrow(Xall)-npred+1):nrow(Xall),,drop=FALSE];
-        ncat <- ncol(xcatp)
-        catvec <- apply(Xcatall,2,function(x)length(unique(x)))
-      } else {
-        xcatp <- cbind(rep(0,npred));
-        ncat <- 0
-        catvec <- 0
-      }
-    }
   }
 
   pmat = matrix(0, ncol(y), ncol(Z))
   noprog <- 0
-  if((is.null(Z)) & (is.null(Zpred))){
+  if((is.null(Z))){
     beta <- pmat
     Z <- matrix(0, nrow = nrow(X), ncol = 1)
-    Zpred <- matrix(0, nrow = nrow(Xpred), ncol = 1)
+    #Zpred <- matrix(0, nrow = nrow(Xpred), ncol = 1)
     noprog <- 1
   } else {
     cormat = matrix(0, ncol(y), ncol(Z))
@@ -333,40 +306,11 @@ ppmxct_fixed <- function(y, X=NULL, Z=NULL, asstreat = NULL,
   res$sigmangg <- out$sigma_ngg
   res$kappangg <- out$kappa_ngg
 
-  #posterior predictive
-  ypred <- array(0, dim = c(npred, ncol(y), A, nout))
-  for(i in 1:nout){
-    for(a in 1:A){
-      ypred[,,a,i] <- out$ypred[i,1][[1]][,,a]
-    }
-  }
-  res$ypred <- ypred
-
-  pipred <- array(0, dim = c(npred, ncol(y), A, nout))
-  for(i in 1:nout){
-    for(a in 1:A){
-      pipred[,,a,i] <- out$pipred[i,1][[1]][,,a]
-    }
-  }
-  res$pipred <- pipred
-  if(any(is.nan(unlist(pipred)))){
-    cat("some NaN occurred", "\n")
-  }
-
   res$theta_prior <- out$theta_prior
   res$sigma_prior <- out$sigma_prior
   #cluster classification prediction (unsupervised clustering)
-  clupred <- matrix(0, nout, npred)
 
   ll = 0
-  for(l in 1:nout){
-    for(pp in 1:npred){
-      clupred[l, pp] <- out$clupred[ll*npred + pp]
-      ll = ll+1
-    }
-  }
-
-  res$clupred <- clupred
 
   return(res)
 }

@@ -111,8 +111,6 @@ Each element of the list is a list of 2 matrices (one for each treatment).
 \item \code{lpml}: scalar. It is the average lpml
 \item \code{sigmangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\sigma} parameter of NGGP for each treatment at each MCMC iteration
 \item \code{kappangg}: \eqn{T\times}\code{nout} matrix. It contains the \eqn{\kappa} parameter of NGGP for each treatment at each MCMC iteration
-\item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the predicted outcome for each untreated patients, under all the competing for each treatment at each MCMC iteration
-\item \code{ypred}: \eqn{n_{pred} \times K \times T \times}\code{nout} array. It contains the Multinomial parameters for each untreated patients, under all the competing for each treatment at each MCMC iteration
 }
 }
 \description{
