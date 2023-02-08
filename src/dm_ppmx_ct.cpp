@@ -1513,12 +1513,6 @@ Rcpp::List dm_ppmx_ct_fix(int iter, int burn, int thin, int nobs, arma::vec trea
   int Q = z.n_cols;
 
   idxs = 0;
-  arma::vec sigma(A, arma::fill::zeros);
-  arma::vec kappa(A, arma::fill::zeros);
-  for(tt = 0; tt < A; tt++){
-    sigma(tt) = grid(0,idxs);
-    kappa(tt) = grid(1,idxs);
-  }
   int K = grid.n_cols;
 
   arma::uword K2 = K;
@@ -1787,8 +1781,6 @@ Rcpp::List dm_ppmx_ct_fix(int iter, int burn, int thin, int nobs, arma::vec trea
   arma::cube pigreco(nobs, dim, nout, arma::fill::zeros);
   arma::field<arma::cube> pigreco_pred(nout, 1);
   arma::cube ispred_out(nobs, dim, nout, arma::fill::ones);
-  arma::mat sigma_ngg_out(nT, nout, arma::fill::zeros);
-  arma::mat kappa_ngg_out(nT, nout, arma::fill::zeros);
   arma::vec lpml(nout, arma::fill::zeros);
   arma::cube Theta_out(dim, nT, nout, arma::fill::ones);
   arma::field<arma::cube> Sigma_out(nout, 1);
@@ -1841,108 +1833,7 @@ Rcpp::List dm_ppmx_ct_fix(int iter, int burn, int thin, int nobs, arma::vec trea
         Sigma.slice(tt) = arma::inv(Lambda);
       }
     }
-    //////////////////////////////////////////////////
-    // update (\sigma, \kappa)
-    //////////////////////////////////////////////////
-    if(cohesion == 2){
-      for(tt = 0; tt < nT; tt++){
-        for(j = 0; j < nclu_curr(tt); j++){
-          lgconY = 0.0;
-          lgcatY = 0.0;
 
-          if(PPMx == 1){
-            // Continuous Covariates
-            for(p = 0; p < (ncon); p++){
-              if(similarity==1){ // Auxilliary
-                if(consim==1){//normal normal
-                  lgcont = gsimconNN(m0, v, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 0, 1);
-                  lgconY += lgcont;
-                }
-                if(consim==2){//normal normal inverse gamma
-                  lgcont = gsimconNNIG(m0, k0, nu0, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 0, 1);
-                  lgconY += lgcont;
-                }
-              }
-              if(similarity==2){ //Double Dipper
-                if(consim==1){//normal normal
-                  lgcont = gsimconNN(m0, v, s20, sumx(tt, j), sumx2(tt, j * ncon + p), nj_curr(tt, j * ncon + p), 1, 1);
-                  lgconY += lgcont;
-                }
-                if(consim==2){//normal normal inverse gamma
-                  lgcont = gsimconNNIG(m0, k0, nu0, s20, sumx(tt, j * ncon + p), sumx2(tt, j * ncon + p), nj_curr(tt, j), 1, 1);
-                  lgconY += lgcont;
-                }
-              }
-            }//close cicle on p continuous covariate
-
-            // Categorical Covariates
-            for(p = 0; p < ncat; p++){
-              // Auxiliary - Dirichlet-Multinomial
-              if(similarity==1){
-                lgcatt = gsimcatDM(njc, dirweights, catvec(p), 0, 1);
-                lgcatY += lgcatt;
-              }
-              // Double dipper - Dirichlet-Multinomial
-              if(similarity==2){
-                lgcatt = gsimcatDM(njc, dirweights, catvec(p), 1, 1);
-                lgcatY += lgcatt;
-              }
-            }//close cicle on p discrete covariate
-
-            gtilY(j) = lgconY + lgcatY;
-          }// this closes PPMx
-
-          if((PPMx == 0) | ((calibration != 2) & (PPMx == 1))){
-            // calibration part
-            omegasigma(tt, j) = gtilY(j);
-          }
-
-          if((calibration == 2) & (PPMx == 1)){
-            // calibration part
-            omegasigma(tt, j) = 0.0;
-            if(coardegree == 1){
-              omegasigma(tt, j) += (1/((double)ncon + (double)ncat))*gtilY(j);
-            }
-            if(coardegree == 2){
-              omegasigma(tt, j) += (1/(pow(((double)ncon + (double)ncat), 1.0/2.0)))*gtilY(j);
-            }
-          }
-        } //chiude la similarity
-
-        // cohesion part
-        for(int idxst = 0; idxst < K; idxst++){
-          sigma_temp = grid(0,idxst);
-          os(tt, idxst) = 0;
-          for(j = 0; j < nclu_curr(tt); j++){
-            os(tt, idxst) += omegasigma(tt, j);
-            //os(tt, idxst) += log(1.0/K) + log((double) (Vwm(num_treat(tt)-1, nclu_curr(tt), idxst)/Vwm(num_treat(tt)-2, nclu_curr(tt)-1, idxst))+(nj_curr(tt, j)-sigma_temp));
-            os(tt, idxst) += lgamma(nj_curr(tt, j) - sigma_temp) - lgamma(1 - sigma_temp);
-          }
-          os(tt, idxst) += log((double) Vwm(num_treat(tt)-1, nclu_curr(tt)-1, idxst));
-        }
-
-        maxwei = os(tt, 0);
-        for(int idxst = 1; idxst < K; idxst++){
-          if(maxwei < os(tt, idxst)) maxwei = os(tt, idxst);
-        }
-        denwei = 0.0;
-        for(int idxst = 0; idxst < K; idxst++){
-          os(tt, idxst) = exp(os(tt, idxst) - maxwei);
-          denwei += os(tt, idxst);
-        }
-
-        for(int idxst = 0; idxst < K; idxst++){
-          pos(tt, idxst) = os(tt, idxst)/denwei;
-        }
-        opts = arma::linspace<arma::uvec>(0L, K2 - 1L, K2);
-
-        idxs = arma::conv_to<arma::uword>::from(
-          Rcpp::RcppArmadillo::sample(opts, 1L, false, os.row(tt).t())
-        );
-        sigma(tt) = grid(0,idxs);
-        kappa(tt) = grid(1,idxs);
-      }
-    }
     if(noprog != 1){
       //UPDATE PROGNOSTIC COVARIATES' COEFFICIENTS
 
@@ -2019,14 +1910,6 @@ Rcpp::List dm_ppmx_ct_fix(int iter, int burn, int thin, int nobs, arma::vec trea
            ispred_out.slice(ll).row(i) = ispred.row(i);
            pigreco.slice(ll).row(i) = JJ.row(i)/TT(i);
          }
-         for(tt = 0; tt < nT; tt++){
-           sigma_ngg_out(tt,ll) = sigma(tt);
-           kappa_ngg_out(tt,ll) = kappa(tt);
-           nclus(tt, ll) = nclu_curr(tt);
-           for(i = 0; i < num_treat(tt); i++){
-             Clui(tt, i, ll) = curr_clu(tt, i);
-           }
-         }
 
          beta_out.col(ll) = beta;
 
@@ -2068,8 +1951,6 @@ Rcpp::List dm_ppmx_ct_fix(int iter, int burn, int thin, int nobs, arma::vec trea
   return Rcpp::List::create(
     Rcpp::Named("eta") = eta_out,
     Rcpp::Named("beta") = beta_out,
-    Rcpp::Named("sigma_ngg") = sigma_ngg_out,
-    Rcpp::Named("kappa_ngg") = kappa_ngg_out,
     Rcpp::Named("eta_acc") = eta_flag,
     Rcpp::Named("beta_acc") = beta_flag,
     Rcpp::Named("cl_lab") = Clui,
