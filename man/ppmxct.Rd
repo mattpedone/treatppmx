@@ -13,8 +13,7 @@ ppmxct(
   asstreat = NULL,
   PPMx = 1,
   cohesion = 2,
-  kappa = c(1, 30, 10, 1),
-  sigma = c(0.005, 1, 10),
+  kappa = 1,
   similarity = 1,
   consim = 1,
   similparam,
@@ -51,9 +50,7 @@ ppmxct(
 1 - DirichletProcess-like cohesion (DP) cohesion
 2 - Normalized Generalized Gamma Process (NGG) cohesion}
 
-\item{kappa}{vector of possible values for \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)}
-
-\item{sigma}{vector of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)}
+\item{kappa}{value for \eqn{\kappa} for cohesion function (concentration parameter in DP)}
 
 \item{similarity}{type of similarity function that is employed for the PPMx prior on partitions. Options are
 1 - Auxiliary similarity

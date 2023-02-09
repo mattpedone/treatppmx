@@ -16,8 +16,8 @@
 #' @param cohesion type of cohesion function that is employed for the PPMx prior on partitions. Options are
 #'   1 - DirichletProcess-like cohesion (DP) cohesion
 #'   2 - Normalized Generalized Gamma Process (NGG) cohesion
-#' @param kappa vector of possible values for \eqn{\kappa} for cohesion function (concentration parameter in DP and NGG)
-#' @param sigma vector of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)
+#' @param kappa value for \eqn{\kappa} for cohesion function (concentration parameter in DP)
+# @param sigma vector of possible value for \eqn{\sigma} parameter in the cohesion function (reinforcement parameter in NGG)
 #' @param similarity type of similarity function that is employed for the PPMx prior on partitions. Options are
 #'   1 - Auxiliary similarity
 #'   2 - Double dipper similarity
@@ -87,8 +87,7 @@
 #' @export
 
 ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
-                   PPMx = 1, cohesion = 2, kappa = c(1.0, 30.0, 10, 1),
-                   sigma = c(0.005, 1.0, 10), similarity = 1, consim=1,
+                   PPMx = 1, cohesion = 2, kappa = 1, similarity = 1, consim=1,
                    similparam, calibration=0, coardegree = 1, modelpriors,
                    update_hierarchy = 1, hsp = 1, iter=1100, burn=100, thin=1,
                    mhtunepar = c(.05, .05), CC = 3, reuse = 1, nclu_init = 5){
@@ -227,11 +226,16 @@ ppmxct <- function(y, X=NULL, Xpred = NULL, Z=NULL, Zpred=NULL, asstreat = NULL,
 
   treatments <- treatments - 1
 
-  kappadp <- kappa[4]
-  nsigma <- sigma[3]
-  nkappa <- kappa[3]
-  sigmagrid <- seq(sigma[1], sigma[2], length.out = nsigma)
-  kappagrid <- seq(kappa[1], kappa[2], length.out = nkappa)
+  kappadp <- kappa
+  #nsigma <- sigma[3]
+  #nkappa <- kappa[3]
+  #sigmagrid <- seq(sigma[1], sigma[2], length.out = nsigma)
+  #kappagrid <- seq(kappa[1], kappa[2], length.out = nkappa)
+  #stats::quantile(stats::rbeta(100000, 5, 23), prob = seq(0, 1, length = 10))
+  sigmagrid <- c(0.01, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.23, 0.27, 0.58)
+  #stats::quantile(stats::rgamma(100000, 2, 1), prob = seq(0, 1, length = 10))
+  kappagrid <- c(0.01, 0.57, 0.89, 1.19, 1.51, 1.87, 2.29, 2.85, 3.73, 13.91)
+
   grid <- t(expand.grid(kappagrid, sigmagrid))[c(2,1),]
   ngrid <- ncol(grid)
 
