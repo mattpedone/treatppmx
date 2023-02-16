@@ -1,7 +1,7 @@
 Package: treatppmx
 Type: Package
 Title: Personalized Treatment Selection
-Version: 1.0
+Version: 2.0
 Author: Matteo Pedone
 Maintainer: Matteo Pedone <matteo.pedone@unifi.it>
 Description: Bayesian treatment selection rule at a single decision point. 

@@ -33,7 +33,7 @@ genoutcome <- function(nobs, alpha, beta1, beta2, beta3, metx, x2, x3){
 
   for(i in 1:nobs){
     temp <- NULL
-    temp <- beta1*metx[i] + beta2*x2[i] + beta3*x3[i]
+    temp <- beta1*(metx[i])^3 + beta2*x2[i] + beta3*x3[i]
     eta1 <- alpha[1] + temp[1]
     eta2 <- alpha[2] + temp[2]
 
@@ -270,10 +270,10 @@ tt <- function(pred, prog){
 
   # pmts probabilities for treatment 1
   alpha1 <- c(-0.5, -1)
-  beta11 <- c(2, 2.6)
+  beta11 <- c(1.5, 2)
   # pmts probabilities for treatment 2
   alpha2 <- c(0.7, -1)
-  beta21 <- c(-1, -3)
+  beta21 <- c(-.5, -1.0)
   # pmts probabilities with prognostic only
   alpha3 <- c(1, -0.5); beta2 <- c(1, 0.5); beta3 <- c(0.7,1)
 
