@@ -398,7 +398,7 @@ ttL <- function(pred, prog){
 #' genmech_het
 #'
 #' Generates the data for the simulations scenarios reported in the paper.
-#' It follows the strategy designed by Ma et al. (2019).
+#' It follows the strategy designed by Ma et al. (2019), but it generates outcome using nonlinear relationship with predictive covariates.
 #' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
 #' Patients (\eqn{n=152}) are assigned to \eqn{T=2} competing treatments.
 #' @param npred number of \eqn{Q} predictive covariates used to generate the outcome
@@ -464,6 +464,35 @@ genmech_het <- function(npred = 10, nset = 30, overlap = 0.8){
 
 #' genmech_hetL
 #'
+#' Generates the data for the simulations scenarios reported in the Supp.
+#' It follows the strategy designed by Ma et al. (2019).
+#' In particular, the outcome is a categorical variable representing \eqn{K=3} benefit-increasing levels.
+#' Patients (\eqn{n=152}) are assigned to \eqn{T=2} competing treatments.
+#' @param npred number of \eqn{Q} predictive covariates used to generate the outcome
+#' @param nset number of replicated scenarios generated
+#' @param overlap proportion of predictors used to generate the response in
+#' both the train and the validation set
+#'
+#' @references
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2016). Bayesian predictive modeling
+#' for genomic based personalized treatment selection. \emph{Biometrics},
+#' \strong{72}(2), 575-583.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1111/biom.12448}
+#'
+#' Ma, J., Stingo, F. C., & Hobbs, B. P. (2019). Bayesian personalized
+#' treatment selection strategies that integrate predictive with prognostic
+#' determinants. \emph{Biometrical Journal}, \strong{61}(4), 902-917.
+#' \url{https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700323}
+#'
+#' @return a list of 6 elements.
+#'   \itemize{
+#'   \item \code{yord}: List of \code{nset}. Each element is a \code{n-}dimensional vector of the ordinal outcome
+#'   \item \code{ymat}: List of \code{nset}. Each element is a \eqn{n\times K} matrix containing the ordinal outcome in the form of a Multinomial experiment
+#'   \item \code{pred}: List of \code{nset}. Each element is a \eqn{n\times Q} matrix containing the predictive biomarkers
+#'   \item \code{pred}: List of \code{nset}. Each element is a \eqn{n\times 2} matrix containing the prognostic biomarkers
+#'   \item \code{trtsgn}: List of \code{nset}. Each element is a \code{n-}dimensional vector of the treatment assigned
+#'   \item \code{prob}: List of \code{nset}. Each element of the list is a list of \eqn{T} \eqn{n\times K} matrices containing the response probabilities
+#' }
 #' @export
 
 genmech_hetL <- function(npred = 10, nset = 30, overlap = 0.8){
