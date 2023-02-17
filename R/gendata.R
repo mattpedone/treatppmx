@@ -613,10 +613,10 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7){#, nset = 50){
 
   # pmts probabilities for treatment 1
   alpha1 <- c(-0.5, -1)
-  beta11 <- c(2, 2.6)
+  beta11 <- c(1.5, 2)
   # pmts probabilities for treatment 2
   alpha2 <- c(0.7, -1)
-  beta21 <- c(-1, -3)
+  beta21 <- c(-.5, -1.0)
   # pmts probabilities with prognostic only
   alpha3 <- c(1, -0.5)
   beta2 <- c(1, 0.5)
@@ -785,10 +785,10 @@ genmech_clu2 <- function(npred = 10){
 
   # pmts probabilities for treatment 1
   alpha1 <- c(-0.5, -1)
-  beta11 <- c(2, 2.6)
+  beta11 <- c(1.5, 2)
   # pmts probabilities for treatment 2
   alpha2 <- c(0.7, -1)
-  beta21 <- c(-1, -3)
+  beta21 <- c(-.5, -1.0)
   # pmts probabilities with prognostic only
   alpha3 <- c(1, -0.5)
   beta2 <- c(1, 0.5)
