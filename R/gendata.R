@@ -613,20 +613,22 @@ genmech_clu <- function(npred = 4, n = 200, nnoise = 7){#, nset = 50){
 
   # pmts probabilities for treatment 1
   alpha1 <- c(-0.5, -1)
-  beta11 <- c(2.0, 2.6)
+  #beta11 <- c(2.0, 2.6)
+  beta11 <- c(1.5, 2.0)
   # pmts probabilities for treatment 2
   alpha2 <- c(0.7, -1)
-  beta21 <- c(-1.0, -3.0)
+  #beta21 <- c(-1.0, -3.0)
+  beta21 <- c(-.5, -1.0)
   # pmts probabilities with prognostic only
   alpha3 <- c(1, -0.5)
   beta2 <- c(1, 0.5)
   beta3 <- c(0.7,1)
 
   #probabilities for treatment 1
-  prob1 <- genoutcomeL(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, z2, z3)
+  prob1 <- genoutcome(nobs, alpha1, beta11 ,c(0,0), c(0,0), metx, z2, z3)
   #probabilities for treatment 2
-  prob2 <- genoutcomeL(nobs, alpha2, beta21, c(0,0), c(0,0), metx, z2, z3)
-  probprog <- genoutcomeL(nobs, alpha3, c(0,0), beta2, beta3, metx, z2, z3)
+  prob2 <- genoutcome(nobs, alpha2, beta21, c(0,0), c(0,0), metx, z2, z3)
+  probprog <- genoutcome(nobs, alpha3, c(0,0), beta2, beta3, metx, z2, z3)
   Zprogcov <- cbind(z2, z3)
 
   # Now we construct prob with both prog and pred features
